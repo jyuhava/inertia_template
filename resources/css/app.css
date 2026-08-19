@@ -156,3 +156,8 @@
         display: block !important;
     }
 }
+
+/* CKEditor custom styles */
+.ck-editor__editable {
+    min-height: 400px !important;
+}

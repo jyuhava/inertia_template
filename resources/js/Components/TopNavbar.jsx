@@ -1,133 +1,146 @@
-import { useState } from 'react';
-import { Link, usePage } from '@inertiajs/react';
+import { useEffect, useMemo, useState } from 'react';
+import { usePage } from '@inertiajs/react';
 import Dropdown from '@/Components/Dropdown';
 
 export default function TopNavbar({ toggleSidebar, toggleCollapse, title = 'Dashboard', sidebarCollapsed = false }) {
     const user = usePage().props.auth.user;
     const [searchQuery, setSearchQuery] = useState('');
 
+    const getCurrentTime = () =>
+        new Date().toLocaleTimeString('id-ID', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+        });
+
+    const [currentTime, setCurrentTime] = useState(getCurrentTime());
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCurrentTime(getCurrentTime());
+        }, 60000);
+
+        return () => clearInterval(interval);
+    }, []);
+
+    const currentDate = useMemo(
+        () =>
+            new Date().toLocaleDateString('id-ID', {
+                weekday: 'short',
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+            }),
+        [],
+    );
+
     return (
-        <header className="bg-white shadow-sm border-b border-gray-200">
-            <div className="flex items-center justify-between px-6 py-4">
-                {/* Left side - Mobile menu button and title */}
-                <div className="flex items-center">
-                    {/* Mobile menu button */}
+        <header className="sticky top-0 z-20 border-b border-[#e5e5e5] bg-white">
+            <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6">
+                <div className="flex min-w-0 items-center gap-3">
                     <button
                         onClick={toggleSidebar}
-                        className="p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 lg:hidden"
+                        className="border border-[#e5e5e5] p-2 text-neutral-600 transition hover:border-black hover:text-black hover:bg-neutral-100 lg:hidden"
+                        aria-label="Buka menu"
                     >
-                        <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
                     </button>
 
-                    {/* Desktop collapse button */}
                     <button
                         onClick={toggleCollapse}
-                        className="hidden lg:block p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+                        className="hidden border border-[#e5e5e5] p-2 text-neutral-600 transition hover:border-black hover:text-black hover:bg-neutral-100 lg:block"
+                        title={sidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+                        aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                     >
-                        <svg className={`h-6 w-6 transform transition-transform duration-200 ${sidebarCollapsed ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                        <svg
+                            className={`h-5 w-5 transform transition-transform duration-300 ${sidebarCollapsed ? 'rotate-180' : ''}`}
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
                         </svg>
                     </button>
-                    
-                    <div className="ml-4">
-                        <h1 className="text-2xl font-semibold text-gray-900">{title}</h1>
-                        <p className="text-sm text-gray-500">Welcome back, {user.name}</p>
+
+                    <div className="min-w-0">
+                        <h1 className="truncate text-sm font-bold uppercase tracking-[0.2em] text-black sm:text-base">{title}</h1>
+                        <p className="hidden text-[10px] uppercase tracking-widest text-neutral-500 sm:block">
+                            {currentDate} • <span className="text-black">{currentTime}</span>
+                        </p>
                     </div>
                 </div>
 
-                {/* Center - Search bar */}
-                <div className="hidden md:block flex-1 max-w-lg mx-8">
+                <div className="hidden flex-1 px-4 lg:block xl:max-w-md">
                     <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                            <svg className="h-4 w-4 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
                         </div>
                         <input
                             type="text"
-                            placeholder="Search..."
+                            placeholder="Cari menu atau data..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                            className="block w-full border border-[#e5e5e5] bg-neutral-50 py-2 pl-9 pr-9 text-xs text-neutral-700 placeholder-neutral-400 focus:border-black focus:bg-white focus:outline-none"
                         />
+                        {searchQuery ? (
+                            <button
+                                onClick={() => setSearchQuery('')}
+                                className="absolute inset-y-0 right-0 flex items-center pr-3 text-neutral-400 hover:text-black"
+                                aria-label="Clear search"
+                            >
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        ) : null}
                     </div>
                 </div>
 
-                {/* Right side - Notifications and user menu */}
-                <div className="flex items-center space-x-4">
-                    {/* Notifications */}
-                    <button className="relative p-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                <div className="flex items-center gap-2 sm:gap-3">
+                    <button
+                        className="relative hidden border border-[#e5e5e5] p-2 text-neutral-600 transition hover:border-black hover:text-black hover:bg-neutral-100 sm:block"
+                        aria-label="Notifikasi"
+                    >
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                         </svg>
-                        <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full flex items-center justify-center notification-badge">
-                            <span className="text-xs text-white font-medium">3</span>
-                        </span>
+                        <span className="absolute right-0 top-0 h-2 w-2 bg-black" />
                     </button>
 
-                    {/* User dropdown */}
-                    <div className="relative">
-                        <Dropdown>
-                            <Dropdown.Trigger>
-                                <button className="flex items-center space-x-3 text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 p-2">
-                                    <div className="h-8 w-8 bg-gray-300 rounded-full flex items-center justify-center">
-                                        <span className="text-sm font-medium text-gray-700">
-                                            {user.name.charAt(0).toUpperCase()}
-                                        </span>
-                                    </div>
-                                    <div className="hidden md:block text-left">
-                                        <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                                        <div className="text-xs text-gray-500">{user.email}</div>
-                                    </div>
-                                    <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                    </svg>
-                                </button>
-                            </Dropdown.Trigger>
-
-                            <Dropdown.Content align="right" width="48">
-                                <div className="px-4 py-3 border-b border-gray-100">
-                                    <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                                    <div className="text-sm text-gray-500">{user.email}</div>
+                    <Dropdown>
+                        <Dropdown.Trigger>
+                            <button className="flex items-center gap-2 border border-[#e5e5e5] p-1.5 transition hover:border-black hover:bg-neutral-100 focus:outline-none sm:p-2">
+                                <div className="h-9 w-9 border border-black bg-black text-white flex items-center justify-center">
+                                    <span className="text-sm font-bold tracking-widest">
+                                        {user.name.charAt(0).toUpperCase()}
+                                    </span>
                                 </div>
-                                
-                                <Dropdown.Link href={route('profile.edit')}>
-                                    <div className="flex items-center">
-                                        <svg className="mr-3 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                        </svg>
-                                        Profile Settings
-                                    </div>
-                                </Dropdown.Link>
-                                
-                                <Dropdown.Link href="#" className="border-t border-gray-100">
-                                    <div className="flex items-center">
-                                        <svg className="mr-3 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        </svg>
-                                        Account Settings
-                                    </div>
-                                </Dropdown.Link>
-                                
-                                <Dropdown.Link 
-                                    href={route('logout')} 
-                                    method="post" 
-                                    as="button"
-                                    className="border-t border-gray-100 text-red-600 hover:text-red-700 hover:bg-red-50"
-                                >
-                                    <div className="flex items-center">
-                                        <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                                        </svg>
-                                        Sign Out
-                                    </div>
-                                </Dropdown.Link>
-                            </Dropdown.Content>
-                        </Dropdown>
-                    </div>
+                                <div className="hidden text-left md:block">
+                                    <p className="max-w-36 truncate text-xs font-semibold uppercase tracking-wider text-black">{user.name}</p>
+                                    <p className="text-[10px] uppercase tracking-widest text-neutral-500">{user.role}</p>
+                                </div>
+                                <svg className="hidden h-4 w-4 text-neutral-500 md:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                        </Dropdown.Trigger>
+
+                        <Dropdown.Content align="right" width="56" className="mt-2 border border-[#e5e5e5] bg-white">
+                            <div className="border-b border-[#e5e5e5] bg-neutral-50 px-4 py-3">
+                                <p className="text-xs font-semibold uppercase tracking-wider text-black">{user.name}</p>
+                                <p className="text-[10px] tracking-widest text-neutral-500">{user.email}</p>
+                            </div>
+
+                            <Dropdown.Link href={route('profile.edit')} className="text-neutral-600 hover:text-black hover:bg-neutral-100">Profil Saya</Dropdown.Link>
+                            <Dropdown.Link href={route('logout')} method="post" as="button" className="text-neutral-600 hover:text-black hover:bg-neutral-100">
+                                Keluar
+                            </Dropdown.Link>
+                        </Dropdown.Content>
+                    </Dropdown>
                 </div>
             </div>
         </header>

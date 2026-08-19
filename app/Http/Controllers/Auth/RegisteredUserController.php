@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\PeriodePmb;
+use App\Models\Prodi;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,32 +22,36 @@ class RegisteredUserController extends Controller
      */
     public function create(): Response
     {
-        return Inertia::render('Auth/Register');
+        \Log::info('=== RegisteredUserController create method called ===');
+        \Log::info('Request URL: ' . request()->fullUrl());
+        
+        // Get active PMB period
+        $periodePmb = PeriodePmb::berlangsung()->first();
+        \Log::info('PMB period found in register: ' . ($periodePmb ? $periodePmb->nama_periode : 'None'));
+        
+        // Get active program studi
+        $prodis = Prodi::where('status', 'aktif')->orderBy('nama_prodi')->get();
+        \Log::info('Prodis count in register: ' . $prodis->count());
+
+        \Log::info('Rendering Auth/Register page');
+        return Inertia::render('Auth/Register', [
+            'periodePmb' => $periodePmb,
+            'prodis' => $prodis,
+        ]);
     }
 
     /**
      * Handle an incoming registration request.
-     *
-     * @throws \Illuminate\Validation\ValidationException
+     * Redirect to PMB registration form.
      */
     public function store(Request $request): RedirectResponse
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-        ]);
-
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
-
-        event(new Registered($user));
-
-        Auth::login($user);
-
-        return redirect(route('dashboard', absolute: false));
+        \Log::info('=== RegisteredUserController store method called ===');
+        \Log::info('Redirecting to PMB create route');
+        
+        // Redirect to PMB registration form instead of creating user account
+        return redirect()->route('pmb.create')->with('info', 
+            'Silakan lengkapi formulir pendaftaran mahasiswa baru berikut ini.'
+        );
     }
 }
