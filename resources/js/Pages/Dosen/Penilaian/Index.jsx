@@ -87,8 +87,13 @@ export default function Index({ dosen, periodeAktif, jadwalKuliah, mahasiswas })
     const finalRate = totalMahasiswa ? Math.round((totalFinal / totalMahasiswa) * 100) : 0;
 
     const handleFinalisasiNilai = () => {
-        if (!confirm('Yakin ingin finalisasi semua nilai? Setelah difinalisasi, nilai tidak dapat diubah lagi.')) return;
+        if (!confirm('Yakin ingin finalisasi semua nilai? Nilai akan dikunci, namun Anda masih bisa membatalkan finalisasi untuk mengedit kembali.')) return;
         router.post(route('dosen.penilaian.finalisasi', jadwalKuliah.id));
+    };
+
+    const handleUnfinalisasiNilai = () => {
+        if (!confirm('Yakin ingin membatalkan finalisasi? Nilai akan kembali ke status draft dan dapat diedit lagi.')) return;
+        router.post(route('dosen.penilaian.unfinalisasi', jadwalKuliah.id));
     };
 
     const formatTime = (value) => String(value || '-').slice(0, 5);
@@ -123,6 +128,10 @@ export default function Index({ dosen, periodeAktif, jadwalKuliah, mahasiswas })
                             {hasAnyNilai && !allNilaiIsFinal ? (
                                 <ActionButton onClick={handleFinalisasiNilai} variant="primary">
                                     Finalisasi Semua Nilai
+                                </ActionButton>
+                            ) : allNilaiIsFinal ? (
+                                <ActionButton onClick={handleUnfinalisasiNilai} variant="secondary">
+                                    Unfinalisasi Nilai
                                 </ActionButton>
                             ) : null}
                         </div>

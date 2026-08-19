@@ -103,6 +103,7 @@ window.route = (name, params = {}) => {
         'dosen.penilaian': (id) => `/dosen/penilaian/${id}`,
         'dosen.penilaian.update': (id) => `/dosen/penilaian/${id}`,
         'dosen.penilaian.finalisasi': (id) => `/dosen/penilaian/${id}/finalisasi`,
+        'dosen.penilaian.unfinalisasi': (id) => `/dosen/penilaian/${id}/unfinalisasi`,
         'dosen.absensi.index': (id) => `/dosen/absensi/${id}`,
         'dosen.absensi.pertemuan.create': (id) => `/dosen/absensi/${id}/pertemuan`,
         'dosen.absensi.update': (id) => `/dosen/absensi/${id}/update`,
@@ -208,6 +209,65 @@ window.route = (name, params = {}) => {
         'mahasiswa.lms.forums.show': (id) => `/mahasiswa/lms/forums/${id}`,
         'mahasiswa.lms.forums.threads.show': (id) => `/mahasiswa/lms/forum-threads/${id}`,
         'mahasiswa.lms.forums.replies.store': (id) => `/mahasiswa/lms/forum-threads/${id}/replies`,
+
+        // Meeting Minutes (Notulen Rapat)
+        'meeting-minutes.index': '/meeting-minutes',
+        'meeting-minutes.create': '/meeting-minutes/create',
+        'meeting-minutes.store': '/meeting-minutes',
+        'meeting-minutes.show': (id) => `/meeting-minutes/${id}`,
+        'meeting-minutes.edit': (id) => `/meeting-minutes/${id}/edit`,
+        'meeting-minutes.update': (id) => `/meeting-minutes/${id}`,
+        'meeting-minutes.destroy': (id) => `/meeting-minutes/${id}`,
+        'meeting-minutes.status': (id) => `/meeting-minutes/${id}/status`,
+        'meeting-minutes.toggle-public': (id) => `/meeting-minutes/${id}/toggle-public`,
+        'meeting-agenda-items.progress': (id) => `/meeting-agenda-items/${id}/progress`,
+        'meeting-minutes.attachments.upload': (id) => `/meeting-minutes/${id}/attachments`,
+        'meeting-attachments.destroy': (id) => `/meeting-attachments/${id}`,
+        'meeting-minutes.public': (token) => `/public/meeting/${token}`,
+
+        // Raker (Rapat Kerja)
+        'raker.index': '/raker',
+        'raker.sessions.index': '/raker/sessions',
+        'raker.sessions.create': '/raker/sessions/create',
+        'raker.sessions.store': '/raker/sessions',
+        'raker.sessions.show': (id) => `/raker/sessions/${id}`,
+        'raker.sessions.edit': (id) => `/raker/sessions/${id}/edit`,
+        'raker.sessions.update': (id) => `/raker/sessions/${id}`,
+        'raker.sessions.destroy': (id) => `/raker/sessions/${id}`,
+        'raker.submission.show': (id) => `/raker/sessions/${id}/my-submission`,
+        'raker.submission.view': (id) => `/raker/submissions/${id}`,
+        'raker.submission.update': (id) => `/raker/submissions/${id}`,
+        'raker.submission.submit': (id) => `/raker/submissions/${id}/submit`,
+
+        'raker.borang1.store': (id) => `/raker/submissions/${id}/borang1`,
+        'raker.borang1.update': (id) => `/raker/borang1/${id}`,
+        'raker.borang1.destroy': (id) => `/raker/borang1/${id}`,
+        'raker.borang1.reorder': (id) => `/raker/submissions/${id}/borang1/reorder`,
+
+        'raker.borang2.store': (id) => `/raker/submissions/${id}/borang2`,
+        'raker.borang2.update': (id) => `/raker/borang2/${id}`,
+        'raker.borang2.destroy': (id) => `/raker/borang2/${id}`,
+        'raker.borang2.reorder': (id) => `/raker/submissions/${id}/borang2/reorder`,
+
+        'raker.borang3.store': (id) => `/raker/submissions/${id}/borang3`,
+        'raker.borang3.update': (id) => `/raker/borang3/${id}`,
+        'raker.borang3.destroy': (id) => `/raker/borang3/${id}`,
+        'raker.borang3.reorder': (id) => `/raker/submissions/${id}/borang3/reorder`,
+
+        'raker.borang4.store': (id) => `/raker/submissions/${id}/borang4`,
+        'raker.borang4.update': (id) => `/raker/borang4/${id}`,
+        'raker.borang4.destroy': (id) => `/raker/borang4/${id}`,
+        'raker.borang4.reorder': (id) => `/raker/submissions/${id}/borang4/reorder`,
+
+        'raker.borang5.store': (id) => `/raker/submissions/${id}/borang5`,
+        'raker.borang5.update': (id) => `/raker/borang5/${id}`,
+        'raker.borang5.destroy': (id) => `/raker/borang5/${id}`,
+        'raker.borang5.reorder': (id) => `/raker/submissions/${id}/borang5/reorder`,
+
+        'raker.borang6.store': (id) => `/raker/submissions/${id}/borang6`,
+        'raker.borang6.update': (id) => `/raker/borang6/${id}`,
+        'raker.borang6.destroy': (id) => `/raker/borang6/${id}`,
+        'raker.borang6.reorder': (id) => `/raker/submissions/${id}/borang6/reorder`,
     };
 
     if (name === undefined) {

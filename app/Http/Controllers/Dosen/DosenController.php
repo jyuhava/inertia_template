@@ -340,4 +340,32 @@ class DosenController extends Controller
 
         return back()->with('success', 'Semua nilai berhasil difinalisasi.');
     }
+
+    /**
+     * Unfinalisasi nilai (kembali ke draft sehingga bisa diedit)
+     */
+    public function unfinalisasiNilai(JadwalKuliah $jadwalKuliah)
+    {
+        $user = auth()->user();
+        $dosen = Dosen::where('user_id', $user->id)->first();
+
+        // Pastikan jadwal ini milik dosen yang login
+        if (!$dosen || $jadwalKuliah->dosen_id !== $dosen->id) {
+            return back()->with('error', 'Unauthorized.');
+        }
+
+        // Get periode KRS yang aktif
+        $periodeAktif = PeriodeKrs::aktif()->first();
+
+        if (!$periodeAktif) {
+            return back()->with('error', 'Tidak ada periode KRS yang aktif.');
+        }
+
+        // Kembalikan semua nilai kelas ini ke status draft
+        Penilaian::where('jadwal_kuliah_id', $jadwalKuliah->id)
+            ->where('periode_krs_id', $periodeAktif->id)
+            ->update(['status' => 'draft']);
+
+        return back()->with('success', 'Finalisasi dibatalkan. Nilai dapat diedit kembali.');
+    }
 }

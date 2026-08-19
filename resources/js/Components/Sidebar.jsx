@@ -159,6 +159,40 @@ export default function Sidebar({ isOpen, isCollapsed, toggleSidebar, toggleColl
             current: url === '/dashboard' || url === '/admin/dashboard'
         },
         {
+            name: 'Notulen Rapat',
+            href: route('meeting-minutes.index'),
+            icon: (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+            ),
+            current: url.startsWith('/meeting-minutes')
+        },
+        ...(user.role !== 'mahasiswa' ? [
+            {
+                name: 'Raker',
+                href: '/raker',
+                icon: (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 9a2 2 0 11-4 0V8a2 2 0 012-2h4a2 2 0 012 2v8a2 2 0 11-4 0zm10-4a2 2 0 11-4 0v-4a2 2 0 014 0v4z" />
+                    </svg>
+                ),
+                current: url.startsWith('/raker') && !url.startsWith('/raker/sessions')
+            },
+            ...(user.role === 'admin' ? [
+                {
+                    name: 'Manajemen Raker',
+                    href: '/raker/sessions',
+                    icon: (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                        </svg>
+                    ),
+                    current: url.startsWith('/raker/sessions')
+                }
+            ] : [])
+        ] : []),
+        {
             name: 'Laporan',
             href: '#',
             icon: (

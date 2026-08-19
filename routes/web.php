@@ -1,6 +1,14 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Raker\RakerBorang1Controller;
+use App\Http\Controllers\Raker\RakerBorang2Controller;
+use App\Http\Controllers\Raker\RakerBorang3Controller;
+use App\Http\Controllers\Raker\RakerBorang4Controller;
+use App\Http\Controllers\Raker\RakerBorang5Controller;
+use App\Http\Controllers\Raker\RakerBorang6Controller;
+use App\Http\Controllers\Raker\RakerSessionController;
+use App\Http\Controllers\Raker\RakerSubmissionController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -162,6 +170,7 @@ Route::middleware(['auth', 'verified', 'role:dosen'])->prefix('dosen')->name('do
     Route::get('/penilaian/{jadwalKuliah}', [\App\Http\Controllers\Dosen\DosenController::class, 'penilaian'])->name('penilaian');
     Route::put('/penilaian/{penilaian}', [\App\Http\Controllers\Dosen\DosenController::class, 'updatePenilaian'])->name('penilaian.update');
     Route::post('/penilaian/{jadwalKuliah}/finalisasi', [\App\Http\Controllers\Dosen\DosenController::class, 'finalisasiNilai'])->name('penilaian.finalisasi');
+    Route::post('/penilaian/{jadwalKuliah}/unfinalisasi', [\App\Http\Controllers\Dosen\DosenController::class, 'unfinalisasiNilai'])->name('penilaian.unfinalisasi');
     
     // Absensi routes
     Route::get('/absensi/{jadwalKuliah}', [\App\Http\Controllers\Dosen\AbsensiController::class, 'index'])->name('absensi.index');
@@ -263,6 +272,68 @@ Route::middleware('auth')->group(function () {
 
     // CKEditor Image Upload
     Route::post('/upload/ckeditor', [\App\Http\Controllers\UploadController::class, 'ckeditorUpload'])->name('upload.ckeditor');
+
+    // Meeting Minutes (Notulen Rapat)
+    Route::resource('meeting-minutes', \App\Http\Controllers\MeetingMinuteController::class);
+    Route::post('meeting-minutes/{meetingMinute}/status', [\App\Http\Controllers\MeetingMinuteController::class, 'updateStatus'])->name('meeting-minutes.status');
+    Route::post('meeting-minutes/{meetingMinute}/toggle-public', [\App\Http\Controllers\MeetingMinuteController::class, 'togglePublic'])->name('meeting-minutes.toggle-public');
+    Route::post('meeting-agenda-items/{agendaItem}/progress', [\App\Http\Controllers\MeetingMinuteController::class, 'updateProgress'])->name('meeting-agenda-items.progress');
+    Route::post('meeting-minutes/{meetingMinute}/attachments', [\App\Http\Controllers\MeetingMinuteController::class, 'uploadAttachment'])->name('meeting-minutes.attachments.upload');
+    Route::delete('meeting-attachments/{attachment}', [\App\Http\Controllers\MeetingMinuteController::class, 'deleteAttachment'])->name('meeting-attachments.destroy');
 });
+
+// Raker (Rapat Kerja) — semua role kecuali mahasiswa
+Route::middleware(['auth', 'not-mahasiswa'])->prefix('raker')->name('raker.')->group(function () {
+    // Admin: kelola sesi raker
+    Route::resource('sessions', RakerSessionController::class)->names('sessions');
+
+    // Semua user non-mahasiswa: lihat sesi aktif
+    Route::get('/', [RakerSubmissionController::class, 'sessionList'])->name('index');
+
+    // Submission per user per sesi
+    Route::get('sessions/{session}/my-submission', [RakerSubmissionController::class, 'getOrCreate'])->name('submission.show');
+    Route::get('submissions/{submission}', [RakerSubmissionController::class, 'show'])->name('submission.view');
+    Route::patch('submissions/{submission}', [RakerSubmissionController::class, 'update'])->name('submission.update');
+    Route::post('submissions/{submission}/submit', [RakerSubmissionController::class, 'submit'])->name('submission.submit');
+
+    // Borang 1 — Program Kerja Lama
+    Route::post('submissions/{submission}/borang1', [RakerBorang1Controller::class, 'store'])->name('borang1.store');
+    Route::put('borang1/{item}', [RakerBorang1Controller::class, 'update'])->name('borang1.update');
+    Route::delete('borang1/{item}', [RakerBorang1Controller::class, 'destroy'])->name('borang1.destroy');
+    Route::post('submissions/{submission}/borang1/reorder', [RakerBorang1Controller::class, 'reorder'])->name('borang1.reorder');
+
+    // Borang 2 — Program Kerja Baru
+    Route::post('submissions/{submission}/borang2', [RakerBorang2Controller::class, 'store'])->name('borang2.store');
+    Route::put('borang2/{item}', [RakerBorang2Controller::class, 'update'])->name('borang2.update');
+    Route::delete('borang2/{item}', [RakerBorang2Controller::class, 'destroy'])->name('borang2.destroy');
+    Route::post('submissions/{submission}/borang2/reorder', [RakerBorang2Controller::class, 'reorder'])->name('borang2.reorder');
+
+    // Borang 3 — Analisis Risiko
+    Route::post('submissions/{submission}/borang3', [RakerBorang3Controller::class, 'store'])->name('borang3.store');
+    Route::put('borang3/{item}', [RakerBorang3Controller::class, 'update'])->name('borang3.update');
+    Route::delete('borang3/{item}', [RakerBorang3Controller::class, 'destroy'])->name('borang3.destroy');
+    Route::post('submissions/{submission}/borang3/reorder', [RakerBorang3Controller::class, 'reorder'])->name('borang3.reorder');
+
+    // Borang 4 — Timeline Program
+    Route::post('submissions/{submission}/borang4', [RakerBorang4Controller::class, 'store'])->name('borang4.store');
+    Route::put('borang4/{item}', [RakerBorang4Controller::class, 'update'])->name('borang4.update');
+    Route::delete('borang4/{item}', [RakerBorang4Controller::class, 'destroy'])->name('borang4.destroy');
+    Route::post('submissions/{submission}/borang4/reorder', [RakerBorang4Controller::class, 'reorder'])->name('borang4.reorder');
+
+    // Borang 5 — Kebutuhan
+    Route::post('submissions/{submission}/borang5', [RakerBorang5Controller::class, 'store'])->name('borang5.store');
+    Route::put('borang5/{item}', [RakerBorang5Controller::class, 'update'])->name('borang5.update');
+    Route::delete('borang5/{item}', [RakerBorang5Controller::class, 'destroy'])->name('borang5.destroy');
+    Route::post('submissions/{submission}/borang5/reorder', [RakerBorang5Controller::class, 'reorder'])->name('borang5.reorder');
+
+    // Borang 6 — Anggaran
+    Route::post('submissions/{submission}/borang6', [RakerBorang6Controller::class, 'store'])->name('borang6.store');
+    Route::put('borang6/{item}', [RakerBorang6Controller::class, 'update'])->name('borang6.update');
+    Route::delete('borang6/{item}', [RakerBorang6Controller::class, 'destroy'])->name('borang6.destroy');
+    Route::post('submissions/{submission}/borang6/reorder', [RakerBorang6Controller::class, 'reorder'])->name('borang6.reorder');
+});
+
+// Public access (tanpa auth) - Notulen rapat publik
+Route::get('public/meeting/{token}', [\App\Http\Controllers\PublicMeetingMinuteController::class, 'show'])->name('meeting-minutes.public');
 
 require __DIR__.'/auth.php';
