@@ -6,7 +6,7 @@ import { useState } from 'react';
 function Box({ children, className = '', padded = true, variant = 'white' }) {
     const variants = {
         white: 'bg-white border-[#e4e4e7]',
-        dark: 'bg-[#0a0a0a] border-[#222] text-white',
+        dark: 'bg-gradient-to-br from-slate-800 via-indigo-700 to-indigo-600 border-transparent text-white rounded-2xl shadow-lg shadow-indigo-500/20',
         accent: 'bg-black text-white border-black'
     };
     return (
@@ -140,7 +140,7 @@ export default function Index({ jadwalKuliahs, filters = {} }) {
                 {/* Table */}
                 <Box padded={false} className="overflow-hidden">
                     <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-[#e4e4e7]">
+                        <table className="min-w-full divide-y divide-[#e4e4e7] table-cards">
                             <thead className="bg-[#fafafa]">
                                 <tr>
                                     <th className="px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.15em] text-neutral-500">Mata Kuliah</th>
@@ -155,7 +155,7 @@ export default function Index({ jadwalKuliahs, filters = {} }) {
                             </thead>
                             <tbody className="bg-white divide-y divide-[#e4e4e7]">
                                 {jadwalKuliahs.data.length === 0 ? (
-                                    <tr>
+                                    <tr className="table-cards-empty">
                                         <td colSpan="8" className="px-5 py-12 text-center text-sm text-neutral-500">
                                             {filters.search ? 'Tidak ada jadwal kuliah yang ditemukan.' : 'Belum ada jadwal kuliah yang dibuat.'}
                                         </td>
@@ -163,23 +163,23 @@ export default function Index({ jadwalKuliahs, filters = {} }) {
                                 ) : (
                                     jadwalKuliahs.data.map((jadwal) => (
                                         <tr key={jadwal.id} className="hover:bg-[#fafafa] transition-colors">
-                                            <td className="px-5 py-4 whitespace-nowrap">
+                                            <td data-label="Mata Kuliah" className="px-5 py-4 whitespace-nowrap">
                                                 <div className="text-sm font-medium text-black">{jadwal.mata_kuliah?.nama_mata_kuliah}</div>
                                                 <div className="text-xs text-neutral-500">{jadwal.mata_kuliah?.kode_mata_kuliah} - {jadwal.mata_kuliah?.sks} SKS</div>
                                             </td>
-                                            <td className="px-5 py-4 whitespace-nowrap">
+                                            <td data-label="Dosen" className="px-5 py-4 whitespace-nowrap">
                                                 <div className="text-sm text-neutral-700">{jadwal.dosen?.nama_lengkap}</div>
                                                 <div className="text-xs text-neutral-500">{jadwal.dosen?.nip}</div>
                                             </td>
-                                            <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-700">{jadwal.semester?.nama_semester}</td>
-                                            <td className="px-5 py-4 whitespace-nowrap">
+                                            <td data-label="Semester" className="px-5 py-4 whitespace-nowrap text-sm text-neutral-700">{jadwal.semester?.nama_semester}</td>
+                                            <td data-label="Jadwal" className="px-5 py-4 whitespace-nowrap">
                                                 <HariBadge hari={jadwal.hari} />
                                                 <div className="text-xs text-neutral-500 mt-1">{jadwal.jam_mulai} - {jadwal.jam_selesai}</div>
                                             </td>
-                                            <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-700">{jadwal.ruangan}</td>
-                                            <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-700">{jadwal.kapasitas}</td>
-                                            <td className="px-5 py-4 whitespace-nowrap"><StatusBadge status={jadwal.status} /></td>
-                                            <td className="px-5 py-4 whitespace-nowrap text-right">
+                                            <td data-label="Ruangan" className="px-5 py-4 whitespace-nowrap text-sm text-neutral-700">{jadwal.ruangan}</td>
+                                            <td data-label="Kapasitas" className="px-5 py-4 whitespace-nowrap text-sm text-neutral-700">{jadwal.kapasitas}</td>
+                                            <td data-label="Status" className="px-5 py-4 whitespace-nowrap"><StatusBadge status={jadwal.status} /></td>
+                                            <td data-label="Aksi" className="px-5 py-4 whitespace-nowrap text-right">
                                                 <div className="flex justify-end gap-2">
                                                     <ActionButton href={`/admin/jadwal-kuliah/${jadwal.id}`} variant="secondary" size="sm">Detail</ActionButton>
                                                     <ActionButton href={`/admin/jadwal-kuliah/${jadwal.id}/edit`} variant="primary" size="sm">Edit</ActionButton>

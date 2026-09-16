@@ -5,7 +5,7 @@ import { useState } from 'react';
 function Box({ children, className = '', padded = true, variant = 'white' }) {
     const variants = {
         white: 'bg-white border-[#e5e5e5]',
-        black: 'bg-black border-black text-white',
+        black: 'bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 border-transparent text-white rounded-2xl shadow-lg shadow-violet-500/20',
         gray: 'bg-[#f5f5f5] border-[#e5e5e5]',
     };
     return (
@@ -99,11 +99,11 @@ export default function Index({ periodePmb, filters }) {
         <AdminLayout title="Periode PMB">
             <Head title="Periode PMB" />
 
-            <div className="p-6 lg:p-8 min-h-screen bg-[#fafafa]">
+            <div className="p-6 lg:p-8 min-h-dvh bg-[#fafafa]">
                 <Box variant="black" className="mb-6">
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div>
-                            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-neutral-400 mb-1">Penerimaan Mahasiswa Baru</p>
+                            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/75 mb-1">Penerimaan Mahasiswa Baru</p>
                             <h1 className="text-xl font-bold uppercase tracking-tight text-white">Periode PMB</h1>
                         </div>
                         <ActionButton href={route('admin.periode-pmb.create')} variant="secondary">+ Tambah Periode PMB</ActionButton>
@@ -130,7 +130,7 @@ export default function Index({ periodePmb, filters }) {
                     <SectionTitle>Daftar Periode PMB</SectionTitle>
 
                     <div className="overflow-x-auto border border-[#e5e5e5]">
-                        <table className="min-w-full text-left">
+                        <table className="min-w-full text-left table-cards">
                             <thead className="bg-[#f5f5f5] border-b border-[#e5e5e5]">
                                 <tr>
                                     <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-neutral-500">Periode PMB</th>
@@ -145,29 +145,29 @@ export default function Index({ periodePmb, filters }) {
                             <tbody className="divide-y divide-[#e5e5e5]">
                                 {periodePmb.data.map((periode) => (
                                     <tr key={periode.id} className="hover:bg-[#fafafa]">
-                                        <td className="px-4 py-3">
+                                        <td data-label="Periode PMB" className="px-4 py-3">
                                             <div className="text-sm font-semibold text-neutral-900">{periode.nama_periode}</div>
                                             {periode.keterangan && (
                                                 <div className="text-xs text-neutral-500 mt-0.5">{periode.keterangan}</div>
                                             )}
                                         </td>
-                                        <td className="px-4 py-3 text-sm text-neutral-600">{periode.tahun_akademik}</td>
-                                        <td className="px-4 py-3 text-sm text-neutral-600">
+                                        <td data-label="Tahun Akademik" className="px-4 py-3 text-sm text-neutral-600">{periode.tahun_akademik}</td>
+                                        <td data-label="Tanggal" className="px-4 py-3 text-sm text-neutral-600">
                                             <div>Buka: {new Date(periode.tanggal_buka).toLocaleDateString('id-ID')}</div>
                                             <div>Tutup: {new Date(periode.tanggal_tutup).toLocaleDateString('id-ID')}</div>
                                         </td>
-                                        <td className="px-4 py-3 text-sm text-neutral-600">
+                                        <td data-label="Biaya & Kuota" className="px-4 py-3 text-sm text-neutral-600">
                                             <div>Biaya: Rp {periode.biaya_pendaftaran?.toLocaleString('id-ID') || 0}</div>
                                             <div>Kuota: {periode.kuota_total}</div>
                                         </td>
-                                        <td className="px-4 py-3">
+                                        <td data-label="Pendaftar" className="px-4 py-3">
                                             <CountPill
                                                 value={periode.calon_mahasiswas_count || 0}
                                                 label={`Sisa ${periode.kuota_total - (periode.calon_mahasiswas_count || 0)}`}
                                             />
                                         </td>
-                                        <td className="px-4 py-3"><StatusBadge status={periode.status} /></td>
-                                        <td className="px-4 py-3 text-right">
+                                        <td data-label="Status" className="px-4 py-3"><StatusBadge status={periode.status} /></td>
+                                        <td data-label="Aksi" className="px-4 py-3 text-right">
                                             <div className="flex items-center justify-end gap-2 flex-wrap">
                                                 <ActionButton href={route('admin.periode-pmb.show', periode.id)} variant="ghost">Lihat</ActionButton>
                                                 <ActionButton href={route('admin.periode-pmb.edit', periode.id)} variant="ghost">Edit</ActionButton>

@@ -162,7 +162,7 @@ class UserManagementController extends Controller
         };
 
         return redirect()->back()
-            ->with('success', "Password {$userType} {$user->name} berhasil direset!")
+            ->with('success', "Password {$userType} {$user->name} berhasil digenerate: {$randomPassword}")
             ->with('generated_password', $randomPassword);
     }
 

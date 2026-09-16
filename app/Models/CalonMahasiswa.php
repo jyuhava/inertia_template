@@ -163,6 +163,9 @@ class CalonMahasiswa extends Model
 
     public function isConvertedToMahasiswa()
     {
+        if (!$this->user_id) {
+            return false;
+        }
         return \App\Models\Mahasiswa::where('user_id', $this->user_id)->exists();
     }
 

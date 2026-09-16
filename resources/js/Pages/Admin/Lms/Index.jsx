@@ -4,7 +4,7 @@ import { Head, Link } from '@inertiajs/react';
 function Box({ children, className = '', padded = true, variant = 'white' }) {
     const variants = {
         white: 'bg-white border-[#e5e5e5]',
-        black: 'bg-black border-black text-white',
+        black: 'bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 border-transparent text-white rounded-2xl shadow-lg shadow-violet-500/20',
         gray: 'bg-[#f5f5f5] border-[#e5e5e5]',
     };
     return (
@@ -66,12 +66,12 @@ export default function Index({ courses }) {
         <AdminLayout title="LMS Admin">
             <Head title="LMS - Semua Kursus" />
 
-            <div className="p-6 lg:p-8 min-h-screen bg-[#fafafa]">
+            <div className="p-6 lg:p-8 min-h-dvh bg-[#fafafa]">
                 <Box variant="black" className="mb-6">
                     <div>
-                        <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-neutral-400 mb-1">Kontrol LMS</p>
+                        <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/75 mb-1">Kontrol LMS</p>
                         <h1 className="text-xl font-bold uppercase tracking-tight text-white">Daftar Kursus LMS</h1>
-                        <p className="mt-2 text-xs text-neutral-300 max-w-2xl">
+                        <p className="mt-2 text-xs text-white/85 max-w-2xl">
                             Pantau seluruh kursus LMS lintas prodi, dosen, dan kelas dari panel admin.
                         </p>
                     </div>
@@ -99,7 +99,7 @@ export default function Index({ courses }) {
                         </div>
                     ) : (
                         <div className="overflow-x-auto border border-[#e5e5e5]">
-                            <table className="min-w-full text-left">
+                            <table className="min-w-full text-left table-cards">
                                 <thead className="bg-[#f5f5f5] border-b border-[#e5e5e5]">
                                     <tr>
                                         <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-neutral-500">Mata Kuliah</th>
@@ -112,14 +112,14 @@ export default function Index({ courses }) {
                                 <tbody className="divide-y divide-[#e5e5e5]">
                                     {courses.map((course) => (
                                         <tr key={course.id} className="hover:bg-[#fafafa]">
-                                            <td className="px-4 py-3">
+                                            <td data-label="Mata Kuliah" className="px-4 py-3">
                                                 <p className="text-sm font-semibold text-neutral-900">{course.jadwal_kuliah?.mata_kuliah?.nama_mata_kuliah || '-'}</p>
                                                 <p className="text-xs text-neutral-500">{course.jadwal_kuliah?.mata_kuliah?.kode_mata_kuliah || '-'}</p>
                                             </td>
-                                            <td className="px-4 py-3 text-sm text-neutral-600">{course.jadwal_kuliah?.dosen?.nama_lengkap || '-'}</td>
-                                            <td className="px-4 py-3 text-sm text-neutral-600">{course.jadwal_kuliah?.mata_kuliah?.prodi?.nama_prodi || '-'}</td>
-                                            <td className="px-4 py-3 text-sm text-neutral-600">{course.chapters_count || 0} Bab</td>
-                                            <td className="px-4 py-3 text-right">
+                                            <td data-label="Dosen" className="px-4 py-3 text-sm text-neutral-600">{course.jadwal_kuliah?.dosen?.nama_lengkap || '-'}</td>
+                                            <td data-label="Prodi" className="px-4 py-3 text-sm text-neutral-600">{course.jadwal_kuliah?.mata_kuliah?.prodi?.nama_prodi || '-'}</td>
+                                            <td data-label="Jumlah Bab" className="px-4 py-3 text-sm text-neutral-600">{course.chapters_count || 0} Bab</td>
+                                            <td data-label="Aksi" className="px-4 py-3 text-right">
                                                 <ActionButton href={route('admin.lms-courses.show', course.id)} variant="primary">Lihat Detail</ActionButton>
                                             </td>
                                         </tr>

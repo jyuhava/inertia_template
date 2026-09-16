@@ -104,6 +104,35 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
     Route::post('periode-pmb/{periodePmb}/activate', [\App\Http\Controllers\Admin\PeriodePmbController::class, 'activate'])->name('periode-pmb.activate');
     Route::post('periode-pmb/{periodePmb}/deactivate', [\App\Http\Controllers\Admin\PeriodePmbController::class, 'deactivate'])->name('periode-pmb.deactivate');
     
+// LPM (Lembaga Penjaminan Mutu) routes
+    Route::prefix('lpm')->name('lpm.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\Lpm\DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/dashboard', [\App\Http\Controllers\Admin\Lpm\DashboardController::class, 'index'])->name('overview');
+
+        Route::post('programs/{program}/activate', [\App\Http\Controllers\Admin\Lpm\ProgramController::class, 'activate'])->name('programs.activate');
+        Route::post('programs/{program}/close', [\App\Http\Controllers\Admin\Lpm\ProgramController::class, 'close'])->name('programs.close');
+        Route::post('programs/{program}/reopen', [\App\Http\Controllers\Admin\Lpm\ProgramController::class, 'reopen'])->name('programs.reopen');
+        Route::post('programs/{program}/finalize', [\App\Http\Controllers\Admin\Lpm\ProgramController::class, 'finalize'])->name('programs.finalize');
+        Route::get('programs/{program}/template', [\App\Http\Controllers\Admin\Lpm\ProgramController::class, 'downloadTemplate'])->name('programs.download-template');
+        Route::resource('programs', \App\Http\Controllers\Admin\Lpm\ProgramController::class);
+
+        Route::post('proposals/{proposal}/verify-approve', [\App\Http\Controllers\Admin\Lpm\ProposalController::class, 'verifyApprove'])->name('proposals.verify-approve');
+        Route::post('proposals/{proposal}/verify-return', [\App\Http\Controllers\Admin\Lpm\ProposalController::class, 'verifyReturn'])->name('proposals.verify-return');
+        Route::post('proposals/{proposal}/verify-admin-approve', [\App\Http\Controllers\Admin\Lpm\ProposalController::class, 'verifyApproveAdmin'])->name('proposals.verify-admin-approve');
+        Route::post('proposals/{proposal}/reject', [\App\Http\Controllers\Admin\Lpm\ProposalController::class, 'reject'])->name('proposals.reject');
+        Route::post('proposals/{proposal}/assign-reviewers', [\App\Http\Controllers\Admin\Lpm\ProposalController::class, 'assignReviewers'])->name('proposals.assign-reviewers');
+        Route::post('proposals/{proposal}/decide-review', [\App\Http\Controllers\Admin\Lpm\ProposalController::class, 'decideReview'])->name('proposals.decide-review');
+        Route::post('proposals/{proposal}/fund', [\App\Http\Controllers\Admin\Lpm\ProposalController::class, 'fund'])->name('proposals.fund');
+        Route::post('proposals/{proposal}/contract', [\App\Http\Controllers\Admin\Lpm\ProposalController::class, 'storeContract'])->name('proposals.contract');
+        Route::post('proposals/{proposal}/start', [\App\Http\Controllers\Admin\Lpm\ProposalController::class, 'startOngoing'])->name('proposals.start');
+        Route::post('proposals/{proposal}/activities', [\App\Http\Controllers\Admin\Lpm\ProposalController::class, 'storeActivity'])->name('proposals.activities.store');
+        Route::get('proposals/{proposal}', [\App\Http\Controllers\Admin\Lpm\ProposalController::class, 'show'])->name('proposals.show');
+        Route::get('proposals', [\App\Http\Controllers\Admin\Lpm\ProposalController::class, 'index'])->name('proposals.index');
+
+        Route::post('reports/{report}/validate', [\App\Http\Controllers\Admin\Lpm\ProposalController::class, 'validateReport'])->name('reports.validate');
+        Route::post('outputs/{output}/validate', [\App\Http\Controllers\Admin\Lpm\ProposalController::class, 'validateOutput'])->name('outputs.validate');
+    });
+    
     Route::resource('dokumen-pmb', \App\Http\Controllers\Admin\DokumenPmbController::class);
     Route::post('dokumen-pmb/{dokumenPmb}/toggle-status', [\App\Http\Controllers\Admin\DokumenPmbController::class, 'toggleStatus'])->name('dokumen-pmb.toggle-status');
     
@@ -145,7 +174,13 @@ Route::middleware(['auth', 'verified', 'role:mahasiswa'])->prefix('mahasiswa')->
         
         // Absensi routes
         Route::get('/absensi', [\App\Http\Controllers\Mahasiswa\AbsensiController::class, 'index'])->name('absensi.index');
+        Route::get('/absensi/cetak', [\App\Http\Controllers\Mahasiswa\AbsensiController::class, 'cetak'])->name('absensi.cetak');
         Route::get('/absensi/{jadwalKuliah}', [\App\Http\Controllers\Mahasiswa\AbsensiController::class, 'show'])->name('absensi.show');
+        Route::get('/absensi/{jadwalKuliah}/cetak', [\App\Http\Controllers\Mahasiswa\AbsensiController::class, 'cetakDetail'])->name('absensi.detail.cetak');
+        
+        // Surat Keterangan Mahasiswa Aktif routes
+        Route::get('/surat-aktif', [\App\Http\Controllers\Mahasiswa\SuratAktifController::class, 'index'])->name('surat-aktif.index');
+        Route::get('/surat-aktif/cetak', [\App\Http\Controllers\Mahasiswa\SuratAktifController::class, 'cetak'])->name('surat-aktif.cetak');
         
         // LMS Routes
         Route::prefix('lms')->name('lms.')->group(function () {
@@ -220,6 +255,32 @@ Route::middleware(['auth', 'verified', 'role:dosen'])->prefix('dosen')->name('do
         Route::put('/assignments/{assignment}', [\App\Http\Controllers\Dosen\LmsContentController::class, 'updateAssignment'])->name('assignments.update');
         Route::put('/submissions/{submission}/grading', [\App\Http\Controllers\Dosen\LmsContentController::class, 'updateSubmissionGrade'])->name('submissions.grade');
         Route::delete('/assignments/{assignment}', [\App\Http\Controllers\Dosen\LmsContentController::class, 'deleteAssignment'])->name('assignments.delete');
+    });
+
+    // LPM (Pengabdian kepada Masyarakat) — Dosen
+    Route::prefix('lpm')->name('lpm.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Dosen\Lpm\ProposalController::class, 'index'])->name('proposals.index');
+        Route::get('/proposals/create', [\App\Http\Controllers\Dosen\Lpm\ProposalController::class, 'create'])->name('proposals.create');
+        Route::post('/proposals', [\App\Http\Controllers\Dosen\Lpm\ProposalController::class, 'store'])->name('proposals.store');
+
+        // Reviewer: penilaian proposal yang ditugaskan
+        Route::prefix('reviews')->name('reviews.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Dosen\Lpm\ReviewController::class, 'index'])->name('index');
+            Route::get('/{review}', [\App\Http\Controllers\Dosen\Lpm\ReviewController::class, 'edit'])->name('edit');
+            Route::put('/{review}', [\App\Http\Controllers\Dosen\Lpm\ReviewController::class, 'update'])->name('update');
+            Route::delete('/{review}', [\App\Http\Controllers\Dosen\Lpm\ReviewController::class, 'destroy'])->name('destroy');
+        });
+
+        Route::get('/{proposal}', [\App\Http\Controllers\Dosen\Lpm\ProposalController::class, 'show'])->name('proposals.show');
+        Route::get('/{proposal}/edit', [\App\Http\Controllers\Dosen\Lpm\ProposalController::class, 'edit'])->name('proposals.edit');
+        Route::put('/{proposal}', [\App\Http\Controllers\Dosen\Lpm\ProposalController::class, 'update'])->name('proposals.update');
+        Route::post('/{proposal}/submit', [\App\Http\Controllers\Dosen\Lpm\ProposalController::class, 'submit'])->name('proposals.submit');
+        Route::post('/{proposal}/confirm-membership', [\App\Http\Controllers\Dosen\Lpm\ProposalController::class, 'confirmMembership'])->name('proposals.confirm-membership');
+        Route::post('/{proposal}/documents', [\App\Http\Controllers\Dosen\Lpm\ProposalController::class, 'uploadDocument'])->name('proposals.documents.upload');
+        Route::delete('/documents/{document}', [\App\Http\Controllers\Dosen\Lpm\ProposalController::class, 'destroyDocument'])->name('proposals.documents.destroy');
+        Route::post('/{proposal}/reports', [\App\Http\Controllers\Dosen\Lpm\SubmissionController::class, 'uploadReport'])->name('proposals.reports.upload');
+        Route::post('/{proposal}/outputs', [\App\Http\Controllers\Dosen\Lpm\SubmissionController::class, 'storeOutput'])->name('proposals.outputs.store');
+        Route::put('/outputs/{output}', [\App\Http\Controllers\Dosen\Lpm\SubmissionController::class, 'updateOutput'])->name('proposals.outputs.update');
     });
 });
 

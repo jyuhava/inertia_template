@@ -5,7 +5,7 @@ import AdminLayout from '@/Layouts/AdminLayout';
 function Box({ children, className = '', padded = true, variant = 'white' }) {
     const variants = {
         white: 'bg-white border border-neutral-200',
-        black: 'bg-black text-white border border-black',
+        black: 'bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 border-transparent text-white rounded-2xl shadow-lg shadow-violet-500/20',
         gray: 'bg-neutral-50 border border-neutral-200',
     };
     return (
@@ -46,7 +46,7 @@ function StatusBadge({ status, label }) {
 function StatCard({ label, value, variant = 'white' }) {
     const map = {
         white: 'bg-white border border-neutral-200',
-        black: 'bg-black text-white border border-black',
+        black: 'bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 border-transparent text-white rounded-2xl shadow-lg shadow-violet-500/20',
         gray: 'bg-neutral-50 border border-neutral-200',
     };
     return (
@@ -70,21 +70,32 @@ export default function Detail({ auth, mahasiswa, jadwalKuliah, periodeKrs, abse
 
             <div className="space-y-6">
                 <Box variant="black" className="relative overflow-hidden">
-                    <div className="absolute right-0 top-0 h-20 w-20 bg-neutral-800" />
+                    <div className="absolute right-0 top-0 h-20 w-20 bg-white/10" />
                     <div className="relative flex flex-col justify-between gap-4 md:flex-row md:items-start">
                         <div>
-                            <p className="text-xs font-bold uppercase tracking-widest text-neutral-400">Detail Kehadiran</p>
+                            <p className="text-xs font-bold uppercase tracking-widest text-white/75">Detail Kehadiran</p>
                             <h1 className="mt-2 text-2xl font-bold md:text-3xl">{jadwalKuliah.nama_mata_kuliah}</h1>
-                            <p className="mt-1 text-sm text-neutral-300">
+                            <p className="mt-1 text-sm text-white/85">
                                 {jadwalKuliah.hari}, {jadwalKuliah.jam_mulai} - {jadwalKuliah.jam_selesai} • Ruang {jadwalKuliah.ruangan}
                             </p>
                         </div>
-                        <Link
-                            href="/mahasiswa/absensi"
-                            className="text-xs font-bold uppercase tracking-widest text-white hover:underline"
-                        >
-                            ← Kembali ke Daftar
-                        </Link>
+                        <div className="flex items-center gap-3">
+                            <a
+                                href={`/mahasiswa/absensi/${jadwalKuliah.id}/cetak?periode_krs_id=${periodeKrs.id}`}
+                                className="inline-flex items-center gap-2 rounded-lg bg-white px-3.5 py-2 text-xs font-bold uppercase tracking-widest text-neutral-900 shadow-sm transition hover:bg-white/85 active:scale-[0.98]"
+                            >
+                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                </svg>
+                                Cetak Detail
+                            </a>
+                            <Link
+                                href="/mahasiswa/absensi"
+                                className="text-xs font-bold uppercase tracking-widest text-white/85 hover:text-white hover:underline"
+                            >
+                                ← Kembali
+                            </Link>
+                        </div>
                     </div>
                 </Box>
 
@@ -160,7 +171,7 @@ export default function Detail({ auth, mahasiswa, jadwalKuliah, periodeKrs, abse
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
-                            <table className="min-w-full text-sm">
+                            <table className="min-w-full text-sm table-cards">
                                 <thead>
                                     <tr className="border-b border-neutral-200 text-left text-xs font-bold uppercase tracking-widest text-neutral-500">
                                         <th className="py-3 pr-4">Pertemuan</th>
@@ -173,15 +184,15 @@ export default function Detail({ auth, mahasiswa, jadwalKuliah, periodeKrs, abse
                                 <tbody className="divide-y divide-neutral-100">
                                     {absensiList.map((absensi) => (
                                         <tr key={absensi.id} className="hover:bg-neutral-50">
-                                            <td className="py-4 pr-4 font-bold text-neutral-900">Pertemuan {absensi.pertemuan_ke}</td>
-                                            <td className="py-4 pr-4 text-neutral-700">{absensi.tanggal_formatted}</td>
-                                            <td className="py-4 pr-4 text-center text-neutral-700">
+                                            <td data-label="Pertemuan" className="py-4 pr-4 font-bold text-neutral-900">Pertemuan {absensi.pertemuan_ke}</td>
+                                            <td data-label="Tanggal" className="py-4 pr-4 text-neutral-700">{absensi.tanggal_formatted}</td>
+                                            <td data-label="Jam" className="py-4 pr-4 text-center text-neutral-700">
                                                 {absensi.jam_mulai} - {absensi.jam_selesai}
                                             </td>
-                                            <td className="py-4 pr-4 text-center">
+                                            <td data-label="Status" className="py-4 pr-4 text-center">
                                                 <StatusBadge status={absensi.status} label={absensi.status_display} />
                                             </td>
-                                            <td className="py-4 text-neutral-500">{absensi.keterangan || '-'}</td>
+                                            <td data-label="Keterangan" className="py-4 text-neutral-500">{absensi.keterangan || '-'}</td>
                                         </tr>
                                     ))}
                                 </tbody>

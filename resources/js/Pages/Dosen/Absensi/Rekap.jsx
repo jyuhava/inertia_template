@@ -76,18 +76,18 @@ export default function Rekap({ dosen, periodeAktif, jadwalKuliah, mahasiswas })
             <Head title={`Rekap Absensi - ${jadwalKuliah.mata_kuliah?.nama_mata_kuliah || 'Kelas'}`} />
 
             <div className="space-y-6">
-                <section className="relative overflow-hidden border border-neutral-900 bg-neutral-900 p-7 text-white shadow-sm">
+                <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-600 shadow-teal-500/20 p-4 text-white shadow-lg sm:p-5">
                     <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
                         <div>
-                            <p className="text-xs font-semibold uppercase tracking-widest text-neutral-400">Analitik Kehadiran</p>
+                            <p className="text-xs font-semibold uppercase tracking-widest text-white/75">Analitik Kehadiran</p>
                             <h1 className="mt-2 text-2xl font-bold tracking-tight md:text-3xl">Rekap Absensi Mahasiswa</h1>
-                            <p className="mt-2 text-sm text-neutral-300">
+                            <p className="mt-2 text-sm text-white/85">
                                 {jadwalKuliah.mata_kuliah?.nama_mata_kuliah} • {jadwalKuliah.mata_kuliah?.kode_mata_kuliah}
                             </p>
-                            <p className="text-sm text-neutral-300">
+                            <p className="text-sm text-white/85">
                                 {jadwalKuliah.hari}, {formatTime(jadwalKuliah.jam_mulai)} - {formatTime(jadwalKuliah.jam_selesai)} • Ruang {jadwalKuliah.ruangan}
                             </p>
-                            <p className="mt-1 text-xs text-neutral-400">
+                            <p className="mt-1 text-xs text-white/75">
                                 Dosen: {dosen?.nama_lengkap || '-'}{periodeAktif ? ` • ${periodeAktif.nama_periode || 'Periode Aktif'}` : ''}
                             </p>
                         </div>

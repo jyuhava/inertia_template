@@ -23,3 +23,19 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+# PWA: tipe MIME manifest + service worker selalu diambil versi terbaru
+<IfModule mod_mime.c>
+    AddType application/manifest+json .webmanifest
+    AddType image/png .png
+</IfModule>
+
+<IfModule mod_headers.c>
+    <FilesMatch "^sw\.js$">
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+        Header set Service-Worker-Allowed "/"
+    </FilesMatch>
+    <FilesMatch "^manifest\.webmanifest$">
+        Header set Cache-Control "no-cache"
+    </FilesMatch>
+</IfModule>

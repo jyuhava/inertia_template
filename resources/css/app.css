@@ -161,3 +161,397 @@
 .ck-editor__editable {
     min-height: 400px !important;
 }
+
+/* ==========================================================================
+   Global Compact Density System
+   Compact, sleek, and comfortable without being too small or altering theme
+   ========================================================================== */
+
+/* 1. Global Tables (Compact row height & cell padding) */
+@media screen {
+    table:not(.no-compact) th {
+        padding-top: 0.5rem !important;    /* 8px */
+        padding-bottom: 0.5rem !important;
+        padding-left: 0.75rem !important;  /* 12px */
+        padding-right: 0.75rem !important;
+        font-size: 0.6875rem !important;  /* 11px */
+        letter-spacing: 0.08em;
+    }
+
+    table:not(.no-compact) td {
+        padding-top: 0.55rem !important;   /* ~9px - compact and readable */
+        padding-bottom: 0.55rem !important;
+        padding-left: 0.75rem !important;  /* 12px */
+        padding-right: 0.75rem !important;
+        font-size: 0.8125rem !important;  /* 13px */
+        line-height: 1.25rem !important;
+    }
+}
+
+/* 2. Global Form Inputs & Selects */
+input[type="text"]:not(.no-compact),
+input[type="email"]:not(.no-compact),
+input[type="password"]:not(.no-compact),
+input[type="number"]:not(.no-compact),
+input[type="search"]:not(.no-compact),
+input[type="tel"]:not(.no-compact),
+input[type="url"]:not(.no-compact),
+input[type="date"]:not(.no-compact),
+input[type="time"]:not(.no-compact),
+select:not(.no-compact) {
+    padding-top: 0.375rem !important;  /* 6px */
+    padding-bottom: 0.375rem !important;
+    padding-left: 0.625rem !important; /* 10px */
+    padding-right: 0.625rem !important;
+    font-size: 0.8125rem !important;   /* 13px */
+    min-height: 2.125rem !important;   /* 34px - comfortable touch/click */
+}
+
+/* 3. Global Cards / Boxes in Admin / Mahasiswa / Dosen / Raker */
+.border.p-5,
+.border.p-6,
+.rounded-lg.p-6,
+.rounded-lg.p-5 {
+    padding: 1rem !important; /* 16px */
+}
+
+@media (min-width: 640px) {
+    .border.sm\:p-5,
+    .border.sm\:p-6,
+    .rounded-lg.sm\:p-5,
+    .rounded-lg.sm\:p-6 {
+        padding: 1.125rem !important; /* 18px */
+    }
+}
+
+/* 4. Tighter rhythm for admin grids and section spacing */
+.space-y-6 > :not([hidden]) ~ :not([hidden]) {
+    --tw-space-y-reverse: 0;
+    margin-top: calc(1rem * calc(1 - var(--tw-space-y-reverse))) !important;
+    margin-bottom: calc(1rem * var(--tw-space-y-reverse)) !important;
+}
+
+.gap-6 {
+    gap: 1rem !important;
+}
+
+.mb-6 {
+    margin-bottom: 1rem !important;
+}
+
+.mb-8 {
+    margin-bottom: 1.25rem !important;
+}
+
+/* 5. Tighter Action Buttons and Badges across pages */
+button[class*="tracking-widest"].px-4.py-2,
+a[class*="tracking-widest"].px-4.py-2 {
+    padding-top: 0.375rem !important;
+    padding-bottom: 0.375rem !important;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+    font-size: 0.6875rem !important;
+}
+
+span[class*="tracking-wider"].px-3.py-1,
+span[class*="tracking-widest"].px-3.py-1,
+span[class*="tracking-wide"].px-3.py-1 {
+    padding-top: 0.15rem !important;
+    padding-bottom: 0.15rem !important;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+}
+
+/* ==========================================================================
+   MOBILE RESPONSIVE & COMPACT LAYER
+   Sasaran: mahasiswa, dosen, admin. Acuan utama lebar 360–430px.
+   ========================================================================== */
+
+/* 1. Dasar viewport — cegah teks ikut membesar saat rotasi & scroll horizontal liar */
+html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
+body {
+    overflow-x: hidden;
+    overflow-wrap: break-word;
+}
+
+/* 2. Ruang aman perangkat berponi (notch / home indicator) */
+.safe-top {
+    padding-top: env(safe-area-inset-top, 0px);
+}
+
+.safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Tinggi penuh yang benar di browser mobile (address bar dinamis) */
+.h-dvh {
+    height: 100vh;
+    height: 100dvh;
+}
+
+.min-h-dvh {
+    min-height: 100vh;
+    min-height: 100dvh;
+}
+
+/* Jarak bawah untuk konten yang tertutup bottom navigation di ponsel */
+.pb-mobile-nav {
+    padding-bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px));
+}
+
+@media (min-width: 1024px) {
+    .pb-mobile-nav {
+        padding-bottom: 0;
+    }
+}
+
+/* 3. Wadah scroll horizontal (tabel, chip, tab) — halus di layar sentuh */
+.overflow-x-auto,
+.table-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+}
+
+.overflow-x-auto::-webkit-scrollbar,
+.table-scroll::-webkit-scrollbar {
+    height: 5px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-track,
+.table-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb,
+.table-scroll::-webkit-scrollbar-thumb {
+    background: #d4d4d4;
+}
+
+/* 4. Tabel panjang: header lengket saat menggulir, kolom pertama bisa dipatok */
+.table-scroll {
+    position: relative;
+}
+
+.table-scroll--sticky-col table th:first-child,
+.table-scroll--sticky-col table td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: #ffffff;
+    box-shadow: 1px 0 0 0 #e5e5e5;
+}
+
+.table-scroll--sticky-col table thead th:first-child {
+    z-index: 3;
+    background: #fafafa;
+}
+
+/* 5. Safety net: grid yang belum punya breakpoint tidak boleh pecah di ponsel */
+@media (max-width: 639px) {
+    .grid[class*="grid-cols-3"]:not([class*="sm:grid-cols-"]):not([class*="md:grid-cols-"]):not([class*="lg:grid-cols-"]):not([class*="xl:grid-cols-"]),
+    .grid[class*="grid-cols-4"]:not([class*="sm:grid-cols-"]):not([class*="md:grid-cols-"]):not([class*="lg:grid-cols-"]):not([class*="xl:grid-cols-"]),
+    .grid[class*="grid-cols-5"]:not([class*="sm:grid-cols-"]):not([class*="md:grid-cols-"]):not([class*="lg:grid-cols-"]):not([class*="xl:grid-cols-"]),
+    .grid[class*="grid-cols-6"]:not([class*="sm:grid-cols-"]):not([class*="md:grid-cols-"]):not([class*="lg:grid-cols-"]):not([class*="xl:grid-cols-"]) {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+/* 6. Density lebih rapat di layar kecil (tanpa mengubah tema) */
+@media (max-width: 639px) {
+    .p-5,
+    .border.p-5,
+    .rounded-lg.p-5 {
+        padding: 0.875rem !important;
+    }
+
+    .p-6,
+    .border.p-6,
+    .rounded-lg.p-6 {
+        padding: 0.9375rem !important;
+    }
+
+    .p-7 {
+        padding: 1rem !important;
+    }
+
+    .p-8 {
+        padding: 1.25rem !important;
+    }
+
+    .gap-5 {
+        gap: 0.75rem !important;
+    }
+
+    .gap-6 {
+        gap: 0.875rem !important;
+    }
+
+    .space-y-5 > :not([hidden]) ~ :not([hidden]) {
+        margin-top: 0.75rem !important;
+    }
+
+    .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+        margin-top: 0.875rem !important;
+    }
+
+    .space-y-8 > :not([hidden]) ~ :not([hidden]) {
+        margin-top: 1rem !important;
+    }
+}
+
+/* 7. Utilitas bantu untuk sweep halaman */
+.hide-mobile {
+    display: none !important;
+}
+
+@media (min-width: 768px) {
+    .hide-mobile {
+        display: revert !important;
+    }
+
+    .mobile-only {
+        display: none !important;
+    }
+}
+
+/* Toolbar filter/aksi: selalu boleh wrap di ponsel */
+.toolbar-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+@media (max-width: 767px) {
+    /* Baris judul/aksi jangan memaksa konten keluar layar — biarkan turun baris */
+    .flex.justify-between,
+    .flex.justify-end {
+        flex-wrap: wrap;
+        row-gap: 0.5rem;
+    }
+}
+
+/* 8. Tabel → daftar kartu di ponsel (opt-in: class "table-cards" + data-label per td) */
+@media (max-width: 767px) {
+    .table-cards {
+        min-width: 0 !important;
+        width: 100%;
+    }
+
+    .table-cards thead {
+        display: none;
+    }
+
+    .table-cards tbody tr {
+        display: block;
+        margin-bottom: 0.625rem;
+        border: 1px solid #e4e4e7;
+        background: #ffffff;
+        padding: 0.75rem 0.875rem;
+    }
+
+    .table-cards tbody tr:last-child {
+        margin-bottom: 0;
+    }
+
+    .table-cards tbody td {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: 0.3125rem 0 !important;
+        border: 0 !important;
+        text-align: left !important;
+        white-space: normal !important;
+        font-size: 0.8125rem !important;
+        line-height: 1.25rem !important;
+    }
+
+    .table-cards tbody td::before {
+        content: attr(data-label);
+        flex: 0 0 38%;
+        padding-top: 0.1rem;
+        font-size: 0.625rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #737373;
+    }
+
+    .table-cards tbody td:not([data-label])::before,
+    .table-cards tbody td[data-label=""]::before {
+        content: none;
+    }
+
+    .table-cards tbody td > * {
+        min-width: 0;
+    }
+
+    .table-cards tbody td[data-label="Aksi"],
+    .table-cards tbody td[data-label="Action"] {
+        justify-content: flex-end;
+        padding-top: 0.5rem !important;
+        margin-top: 0.25rem;
+        border-top: 1px solid #f0f0f0 !important;
+    }
+
+    .table-cards tbody td[data-label="Aksi"]::before,
+    .table-cards tbody td[data-label="Action"]::before {
+        content: none;
+    }
+
+    /* Baris empty-state tetap tampil wajar */
+    .table-cards tbody tr.table-cards-empty {
+        border: 1px dashed #d4d4d4;
+        background: #fafafa;
+        text-align: center;
+    }
+
+    .table-cards tbody tr.table-cards-empty td {
+        display: block;
+        text-align: center !important;
+    }
+
+    .table-cards tbody tr.table-cards-empty td::before {
+        content: none;
+    }
+}
+
+/* 9. Nyaman disentuh & cegah zoom otomatis iOS saat fokus input */
+@media (max-width: 767px) {
+    button,
+    a,
+    [role="button"],
+    input,
+    select,
+    textarea,
+    label {
+        touch-action: manipulation;
+    }
+
+    input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]),
+    select,
+    textarea {
+        font-size: 16px !important;
+    }
+
+    /* Tombol aksi minimal 40px agar tidak salah tekan */
+    button[class*="py-1.5"],
+    button[class*="py-2"],
+    a[class*="px-3"][class*="py-2"],
+    a[class*="px-4"][class*="py-2"] {
+        min-height: 2.5rem;
+    }
+
+    /* Pagination & baris aksi tabel tidak meluber */
+    .pagination-compact {
+        flex-wrap: wrap;
+        gap: 0.25rem;
+    }
+}
+

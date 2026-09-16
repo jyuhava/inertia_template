@@ -5,7 +5,7 @@ import AdminLayout from '@/Layouts/AdminLayout';
 function Box({ children, className = '', padded = true, variant = 'white' }) {
     const variants = {
         white: 'bg-white border border-neutral-200',
-        black: 'bg-black text-white border border-black',
+        black: 'bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 border-transparent text-white rounded-2xl shadow-lg shadow-violet-500/20',
         gray: 'bg-neutral-50 border border-neutral-200',
     };
     return (
@@ -96,12 +96,12 @@ export default function Index({ mahasiswa, hasUploaded, komitmenUrl, flash }) {
 
             <div className="max-w-5xl mx-auto space-y-6">
                 <Box variant="black" className="text-center relative overflow-hidden">
-                    <div className="absolute right-0 top-0 h-32 w-32 bg-neutral-800/30" />
-                    <div className="absolute bottom-0 left-0 h-24 w-24 bg-neutral-800/20" />
+                    <div className="absolute right-0 top-0 h-32 w-32 bg-white/10" />
+                    <div className="absolute bottom-0 left-0 h-24 w-24 bg-white/10" />
                     <div className="relative">
-                        <p className="text-xs font-bold uppercase tracking-widest text-neutral-400">STIT AL-WAFI BOGOR</p>
+                        <p className="text-xs font-bold uppercase tracking-widest text-white/75">STIT AL-WAFI BOGOR</p>
                         <h1 className="mt-1 text-2xl font-bold md:text-3xl">Surat Komitmen Mahasiswa</h1>
-                        <p className="mt-2 text-sm text-neutral-300">Upload surat komitmen untuk mengakses fitur akademik.</p>
+                        <p className="mt-2 text-sm text-white/85">Upload surat komitmen untuk mengakses fitur akademik.</p>
                     </div>
                 </Box>
 

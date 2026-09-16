@@ -4,35 +4,47 @@ import { useMemo, useState } from 'react';
 import InputError from '@/Components/InputError';
 import Modal from '@/Components/Modal';
 import RichTextEditor from '@/Components/RichTextEditor';
+import {
+    AcademicCapIcon,
+    ArrowDownTrayIcon,
+    ArrowLeftIcon,
+    BookOpenIcon,
+    CalendarDaysIcon,
+    ChatBubbleLeftRightIcon,
+    CheckCircleIcon,
+    ChevronRightIcon,
+    ClipboardDocumentListIcon,
+    DocumentTextIcon,
+    ExclamationTriangleIcon,
+    PaperClipIcon,
+    Squares2X2Icon,
+    UserIcon,
+} from '@heroicons/react/24/outline';
 
-function Box({ children, className = '', padded = true, variant = 'white' }) {
-    const variants = {
-        white: 'bg-white border border-neutral-200',
-        black: 'bg-black text-white border border-black',
-        gray: 'bg-neutral-50 border border-neutral-200',
-    };
-    return (
-        <div className={`${variants[variant] || variants.white} ${padded ? 'p-5' : ''} ${className}`}>
-            {children}
-        </div>
-    );
-}
+/* ------------------------------------------------------------------ */
+/* Design tokens                                                       */
+/* ------------------------------------------------------------------ */
 
-function SectionTitle({ children, action }) {
-    return (
-        <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-sm font-bold uppercase tracking-widest text-neutral-900">{children}</h2>
-            {action ? <div>{action}</div> : null}
-        </div>
-    );
-}
+const TONES = {
+    indigo: { icon: 'bg-brand-50 text-brand-600', chip: 'bg-brand-50 text-brand-700', bar: 'bg-brand-600' },
+    emerald: { icon: 'bg-emerald-50 text-emerald-600', chip: 'bg-emerald-50 text-emerald-700', bar: 'bg-emerald-500' },
+    violet: { icon: 'bg-brand-100 text-brand-700', chip: 'bg-brand-100 text-brand-700', bar: 'bg-brand-700' },
+    amber: { icon: 'bg-amber-50 text-amber-600', chip: 'bg-amber-50 text-amber-700', bar: 'bg-amber-500' },
+    sky: { icon: 'bg-brand-50 text-brand-600', chip: 'bg-brand-50 text-brand-700', bar: 'bg-brand-600' },
+    rose: { icon: 'bg-rose-50 text-rose-600', chip: 'bg-rose-50 text-rose-700', bar: 'bg-rose-500' },
+    neutral: { icon: 'bg-neutral-100 text-neutral-500', chip: 'bg-neutral-100 text-neutral-600', bar: 'bg-neutral-400' },
+};
+
+/* ------------------------------------------------------------------ */
+/* Primitives                                                          */
+/* ------------------------------------------------------------------ */
 
 function ActionButton({ children, onClick, href, variant = 'primary', type = 'button', disabled = false }) {
     const map = {
         primary: 'bg-neutral-900 text-white hover:bg-neutral-800',
         secondary: 'bg-white text-neutral-900 border border-neutral-200 hover:bg-neutral-50',
     };
-    const base = `inline-flex items-center px-4 py-2 text-xs font-bold uppercase tracking-widest transition-colors ${map[variant]}`;
+    const base = `inline-flex items-center justify-center rounded-lg px-3.5 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${map[variant]}`;
 
     if (href) {
         return (
@@ -49,42 +61,139 @@ function ActionButton({ children, onClick, href, variant = 'primary', type = 'bu
     );
 }
 
-function StatCard({ label, value, variant = 'white' }) {
+function StatCell({ icon: Icon, label, value, suffix, tone = 'indigo' }) {
+    const t = TONES[tone];
     return (
-        <Box variant={variant} className="relative overflow-hidden text-center">
-            <div className="absolute right-0 top-0 h-10 w-10 bg-neutral-100" />
-            <p className="text-xs font-bold uppercase tracking-widest text-neutral-500">{label}</p>
-            <p className="mt-2 text-3xl font-bold">{value}</p>
-        </Box>
+        <div className="flex items-center gap-2.5 bg-white p-3">
+            <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${t.icon}`}>
+                <Icon className="h-4 w-4" />
+            </span>
+            <div className="min-w-0">
+                <p className="flex items-baseline gap-1 leading-none">
+                    <span className="text-lg font-bold text-neutral-900">{value}</span>
+                    {suffix ? <span className="text-[11px] font-semibold text-neutral-400">{suffix}</span> : null}
+                </p>
+                <p className="mt-1 truncate text-[10px] font-bold uppercase tracking-wider text-neutral-500">{label}</p>
+            </div>
+        </div>
     );
 }
 
-function Pill({ label, variant = 'default' }) {
-    const map = {
-        default: 'bg-neutral-100 text-neutral-700',
-        success: 'bg-neutral-900 text-white',
-        warning: 'bg-neutral-200 text-neutral-900',
-        info: 'bg-neutral-50 text-neutral-700 border border-neutral-200',
-    };
-    return <span className={`px-2.5 py-1 text-xs font-bold ${map[variant] || map.default}`}>{label}</span>;
+function CountChip({ icon: Icon, count, tone }) {
+    if (!count) return null;
+    const t = TONES[tone];
+    return (
+        <span className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold ${t.chip}`}>
+            <Icon className="h-3 w-3" />
+            {count}
+        </span>
+    );
 }
 
 function EmptyMini({ text }) {
-    return <div className="bg-neutral-50 p-3 text-sm text-neutral-500">{text}</div>;
+    return (
+        <div className="rounded-lg border border-dashed border-neutral-200 bg-neutral-50/60 px-2.5 py-3 text-center text-[11px] text-neutral-400">
+            {text}
+        </div>
+    );
 }
+
+/* ------------------------------------------------------------------ */
+/* Rows                                                                */
+/* ------------------------------------------------------------------ */
+
+function MaterialRow({ material, done }) {
+    const t = done ? TONES.emerald : TONES.indigo;
+    return (
+        <Link
+            href={route('mahasiswa.lms.materials.show', material.id)}
+            className="group flex items-center gap-2.5 rounded-lg border border-neutral-200 bg-white px-2.5 py-2 transition hover:border-neutral-300 hover:bg-neutral-50"
+        >
+            <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${t.icon}`}>
+                {done ? <CheckCircleIcon className="h-4 w-4" /> : <DocumentTextIcon className="h-4 w-4" />}
+            </span>
+            <div className="min-w-0 flex-1">
+                <p className="truncate text-xs font-semibold text-neutral-900">{material.title}</p>
+                <p className="truncate text-[10px] uppercase tracking-wider text-neutral-400">
+                    {material.type || 'Materi'}
+                    {done ? ' • selesai' : ''}
+                </p>
+            </div>
+            <ChevronRightIcon className="h-3.5 w-3.5 shrink-0 text-neutral-300 transition group-hover:translate-x-0.5 group-hover:text-neutral-500" />
+        </Link>
+    );
+}
+
+function AssignmentRow({ assignment, submission, onOpen }) {
+    const submitted = !!submission;
+    const t = submitted ? TONES.emerald : TONES.amber;
+    return (
+        <button
+            type="button"
+            onClick={onOpen}
+            className="group flex w-full items-center gap-2.5 rounded-lg border border-neutral-200 bg-white px-2.5 py-2 text-left transition hover:border-neutral-300 hover:bg-neutral-50"
+        >
+            <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${t.icon}`}>
+                {submitted ? <CheckCircleIcon className="h-4 w-4" /> : <ClipboardDocumentListIcon className="h-4 w-4" />}
+            </span>
+            <div className="min-w-0 flex-1">
+                <p className="truncate text-xs font-semibold text-neutral-900">{assignment.title}</p>
+                <p className="truncate text-[10px] uppercase tracking-wider text-neutral-400">
+                    {submitted ? 'Sudah dikumpulkan' : 'Belum dikumpulkan'}
+                </p>
+            </div>
+            <span className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-bold ${t.chip}`}>
+                {submitted ? 'Terkumpul' : 'Kumpulkan'}
+            </span>
+        </button>
+    );
+}
+
+function ForumRow({ forum }) {
+    return (
+        <Link
+            href={route('mahasiswa.lms.forums.show', forum.id)}
+            className="group flex items-center gap-2.5 rounded-lg border border-neutral-200 bg-white px-2.5 py-2 transition hover:border-neutral-300 hover:bg-neutral-50"
+        >
+            <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${TONES.sky.icon}`}>
+                <ChatBubbleLeftRightIcon className="h-4 w-4" />
+            </span>
+            <div className="min-w-0 flex-1">
+                <p className="truncate text-xs font-semibold text-neutral-900">{forum.title}</p>
+                <p className="truncate text-[10px] uppercase tracking-wider text-neutral-400">
+                    {forum.threads_count || 0} thread
+                </p>
+            </div>
+            {forum.is_active ? (
+                <span className="shrink-0 rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">
+                    Aktif
+                </span>
+            ) : (
+                <span className="shrink-0 rounded-md bg-neutral-100 px-1.5 py-0.5 text-[10px] font-bold text-neutral-500">
+                    Nonaktif
+                </span>
+            )}
+        </Link>
+    );
+}
+
+/* ------------------------------------------------------------------ */
+/* Page                                                                */
+/* ------------------------------------------------------------------ */
 
 export default function Show({ course, progress, submissions }) {
     const [selectedAssignment, setSelectedAssignment] = useState(null);
 
     const chapters = course?.chapters || [];
+    const mataKuliah = course?.jadwal_kuliah?.mata_kuliah;
+    const jadwal = course?.jadwal_kuliah;
 
     const stats = useMemo(() => {
-        const totalMaterials = chapters.reduce((sum, chapter) => sum + (chapter.materials?.length || 0), 0);
-        const totalAssignments = chapters.reduce((sum, chapter) => sum + (chapter.assignments?.length || 0), 0);
-        const totalForums = chapters.reduce((sum, chapter) => sum + (chapter.forums?.length || 0), 0);
+        const totalMaterials = chapters.reduce((sum, c) => sum + (c.materials?.length || 0), 0);
+        const totalAssignments = chapters.reduce((sum, c) => sum + (c.assignments?.length || 0), 0);
+        const totalForums = chapters.reduce((sum, c) => sum + (c.forums?.length || 0), 0);
         const completedMaterials = Object.keys(progress || {}).length;
         const submittedAssignments = Object.keys(submissions || {}).length;
-        const pendingAssignments = Math.max(0, totalAssignments - submittedAssignments);
 
         return {
             totalMaterials,
@@ -92,191 +201,202 @@ export default function Show({ course, progress, submissions }) {
             totalForums,
             completedMaterials,
             submittedAssignments,
-            pendingAssignments,
+            pendingAssignments: Math.max(0, totalAssignments - submittedAssignments),
         };
     }, [chapters, progress, submissions]);
 
     const progressPercent = stats.totalMaterials ? Math.round((stats.completedMaterials / stats.totalMaterials) * 100) : 0;
 
+    const schedule = [jadwal?.hari, jadwal?.jam_mulai].filter(Boolean).join(', ');
+
     return (
-        <AdminLayout title={`LMS: ${course.jadwal_kuliah?.mata_kuliah?.nama_mata_kuliah || 'Kelas'}`}>
-            <Head title={`LMS - ${course.jadwal_kuliah?.mata_kuliah?.nama_mata_kuliah || 'Kelas'}`} />
+        <AdminLayout title={`LMS: ${mataKuliah?.nama_mata_kuliah || 'Kelas'}`}>
+            <Head title={`LMS - ${mataKuliah?.nama_mata_kuliah || 'Kelas'}`} />
 
-            <div className="space-y-6">
-                <Box variant="black" className="relative overflow-hidden">
-                    <div className="absolute right-0 top-0 h-24 w-24 bg-neutral-800" />
-                    <div className="absolute bottom-0 left-0 h-16 w-16 bg-neutral-800" />
+            <div className="space-y-3">
+                {/* Hero */}
+                <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-brand-900 via-brand-800 to-brand-700 px-4 py-3.5 shadow-md shadow-brand-900/25">
+                    <div className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full bg-white/10" />
+                    <div className="pointer-events-none absolute -bottom-12 -left-6 h-28 w-28 rounded-full bg-white/10" />
 
-                    <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-                        <div className="max-w-3xl">
-                            <p className="text-xs font-bold uppercase tracking-widest text-neutral-400">Course Workspace</p>
-                            <h1 className="mt-2 text-2xl font-bold md:text-3xl">{course.jadwal_kuliah?.mata_kuliah?.nama_mata_kuliah}</h1>
-                            <p className="mt-2 text-sm text-neutral-300">
-                                Dosen: {course.jadwal_kuliah?.dosen?.nama_lengkap || '-'} • {course.jadwal_kuliah?.hari || '-'}
-                            </p>
-                            <p className="mt-1 text-sm text-neutral-300">{course.description || 'Tidak ada deskripsi kelas.'}</p>
+                    <div className="relative flex flex-wrap items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.15em] text-white ring-1 ring-white/20">
+                                <AcademicCapIcon className="h-3 w-3" />
+                                Course Workspace
+                            </span>
+
+                            <h1 className="mt-2 text-lg font-bold leading-tight text-white md:text-xl">
+                                {mataKuliah?.nama_mata_kuliah || 'Kelas'}
+                            </h1>
+
+                            <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-white/85">
+                                <span className="inline-flex items-center gap-1">
+                                    <UserIcon className="h-3.5 w-3.5 text-white/70" />
+                                    {jadwal?.dosen?.nama_lengkap || '-'}
+                                </span>
+                                {schedule ? (
+                                    <span className="inline-flex items-center gap-1">
+                                        <CalendarDaysIcon className="h-3.5 w-3.5 text-white/70" />
+                                        {schedule}
+                                    </span>
+                                ) : null}
+                                {jadwal?.ruangan ? (
+                                    <span className="inline-flex items-center gap-1">
+                                        <Squares2X2Icon className="h-3.5 w-3.5 text-white/70" />
+                                        {jadwal.ruangan}
+                                    </span>
+                                ) : null}
+                                {mataKuliah?.sks ? <span className="font-bold text-white/90">{mataKuliah.sks} SKS</span> : null}
+                            </div>
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-2">
-                            <span className="border border-white/30 bg-white/10 px-2.5 py-1 text-xs font-bold">{chapters.length} Bab</span>
-                            <span className="border border-white/30 bg-white/10 px-2.5 py-1 text-xs font-bold">{progressPercent}% Progress</span>
-                            <ActionButton href={route('mahasiswa.lms.index')} variant="secondary">← Kembali</ActionButton>
+                        <Link
+                            href={route('mahasiswa.lms.index')}
+                            className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-neutral-900 shadow-sm transition hover:bg-white/85"
+                        >
+                            <ArrowLeftIcon className="h-3.5 w-3.5" />
+                            Kembali
+                        </Link>
+                    </div>
+
+                    {/* Inline progress */}
+                    <div className="relative mt-3">
+                        <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-white/80">
+                            <span>Progress Belajar</span>
+                            <span>
+                                {stats.completedMaterials}/{stats.totalMaterials} materi • {progressPercent}%
+                            </span>
+                        </div>
+                        <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-white/25">
+                            <div
+                                className="h-full rounded-full bg-white transition-all duration-500"
+                                style={{ width: `${progressPercent}%` }}
+                            />
                         </div>
                     </div>
-                </Box>
+                </div>
 
-                <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-6">
-                    <StatCard label="Total Materi" value={stats.totalMaterials} />
-                    <StatCard label="Sudah Dipelajari" value={stats.completedMaterials} variant="black" />
-                    <StatCard label="Total Tugas" value={stats.totalAssignments} />
-                    <StatCard label="Forum" value={stats.totalForums} variant="gray" />
-                    <StatCard label="Terkumpul" value={stats.submittedAssignments} variant="black" />
-                    <StatCard label="Belum Terkumpul" value={stats.pendingAssignments} />
+                {/* Compact stat strip */}
+                <section className="grid grid-cols-2 gap-px overflow-hidden rounded-xl bg-neutral-200 shadow-sm ring-1 ring-neutral-200 lg:grid-cols-5">
+                    <StatCell icon={Squares2X2Icon} label="Total Bab" value={chapters.length} tone="indigo" />
+                    <StatCell
+                        icon={BookOpenIcon}
+                        label="Materi Selesai"
+                        value={stats.completedMaterials}
+                        suffix={`/${stats.totalMaterials}`}
+                        tone="emerald"
+                    />
+                    <StatCell
+                        icon={ClipboardDocumentListIcon}
+                        label="Tugas Terkumpul"
+                        value={stats.submittedAssignments}
+                        suffix={`/${stats.totalAssignments}`}
+                        tone="violet"
+                    />
+                    <StatCell icon={ChatBubbleLeftRightIcon} label="Forum Diskusi" value={stats.totalForums} tone="sky" />
+                    <StatCell
+                        icon={ExclamationTriangleIcon}
+                        label="Belum Dikumpul"
+                        value={stats.pendingAssignments}
+                        tone={stats.pendingAssignments > 0 ? 'rose' : 'neutral'}
+                    />
                 </section>
 
-                <Box>
-                    <div className="mb-2 flex items-center justify-between">
-                        <p className="text-sm font-bold text-neutral-600">Progress Belajar Materi</p>
-                        <p className="text-sm font-bold text-neutral-800">{progressPercent}%</p>
-                    </div>
-                    <div className="h-2.5 w-full bg-neutral-100">
-                        <div
-                            className="h-full bg-neutral-900 transition-all duration-500"
-                            style={{ width: `${progressPercent}%` }}
-                        />
-                    </div>
-                    <p className="mt-2 text-xs text-neutral-500">
-                        {stats.completedMaterials} dari {stats.totalMaterials} materi sudah dipelajari.
-                    </p>
-                </Box>
-
+                {/* Chapters */}
                 {chapters.length === 0 ? (
-                    <div className="border border-dashed border-neutral-300 bg-white p-12 text-center text-sm text-neutral-500">
-                        Belum ada konten di kelas ini.
+                    <div className="rounded-xl border border-dashed border-neutral-300 bg-white p-8 text-center">
+                        <span className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-100 text-neutral-400">
+                            <BookOpenIcon className="h-5 w-5" />
+                        </span>
+                        <p className="mt-3 text-sm font-bold text-neutral-900">Belum ada konten</p>
+                        <p className="mx-auto mt-1 max-w-sm text-[11px] text-neutral-500">
+                            Dosen belum menambahkan bab, materi, atau tugas pada kelas ini.
+                        </p>
                     </div>
                 ) : (
-                    <section className="space-y-5">
+                    <section className="space-y-3">
                         {chapters.map((chapter, idx) => {
                             const chapterMaterials = chapter.materials || [];
                             const chapterAssignments = chapter.assignments || [];
                             const chapterForums = chapter.forums || [];
-                            const chapterCompleted = chapterMaterials.filter((material) => !!progress?.[material.id]).length;
+                            const chapterCompleted = chapterMaterials.filter((m) => !!progress?.[m.id]).length;
 
                             return (
-                                <article key={chapter.id} className="overflow-hidden bg-white shadow-sm ring-1 ring-neutral-200">
-                                    <div className="border-b border-neutral-200 bg-neutral-50 p-4 sm:p-5">
-                                        <div className="flex flex-wrap items-start justify-between gap-3">
-                                            <div>
-                                                <p className="text-xs font-bold uppercase tracking-widest text-neutral-500">Bab {idx + 1}</p>
-                                                <h2 className="text-lg font-bold text-neutral-900">{chapter.title}</h2>
+                                <article
+                                    key={chapter.id}
+                                    className="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-neutral-200"
+                                >
+                                    {/* Chapter header */}
+                                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-200 bg-neutral-50 px-3 py-2.5">
+                                        <div className="flex min-w-0 items-center gap-2.5">
+                                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-[11px] font-black text-brand-700">
+                                                {String(idx + 1).padStart(2, '0')}
+                                            </span>
+                                            <div className="min-w-0">
+                                                <h2 className="truncate text-[13px] font-bold text-neutral-900">{chapter.title}</h2>
+                                                <p className="text-[10px] text-neutral-500">
+                                                    {chapterCompleted}/{chapterMaterials.length} materi selesai
+                                                </p>
                                             </div>
-                                            <div className="flex flex-wrap gap-2">
-                                                <Pill label={`${chapterMaterials.length} Materi`} />
-                                                <Pill label={`${chapterAssignments.length} Tugas`} variant="warning" />
-                                                <Pill label={`${chapterForums.length} Forum`} variant="info" />
-                                                <Pill label={`${chapterCompleted} Selesai`} variant="success" />
-                                            </div>
+                                        </div>
+
+                                        <div className="flex flex-wrap items-center gap-1.5">
+                                            <CountChip icon={BookOpenIcon} count={chapterMaterials.length} tone="indigo" />
+                                            <CountChip icon={ClipboardDocumentListIcon} count={chapterAssignments.length} tone="violet" />
+                                            <CountChip icon={ChatBubbleLeftRightIcon} count={chapterForums.length} tone="sky" />
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-1 gap-4 p-4 sm:p-5 lg:grid-cols-12">
+                                    {/* Chapter body */}
+                                    <div className="grid grid-cols-1 gap-3 p-3 lg:grid-cols-12">
                                         <div className="lg:col-span-7">
-                                            <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-neutral-500">Materi</h3>
-                                            <div className="space-y-2">
+                                            <h3 className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-neutral-500">
+                                                Materi
+                                            </h3>
+                                            <div className="space-y-1.5">
                                                 {chapterMaterials.length === 0 ? (
-                                                    <EmptyMini text="Belum ada materi di bab ini." />
+                                                    <EmptyMini text="Belum ada materi." />
                                                 ) : (
                                                     chapterMaterials.map((material) => (
-                                                        <Link
+                                                        <MaterialRow
                                                             key={material.id}
-                                                            href={route('mahasiswa.lms.materials.show', material.id)}
-                                                            className={`flex items-center justify-between border p-3 transition ${
-                                                                progress?.[material.id]
-                                                                    ? 'border-neutral-900 bg-neutral-50 hover:bg-neutral-100'
-                                                                    : 'border-neutral-200 hover:bg-neutral-50'
-                                                            }`}
-                                                        >
-                                                            <div className="min-w-0 pr-2">
-                                                                <p className="truncate text-sm font-bold text-neutral-900">{material.title}</p>
-                                                                <p className="text-xs uppercase text-neutral-500">{material.type}</p>
-                                                            </div>
-                                                            <span
-                                                                className={`shrink-0 px-2.5 py-1 text-[11px] font-bold ${
-                                                                    progress?.[material.id]
-                                                                        ? 'bg-neutral-900 text-white'
-                                                                        : 'bg-neutral-100 text-neutral-600'
-                                                                }`}
-                                                            >
-                                                                {progress?.[material.id] ? 'Selesai' : 'Buka'}
-                                                            </span>
-                                                        </Link>
+                                                            material={material}
+                                                            done={!!progress?.[material.id]}
+                                                        />
                                                     ))
                                                 )}
                                             </div>
                                         </div>
 
                                         <div className="lg:col-span-5">
-                                            <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-neutral-500">Tugas</h3>
-                                            <div className="space-y-2">
+                                            <h3 className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-neutral-500">
+                                                Tugas
+                                            </h3>
+                                            <div className="space-y-1.5">
                                                 {chapterAssignments.length === 0 ? (
-                                                    <EmptyMini text="Belum ada tugas di bab ini." />
+                                                    <EmptyMini text="Belum ada tugas." />
                                                 ) : (
                                                     chapterAssignments.map((assignment) => (
-                                                        <button
+                                                        <AssignmentRow
                                                             key={assignment.id}
-                                                            type="button"
-                                                            onClick={() => setSelectedAssignment(assignment)}
-                                                            className="flex w-full items-center justify-between border border-neutral-200 bg-neutral-50 p-3 text-left transition hover:bg-neutral-100"
-                                                        >
-                                                            <div className="min-w-0 pr-2">
-                                                                <p className="truncate text-sm font-bold text-neutral-900">{assignment.title}</p>
-                                                                <p className="text-xs text-neutral-500">
-                                                                    {submissions?.[assignment.id] ? 'Tugas sudah dikumpulkan' : 'Belum dikumpulkan'}
-                                                                </p>
-                                                            </div>
-                                                            <span
-                                                                className={`shrink-0 px-2.5 py-1 text-[11px] font-bold ${
-                                                                    submissions?.[assignment.id]
-                                                                        ? 'bg-neutral-900 text-white'
-                                                                        : 'bg-neutral-200 text-neutral-800'
-                                                                }`}
-                                                            >
-                                                                {submissions?.[assignment.id] ? 'Terkumpul' : 'Pending'}
-                                                            </span>
-                                                        </button>
+                                                            assignment={assignment}
+                                                            submission={submissions?.[assignment.id]}
+                                                            onOpen={() => setSelectedAssignment(assignment)}
+                                                        />
                                                     ))
                                                 )}
                                             </div>
 
-                                            <div className="mt-4">
-                                                <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-neutral-500">Forum</h3>
-                                                <div className="space-y-2">
-                                                    {chapterForums.length === 0 ? (
-                                                        <EmptyMini text="Belum ada forum di bab ini." />
-                                                    ) : (
-                                                        chapterForums.map((forum) => (
-                                                            <Link
-                                                                key={forum.id}
-                                                                href={route('mahasiswa.lms.forums.show', forum.id)}
-                                                                className="block border border-neutral-200 bg-neutral-50 p-3 transition hover:bg-neutral-100"
-                                                            >
-                                                                <div className="flex items-center justify-between gap-2">
-                                                                    <div className="min-w-0 pr-2">
-                                                                        <p className="truncate text-sm font-bold text-neutral-900">{forum.title}</p>
-                                                                        <p className="text-xs text-neutral-500">{forum.threads_count || 0} thread diskusi</p>
-                                                                    </div>
-                                                                    <span
-                                                                        className={`shrink-0 px-2.5 py-1 text-[11px] font-bold ${
-                                                                            forum.is_active ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-600'
-                                                                        }`}
-                                                                    >
-                                                                        {forum.is_active ? 'Aktif' : 'Nonaktif'}
-                                                                    </span>
-                                                                </div>
-                                                            </Link>
-                                                        ))
-                                                    )}
-                                                </div>
+                                            <h3 className="mb-1.5 mt-3 text-[10px] font-bold uppercase tracking-wider text-neutral-500">
+                                                Forum
+                                            </h3>
+                                            <div className="space-y-1.5">
+                                                {chapterForums.length === 0 ? (
+                                                    <EmptyMini text="Belum ada forum." />
+                                                ) : (
+                                                    chapterForums.map((forum) => <ForumRow key={forum.id} forum={forum} />)
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -300,6 +420,10 @@ export default function Show({ course, progress, submissions }) {
     );
 }
 
+/* ------------------------------------------------------------------ */
+/* Assignment modal                                                    */
+/* ------------------------------------------------------------------ */
+
 function AssignmentViewer({ assignment, submission, onClose }) {
     const { data, setData, post, processing, errors, reset } = useForm({
         file: null,
@@ -321,90 +445,142 @@ function AssignmentViewer({ assignment, submission, onClose }) {
     const isGraded = submission?.grade !== null && submission?.grade !== undefined;
 
     return (
-        <div className="p-6">
-            <h2 className="text-xl font-bold text-neutral-900">{assignment.title}</h2>
+        <div className="p-4 sm:p-5">
+            <div className="flex items-start gap-2.5">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
+                    <ClipboardDocumentListIcon className="h-4 w-4" />
+                </span>
+                <div className="min-w-0">
+                    <h2 className="text-base font-bold leading-tight text-neutral-900">{assignment.title}</h2>
+                    <p className="text-[11px] text-neutral-500">Tugas kelas</p>
+                </div>
+            </div>
 
-            <div className="mt-4 text-sm text-neutral-700">
+            <div className="mt-3 rounded-lg bg-neutral-50 p-3 text-xs leading-relaxed text-neutral-700">
                 <div dangerouslySetInnerHTML={{ __html: assignment.description || '-' }} />
                 {assignment.file_path ? (
-                    <a href={`/storage/${assignment.file_path}`} target="_blank" rel="noreferrer" className="mt-2 inline-block font-bold text-neutral-900 hover:underline">
+                    <a
+                        href={`/storage/${assignment.file_path}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-2 inline-flex items-center gap-1.5 font-bold text-neutral-900 hover:underline"
+                    >
+                        <PaperClipIcon className="h-3.5 w-3.5" />
                         Unduh Lampiran Soal
                     </a>
                 ) : null}
             </div>
 
-            <hr className="my-4" />
+            <hr className="my-3 border-neutral-200" />
 
             {submission && !isEditing ? (
-                <div className="border border-neutral-200 bg-neutral-50 p-4 text-sm">
+                <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3 text-xs">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="font-bold text-neutral-900">Status: Sudah dikumpulkan</p>
-                        {!isGraded && (
-                            <button type="button" onClick={() => setIsEditing(true)} className="border border-neutral-300 bg-white px-3 py-1 text-xs font-bold text-neutral-900 hover:bg-neutral-100">
+                        <p className="inline-flex items-center gap-1.5 font-bold text-emerald-700">
+                            <CheckCircleIcon className="h-4 w-4" />
+                            Sudah dikumpulkan
+                        </p>
+                        {!isGraded ? (
+                            <button
+                                type="button"
+                                onClick={() => setIsEditing(true)}
+                                className="rounded-md border border-neutral-300 bg-white px-2.5 py-1 text-[11px] font-bold text-neutral-900 transition hover:bg-neutral-100"
+                            >
                                 Edit Jawaban
                             </button>
-                        )}
+                        ) : null}
                     </div>
-                    <p className="mt-1 text-neutral-700">Waktu: {new Date(submission.submitted_at).toLocaleString('id-ID')}</p>
+
+                    <p className="mt-1.5 text-neutral-600">
+                        Waktu: {new Date(submission.submitted_at).toLocaleString('id-ID')}
+                    </p>
+
                     {submission.file_path ? (
-                        <p className="mt-1 text-neutral-700">
-                            File:{' '}
-                            <a href={`/storage/${submission.file_path}`} target="_blank" rel="noreferrer" className="font-bold underline">
-                                Lihat jawaban lampiran
-                            </a>
-                        </p>
+                        <a
+                            href={`/storage/${submission.file_path}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="mt-1.5 inline-flex items-center gap-1.5 font-bold text-neutral-900 hover:underline"
+                        >
+                            <ArrowDownTrayIcon className="h-3.5 w-3.5" />
+                            Lihat jawaban lampiran
+                        </a>
                     ) : null}
+
                     {submission.notes ? (
-                        <div className="mt-2 text-neutral-800">
-                            <p className="font-bold">Teks Jawaban / Catatan:</p>
-                            <div className="prose prose-sm mt-1 max-w-none rounded-md bg-white p-3 shadow-inner" dangerouslySetInnerHTML={{ __html: submission.notes }} />
+                        <div className="mt-2">
+                            <p className="font-bold text-neutral-800">Teks Jawaban / Catatan</p>
+                            <div
+                                className="prose prose-sm mt-1 max-w-none rounded-md bg-white p-2.5 shadow-inner"
+                                dangerouslySetInnerHTML={{ __html: submission.notes }}
+                            />
                         </div>
                     ) : null}
+
                     {isGraded ? (
                         <div className="mt-2 border-t border-neutral-200 pt-2">
-                            <p className="font-bold text-neutral-900">Nilai: {submission.grade}</p>
+                            <p className="font-bold text-neutral-900">
+                                Nilai: <span className="text-emerald-700">{submission.grade}</span>
+                            </p>
                             <p className="text-neutral-700">Feedback: {submission.feedback || '-'}</p>
                         </div>
                     ) : null}
                 </div>
             ) : (
-                <form onSubmit={submit} className="space-y-4">
+                <form onSubmit={submit} className="space-y-3">
                     <div>
-                        <label className="mb-1 block text-xs font-bold uppercase tracking-widest text-neutral-500">Upload Jawaban (PDF/Doc/Zip) - Opsional</label>
-                        {submission?.file_path && (
-                            <p className="mb-2 text-xs font-bold text-neutral-600">
-                                Anda sudah pernah mengupload file. Upload file baru HANYA jika ingin mengganti file yang lama.
+                        <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-neutral-500">
+                            Upload Jawaban (PDF/Doc/Zip) — Opsional
+                        </label>
+                        {submission?.file_path ? (
+                            <p className="mb-1.5 text-[11px] font-semibold text-amber-700">
+                                Anda sudah pernah mengunggah file. Unggah file baru hanya jika ingin menggantinya.
                             </p>
-                        )}
+                        ) : null}
                         <input
                             type="file"
                             onChange={(e) => setData('file', e.target.files[0])}
-                            className="block w-full border border-neutral-300 bg-white p-2.5 text-sm text-neutral-700"
+                            className="block w-full rounded-lg border border-neutral-300 bg-white p-2 text-xs text-neutral-700"
                         />
                         <InputError message={errors.file} className="mt-1" />
                     </div>
 
                     <div>
-                        <label className="mb-1 block text-xs font-bold uppercase tracking-widest text-neutral-500">Teks Jawaban / Catatan</label>
+                        <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-neutral-500">
+                            Teks Jawaban / Catatan
+                        </label>
                         <RichTextEditor
                             value={data.notes}
                             onChange={(value) => setData('notes', value)}
-                            placeholder="Ketik jawaban Anda di sini jika tidak mengupload file..."
+                            placeholder="Ketik jawaban Anda di sini jika tidak mengunggah file..."
                         />
                         <InputError message={errors.notes} className="mt-1" />
                     </div>
 
                     <div className="flex justify-end gap-2">
-                        {submission && (
-                            <ActionButton type="button" onClick={() => setIsEditing(false)} disabled={processing} variant="secondary">Batal</ActionButton>
-                        )}
-                        <ActionButton type="submit" disabled={processing} variant="primary">{processing ? 'Menyimpan...' : 'Kumpulkan Tugas'}</ActionButton>
+                        {submission ? (
+                            <ActionButton
+                                type="button"
+                                onClick={() => setIsEditing(false)}
+                                disabled={processing}
+                                variant="secondary"
+                            >
+                                Batal
+                            </ActionButton>
+                        ) : null}
+                        <ActionButton type="submit" disabled={processing} variant="primary">
+                            {processing ? 'Menyimpan...' : 'Kumpulkan Tugas'}
+                        </ActionButton>
                     </div>
                 </form>
             )}
 
-            <div className="mt-4 flex justify-end">
-                {!isEditing && <ActionButton onClick={onClose} variant="secondary">Tutup</ActionButton>}
+            <div className="mt-3 flex justify-end">
+                {!isEditing ? (
+                    <ActionButton onClick={onClose} variant="secondary">
+                        Tutup
+                    </ActionButton>
+                ) : null}
             </div>
         </div>
     );

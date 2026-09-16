@@ -50,7 +50,7 @@ export default function Index({ sessions }) {
                     </div>
 
                     <div className="overflow-x-auto border border-[#e5e5e5]">
-                        <table className="min-w-full text-left">
+                        <table className="min-w-full text-left table-cards">
                             <thead className="bg-[#f5f5f5] border-b border-[#e5e5e5]">
                                 <tr>
                                     <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-neutral-500">Nama Sesi</th>
@@ -63,7 +63,7 @@ export default function Index({ sessions }) {
                             </thead>
                             <tbody className="divide-y divide-[#e5e5e5]">
                                 {filtered.length === 0 ? (
-                                    <tr>
+                                    <tr className="table-cards-empty">
                                         <td colSpan="6" className="px-4 py-8 text-center text-xs text-neutral-400 uppercase tracking-widest">
                                             Belum ada sesi Raker.
                                         </td>
@@ -71,14 +71,14 @@ export default function Index({ sessions }) {
                                 ) : (
                                     filtered.map((session) => (
                                         <tr key={session.id} className="hover:bg-[#fafafa]">
-                                            <td className="px-4 py-3 text-sm font-semibold text-neutral-900">{session.name}</td>
-                                            <td className="px-4 py-3 text-sm text-neutral-600">
+                                            <td data-label="Nama Sesi" className="px-4 py-3 text-sm font-semibold text-neutral-900">{session.name}</td>
+                                            <td data-label="Tanggal" className="px-4 py-3 text-sm text-neutral-600">
                                                 {formatDate(session.start_date)} — {formatDate(session.end_date)}
                                             </td>
-                                            <td className="px-4 py-3 text-sm text-neutral-600">{session.location || '-'}</td>
-                                            <td className="px-4 py-3"><SessionStatusBadge status={session.status} /></td>
-                                            <td className="px-4 py-3 text-sm text-neutral-600">{session.submissions_count}</td>
-                                            <td className="px-4 py-3 text-right">
+                                            <td data-label="Lokasi" className="px-4 py-3 text-sm text-neutral-600">{session.location || '-'}</td>
+                                            <td data-label="Status" className="px-4 py-3"><SessionStatusBadge status={session.status} /></td>
+                                            <td data-label="Pengisi" className="px-4 py-3 text-sm text-neutral-600">{session.submissions_count}</td>
+                                            <td data-label="Aksi" className="px-4 py-3 text-right">
                                                 <div className="flex items-center justify-end gap-2">
                                                     <ActionButton href={`/raker/sessions/${session.id}`} variant="ghost">Lihat</ActionButton>
                                                     <ActionButton href={`/raker/sessions/${session.id}/edit`} variant="ghost">Edit</ActionButton>

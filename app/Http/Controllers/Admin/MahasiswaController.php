@@ -35,6 +35,14 @@ class MahasiswaController extends Controller
         }
 
         $mahasiswas = $query->paginate(10)->withQueryString();
+        $mahasiswas->through(function ($m) {
+            if (!$m->relationLoaded('user') || !$m->user) {
+                $m->setRelation('user', new User(['name' => $m->nama_lengkap ?? '-', 'email' => '-']));
+            } elseif (empty($m->user->email)) {
+                $m->user->email = '-';
+            }
+            return $m;
+        });
         
         // Get total count for info
         $totalMahasiswa = Mahasiswa::count();
@@ -115,6 +123,9 @@ class MahasiswaController extends Controller
     public function show(Mahasiswa $mahasiswa)
     {
         $mahasiswa->load(['user', 'prodi']);
+        if (!$mahasiswa->user) {
+            $mahasiswa->setRelation('user', new User(['name' => $mahasiswa->nama_lengkap ?? '-', 'email' => '-']));
+        }
         
         return Inertia::render('Admin/Mahasiswa/Show', [
             'mahasiswa' => $mahasiswa,
@@ -129,6 +140,9 @@ class MahasiswaController extends Controller
     public function edit(Mahasiswa $mahasiswa)
     {
         $mahasiswa->load(['user', 'prodi']);
+        if (!$mahasiswa->user) {
+            $mahasiswa->setRelation('user', new User(['name' => $mahasiswa->nama_lengkap ?? '-', 'email' => '-']));
+        }
         $prodis = Prodi::where('status', 'aktif')->orderBy('nama_prodi')->get();
         
         return Inertia::render('Admin/Mahasiswa/Edit', [
@@ -286,6 +300,10 @@ class MahasiswaController extends Controller
         $request->validate([
             'password' => 'required|string|min:8|confirmed',
         ]);
+
+        if (!$mahasiswa->user) {
+            return redirect()->back()->with('error', 'Akun user untuk mahasiswa ini tidak ditemukan!');
+        }
 
         // Update password user
         $mahasiswa->user->update([

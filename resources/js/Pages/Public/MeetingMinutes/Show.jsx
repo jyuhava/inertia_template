@@ -65,7 +65,7 @@ export default function PublicMeetingMinuteShow({ meeting }) {
     }, [meeting.agenda_items]);
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-dvh bg-gray-50">
             <Head title={meeting.title} />
 
             <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">

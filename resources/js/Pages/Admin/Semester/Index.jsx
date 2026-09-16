@@ -7,7 +7,7 @@ import Modal from '@/Components/Modal';
 function Box({ children, className = '', padded = true, variant = 'white' }) {
     const variants = {
         white: 'bg-white border-[#e4e4e7]',
-        dark: 'bg-[#0a0a0a] border-[#222] text-white',
+        dark: 'bg-gradient-to-br from-slate-800 via-indigo-700 to-indigo-600 border-transparent text-white rounded-2xl shadow-lg shadow-indigo-500/20',
         accent: 'bg-black text-white border-black'
     };
     return (
@@ -150,7 +150,7 @@ export default function Index({ semesters, filters }) {
                 {/* Table */}
                 <Box padded={false} className="overflow-hidden">
                     <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-[#e4e4e7]">
+                        <table className="min-w-full divide-y divide-[#e4e4e7] table-cards">
                             <thead className="bg-[#fafafa]">
                                 <tr>
                                     <th className="px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.15em] text-neutral-500">Tahun Ajaran</th>
@@ -164,17 +164,17 @@ export default function Index({ semesters, filters }) {
                                 {semesters.data.length > 0 ? (
                                     semesters.data.map((semester) => (
                                         <tr key={semester.id} className="hover:bg-[#fafafa] transition-colors">
-                                            <td className="px-5 py-4 whitespace-nowrap">
+                                            <td data-label="Tahun Ajaran" className="px-5 py-4 whitespace-nowrap">
                                                 <div className="text-sm font-medium text-black">{semester.tahun_ajaran.nama_tahun_ajaran}</div>
                                                 <div className="mt-1"><StatusBadge status={semester.tahun_ajaran.status} /></div>
                                             </td>
-                                            <td className="px-5 py-4 whitespace-nowrap"><SemesterBadge nama_semester={semester.nama_semester} /></td>
-                                            <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-700">
+                                            <td data-label="Semester" className="px-5 py-4 whitespace-nowrap"><SemesterBadge nama_semester={semester.nama_semester} /></td>
+                                            <td data-label="Periode" className="px-5 py-4 whitespace-nowrap text-sm text-neutral-700">
                                                 <div>{new Date(semester.tanggal_mulai).toLocaleDateString('id-ID')}</div>
                                                 <div className="text-neutral-400 text-xs">s/d {new Date(semester.tanggal_selesai).toLocaleDateString('id-ID')}</div>
                                             </td>
-                                            <td className="px-5 py-4 whitespace-nowrap"><StatusBadge status={semester.status} /></td>
-                                            <td className="px-5 py-4 whitespace-nowrap text-right">
+                                            <td data-label="Status" className="px-5 py-4 whitespace-nowrap"><StatusBadge status={semester.status} /></td>
+                                            <td data-label="Aksi" className="px-5 py-4 whitespace-nowrap text-right">
                                                 <div className="flex justify-end gap-2">
                                                     <ActionButton href={route('admin.semester.show', semester.id)} variant="secondary" size="sm">Detail</ActionButton>
                                                     <ActionButton href={route('admin.semester.edit', semester.id)} variant="primary" size="sm">Edit</ActionButton>
@@ -184,7 +184,7 @@ export default function Index({ semesters, filters }) {
                                         </tr>
                                     ))
                                 ) : (
-                                    <tr>
+                                    <tr className="table-cards-empty">
                                         <td colSpan={5} className="px-5 py-12 text-center text-sm text-neutral-500">
                                             Tidak ada data semester.
                                         </td>

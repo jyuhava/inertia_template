@@ -131,7 +131,7 @@ export default function Register({ periodePmb, prodis }) {
         <GuestLayout>
             <Head title="Pendaftaran PMB" />
 
-            <div className="min-h-screen bg-[#f5f0eb] py-12">
+            <div className="min-h-dvh bg-[#f5f0eb] py-12">
                 <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
                     <div className="text-center">
                         <span className="inline-block border border-[#7f4f2e] px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-[#7f4f2e]">

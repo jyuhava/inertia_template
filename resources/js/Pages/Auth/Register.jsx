@@ -60,7 +60,7 @@ export default function Register({ periodePmb, prodis = [] }) {
         <GuestLayout>
             <Head title="PMB - STIT Al Wafi Bogor" />
 
-            <div className="min-h-screen bg-[#f5f0eb] text-[#22130d]">
+            <div className="min-h-dvh bg-[#f5f0eb] text-[#22130d]">
                 {/* Hero */}
                 <section className="relative overflow-hidden border-b border-[#e8d4c2] bg-[#7f4f2e]">
                     <div className="absolute right-0 top-0 h-40 w-40 border border-[#9e6b42] bg-[#633d25]" />

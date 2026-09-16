@@ -4,7 +4,7 @@ import AdminLayout from '@/Layouts/AdminLayout';
 function Box({ children, className = '', padded = true, variant = 'white' }) {
     const variants = {
         white: 'bg-white border-[#e5e5e5]',
-        black: 'bg-black border-black text-white',
+        black: 'bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 border-transparent text-white rounded-2xl shadow-lg shadow-violet-500/20',
         gray: 'bg-[#f5f5f5] border-[#e5e5e5]',
     };
     return (
@@ -111,11 +111,11 @@ export default function Show({ mahasiswa, periodeKrs, krsData, totalSks }) {
         <AdminLayout title={`KRS - ${mahasiswa.nama_lengkap}`}>
             <Head title={`KRS - ${mahasiswa.nama_lengkap}`} />
 
-            <div className="p-6 lg:p-8 min-h-screen bg-[#fafafa]">
+            <div className="p-6 lg:p-8 min-h-dvh bg-[#fafafa]">
                 <Box variant="black" className="mb-6">
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div>
-                            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-neutral-400 mb-1">Manajemen KRS</p>
+                            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/75 mb-1">Manajemen KRS</p>
                             <h1 className="text-xl font-bold uppercase tracking-tight text-white">Detail KRS Mahasiswa</h1>
                         </div>
                         <ActionButton href={route('admin.krs.index')} variant="secondary">← Kembali ke Daftar KRS</ActionButton>
@@ -169,7 +169,7 @@ export default function Show({ mahasiswa, periodeKrs, krsData, totalSks }) {
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
-                            <table className="min-w-full border border-[#e5e5e5]">
+                            <table className="min-w-full border border-[#e5e5e5] table-cards">
                                 <thead className="bg-[#f5f5f5]">
                                     <tr>
                                         <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-neutral-500 border-b border-[#e5e5e5]">Mata Kuliah</th>
@@ -184,27 +184,27 @@ export default function Show({ mahasiswa, periodeKrs, krsData, totalSks }) {
                                 <tbody className="bg-white divide-y divide-[#e5e5e5]">
                                     {krsData.map((krs) => (
                                         <tr key={krs.id} className="hover:bg-[#fafafa]">
-                                            <td className="px-4 py-3 text-sm text-neutral-900">
+                                            <td data-label="Mata Kuliah" className="px-4 py-3 text-sm text-neutral-900">
                                                 <p className="font-bold">{krs.jadwal_kuliah.mata_kuliah.nama_mata_kuliah}</p>
                                                 <p className="text-xs text-neutral-500">{krs.jadwal_kuliah.mata_kuliah.kode_mata_kuliah}</p>
                                             </td>
-                                            <td className="px-4 py-3 text-sm text-neutral-900">{krs.jadwal_kuliah.dosen.nama_lengkap}</td>
-                                            <td className="px-4 py-3 text-sm text-neutral-900">
+                                            <td data-label="Dosen" className="px-4 py-3 text-sm text-neutral-900">{krs.jadwal_kuliah.dosen.nama_lengkap}</td>
+                                            <td data-label="Jadwal" className="px-4 py-3 text-sm text-neutral-900">
                                                 <HariBadge hari={krs.jadwal_kuliah.hari} />
                                                 <div className="text-xs text-neutral-500 mt-1">{krs.jadwal_kuliah.jam_mulai} - {krs.jadwal_kuliah.jam_selesai}</div>
                                                 <div className="text-xs text-neutral-500">Ruang: {krs.jadwal_kuliah.ruangan}</div>
                                             </td>
-                                            <td className="px-4 py-3 text-sm text-neutral-900">{krs.jadwal_kuliah.mata_kuliah.sks} SKS</td>
-                                            <td className="px-4 py-3 text-sm text-neutral-900">
+                                            <td data-label="SKS" className="px-4 py-3 text-sm text-neutral-900">{krs.jadwal_kuliah.mata_kuliah.sks} SKS</td>
+                                            <td data-label="Status" className="px-4 py-3 text-sm text-neutral-900">
                                                 <StatusBadge status={krs.status} label={krs.status_display} />
                                                 {krs.catatan_admin && <div className="text-xs text-neutral-500 mt-1">Catatan: {krs.catatan_admin}</div>}
                                                 {krs.approved_by && <div className="text-xs text-neutral-500 mt-1">Oleh: {krs.approved_by.name}</div>}
                                             </td>
-                                            <td className="px-4 py-3 text-sm text-neutral-500">
+                                            <td data-label="Tanggal" className="px-4 py-3 text-sm text-neutral-500">
                                                 <div>Pengajuan: {new Date(krs.created_at).toLocaleDateString('id-ID')}</div>
                                                 {krs.tanggal_approval && <div>Approval: {new Date(krs.tanggal_approval).toLocaleDateString('id-ID')}</div>}
                                             </td>
-                                            <td className="px-4 py-3 text-right">
+                                            <td data-label="Aksi" className="px-4 py-3 text-right">
                                                 {krs.status === 'menunggu_persetujuan' && (
                                                     <div className="flex justify-end gap-2">
                                                         <button onClick={() => handleApprove(krs.id)} className="text-xs font-bold uppercase tracking-widest text-neutral-900 hover:text-neutral-600 underline">Setujui</button>

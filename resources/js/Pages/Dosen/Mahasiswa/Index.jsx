@@ -76,18 +76,18 @@ export default function Index({ dosen, periodeAktif, jadwalKuliah, mahasiswas })
             <Head title={`Daftar Mahasiswa - ${jadwalKuliah.mata_kuliah?.nama_mata_kuliah || 'Kelas'}`} />
 
             <div className="space-y-6">
-                <section className="relative overflow-hidden border border-neutral-900 bg-neutral-900 p-7 text-white shadow-sm">
+                <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-600 shadow-teal-500/20 p-4 text-white shadow-lg sm:p-5">
                     <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
                         <div>
-                            <p className="text-xs font-semibold uppercase tracking-widest text-neutral-400">Manajemen Peserta Kelas</p>
+                            <p className="text-xs font-semibold uppercase tracking-widest text-white/75">Manajemen Peserta Kelas</p>
                             <h1 className="mt-2 text-2xl font-bold tracking-tight md:text-3xl">{jadwalKuliah.mata_kuliah?.nama_mata_kuliah}</h1>
-                            <p className="mt-2 text-sm text-neutral-300">
+                            <p className="mt-2 text-sm text-white/85">
                                 {jadwalKuliah.mata_kuliah?.kode_mata_kuliah} • {jadwalKuliah.mata_kuliah?.sks} SKS
                             </p>
-                            <p className="text-sm text-neutral-300">
+                            <p className="text-sm text-white/85">
                                 {jadwalKuliah.hari}, {formatTime(jadwalKuliah.jam_mulai)} - {formatTime(jadwalKuliah.jam_selesai)} • Ruang {jadwalKuliah.ruangan}
                             </p>
-                            <p className="mt-1 text-xs text-neutral-400">
+                            <p className="mt-1 text-xs text-white/75">
                                 Dosen: {dosen?.nama_lengkap || '-'}{periodeAktif ? ` • ${periodeAktif.nama_periode || 'Periode Aktif'}` : ''}
                             </p>
                         </div>
@@ -151,7 +151,7 @@ export default function Index({ dosen, periodeAktif, jadwalKuliah, mahasiswas })
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-neutral-200 text-sm">
+                            <table className="min-w-full divide-y divide-neutral-200 text-sm table-cards">
                                 <thead className="bg-neutral-50">
                                     <tr className="text-left text-xs uppercase tracking-widest text-neutral-600">
                                         <th className="px-4 py-3">No</th>
@@ -164,8 +164,8 @@ export default function Index({ dosen, periodeAktif, jadwalKuliah, mahasiswas })
                                 <tbody className="divide-y divide-neutral-100">
                                     {sorted.map((m, index) => (
                                         <tr key={m.id} className="hover:bg-neutral-50">
-                                            <td className="px-4 py-3 text-neutral-700">{index + 1}</td>
-                                            <td className="px-4 py-3">
+                                            <td data-label="No" className="px-4 py-3 text-neutral-700">{index + 1}</td>
+                                            <td data-label="Mahasiswa" className="px-4 py-3">
                                                 <div className="flex items-center gap-3">
                                                     <div className="flex h-10 w-10 items-center justify-center border border-neutral-300 bg-neutral-100 font-semibold text-neutral-800">
                                                         {(m.nama_lengkap || m.nama || 'M').charAt(0)}
@@ -176,17 +176,17 @@ export default function Index({ dosen, periodeAktif, jadwalKuliah, mahasiswas })
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-4 py-3">
+                                            <td data-label="Program Studi" className="px-4 py-3">
                                                 <p className="text-neutral-800">{m.prodi?.nama_prodi || '-'}</p>
                                                 <p className="text-xs text-neutral-500">{m.prodi?.kode_prodi || '-'}</p>
                                             </td>
-                                            <td className="px-4 py-3">
+                                            <td data-label="Nilai" className="px-4 py-3">
                                                 <div className="flex items-center gap-2">
                                                     <ScorePill score={m.penilaian?.nilai_akhir} />
                                                     <GradePill grade={m.penilaian?.nilai_huruf} />
                                                 </div>
                                             </td>
-                                            <td className="px-4 py-3">
+                                            <td data-label="Status" className="px-4 py-3">
                                                 <StatusPill status={m.penilaian?.status} />
                                             </td>
                                         </tr>

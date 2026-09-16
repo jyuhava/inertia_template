@@ -6,7 +6,7 @@ import RichTextEditor from '@/Components/RichTextEditor';
 function Box({ children, className = '', padded = true, variant = 'white' }) {
     const variants = {
         white: 'bg-white border border-neutral-200',
-        black: 'bg-black text-white border border-black',
+        black: 'bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 border-transparent text-white rounded-2xl shadow-lg shadow-violet-500/20',
         gray: 'bg-neutral-50 border border-neutral-200',
     };
     return (
@@ -130,11 +130,11 @@ export default function ThreadShow({ thread, forum, chapter, course }) {
 
             <div className="space-y-6">
                 <Box variant="black" className="relative overflow-hidden">
-                    <div className="absolute right-0 top-0 h-32 w-32 bg-neutral-800/30" />
-                    <div className="absolute bottom-0 left-0 h-24 w-24 bg-neutral-800/20" />
-                    <p className="text-xs font-bold uppercase tracking-widest text-neutral-400">Detail Thread</p>
+                    <div className="absolute right-0 top-0 h-32 w-32 bg-white/10" />
+                    <div className="absolute bottom-0 left-0 h-24 w-24 bg-white/10" />
+                    <p className="text-xs font-bold uppercase tracking-widest text-white/75">Detail Thread</p>
                     <h1 className="mt-1 text-2xl font-bold">{thread.title}</h1>
-                    <p className="mt-2 text-sm text-neutral-300">
+                    <p className="mt-2 text-sm text-white/85">
                         Forum: {forum?.title || '-'} • Bab: {chapter?.title || '-'}
                     </p>
                     <div className="mt-4">

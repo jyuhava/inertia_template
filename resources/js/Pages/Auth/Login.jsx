@@ -32,7 +32,7 @@ export default function Login({ status, canResetPassword }) {
     };
 
     return (
-        <div className="relative min-h-screen overflow-hidden bg-[#0a0a0a] text-[#e8e8e8]">
+        <div className="relative min-h-dvh overflow-hidden bg-[#0a0a0a] text-[#e8e8e8]">
             <Head title="Masuk - SIAKAD STIT Al Wafi" />
 
             {/* Geometric pattern overlay */}
@@ -51,7 +51,7 @@ export default function Login({ status, canResetPassword }) {
             <div className="pointer-events-none absolute -left-16 top-16 h-56 w-56 border border-[#222]" />
             <div className="pointer-events-none absolute -right-12 bottom-12 h-48 w-48 border border-[#222]" />
 
-            <div className="relative mx-auto flex min-h-screen max-w-6xl flex-col justify-center px-5 py-8 sm:px-6 lg:px-8">
+            <div className="relative mx-auto flex min-h-dvh max-w-6xl flex-col justify-center px-5 py-8 sm:px-6 lg:px-8">
                 <div className="grid gap-6 lg:grid-cols-12 lg:gap-0">
                     {/* Left panel */}
                     <section className="order-2 border border-[#222] bg-[#111] p-6 lg:order-1 lg:col-span-5 lg:p-8">
@@ -103,7 +103,7 @@ export default function Login({ status, canResetPassword }) {
                             <div>
                                 <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#888]">Login Portal</p>
                                 <h2 className="mt-1 text-2xl font-bold tracking-tight text-[#0a0a0a] sm:text-3xl">Selamat datang kembali</h2>
-                                <p className="mt-1 text-sm text-[#666]">Masuk menggunakan akun terdaftar.</p>
+                                <p className="mt-1 text-sm text-[#666]">Masuk menggunakan Email atau NIM terdaftar.</p>
                             </div>
                             <Link
                                 href="/"
@@ -121,14 +121,14 @@ export default function Login({ status, canResetPassword }) {
 
                         <form onSubmit={submit} className="space-y-5">
                             <div>
-                                <InputLabel htmlFor="email" value="Email" className="text-xs font-bold uppercase tracking-wider text-[#555]" />
+                                <InputLabel htmlFor="email" value="Email atau NIM" className="text-xs font-bold uppercase tracking-wider text-[#555]" />
                                 <TextInput
                                     id="email"
-                                    type="email"
+                                    type="text"
                                     name="email"
                                     value={data.email}
                                     className="mt-2 block w-full rounded-none border-[#ccc] text-sm focus:border-[#0a0a0a] focus:ring-[#0a0a0a]"
-                                    placeholder="nama@email.com"
+                                    placeholder="Masukkan Email atau NIM..."
                                     autoComplete="username"
                                     isFocused={true}
                                     onChange={(e) => setData('email', e.target.value)}

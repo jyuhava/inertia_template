@@ -4,6 +4,7 @@ import './bootstrap';
 import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
+import { initInstallPrompt, registerServiceWorker } from './pwa';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -21,7 +22,17 @@ window.route = (name, params = {}) => {
         'admin.mahasiswa.edit': (id) => `/admin/mahasiswa/${id}/edit`,
         'admin.mahasiswa.update': (id) => `/admin/mahasiswa/${id}`,
         'admin.mahasiswa.destroy': (id) => `/admin/mahasiswa/${id}`,
-        'admin.user-management.reset-password.form': (id) => `/admin/user-management/${id}/reset-password`,
+        'admin.mahasiswa.reset-password': (id) => `/admin/mahasiswa/${typeof id === 'object' && id !== null ? (id.id || id.mahasiswa) : id}/reset-password`,
+        'admin.dosen.reset-password': (id) => `/admin/dosen/${typeof id === 'object' && id !== null ? (id.id || id.dosen) : id}/reset-password`,
+
+        // User Management routes
+        'admin.user-management.index': '/admin/user-management',
+        'admin.user-management.reset-password.form': (id) => `/admin/user-management/${typeof id === 'object' && id !== null ? (id.id || id.user) : id}/reset-password`,
+        'admin.user-management.reset-password': (id) => `/admin/user-management/${typeof id === 'object' && id !== null ? (id.id || id.user) : id}/reset-password`,
+        'admin.user-management.bulk-reset-password': '/admin/user-management/bulk-reset-password',
+        'admin.user-management.generate-password': (id) => `/admin/user-management/${typeof id === 'object' && id !== null ? (id.id || id.user) : id}/generate-password`,
+        'admin.user-management.toggle-status': (id) => `/admin/user-management/${typeof id === 'object' && id !== null ? (id.id || id.user) : id}/toggle-status`,
+        'admin.user-management.export': '/admin/user-management/export',
 
         // KHS routes
         'admin.mahasiswa.khs.index': (id) => `/admin/mahasiswa/${id}/khs`,
@@ -268,6 +279,55 @@ window.route = (name, params = {}) => {
         'raker.borang6.update': (id) => `/raker/borang6/${id}`,
         'raker.borang6.destroy': (id) => `/raker/borang6/${id}`,
         'raker.borang6.reorder': (id) => `/raker/submissions/${id}/borang6/reorder`,
+
+        // LPM Admin
+        'admin.lpm.dashboard': '/admin/lpm',
+        'admin.lpm.overview': '/admin/lpm/dashboard',
+        'admin.lpm.programs.index': '/admin/lpm/programs',
+        'admin.lpm.programs.create': '/admin/lpm/programs/create',
+        'admin.lpm.programs.store': '/admin/lpm/programs',
+        'admin.lpm.programs.show': (id) => `/admin/lpm/programs/${id}`,
+        'admin.lpm.programs.edit': (id) => `/admin/lpm/programs/${id}/edit`,
+        'admin.lpm.programs.update': (id) => `/admin/lpm/programs/${id}`,
+        'admin.lpm.programs.destroy': (id) => `/admin/lpm/programs/${id}`,
+        'admin.lpm.programs.activate': (id) => `/admin/lpm/programs/${id}/activate`,
+        'admin.lpm.programs.close': (id) => `/admin/lpm/programs/${id}/close`,
+        'admin.lpm.programs.reopen': (id) => `/admin/lpm/programs/${id}/reopen`,
+        'admin.lpm.programs.finalize': (id) => `/admin/lpm/programs/${id}/finalize`,
+        'admin.lpm.programs.download-template': (id) => `/admin/lpm/programs/${id}/template`,
+        'admin.lpm.proposals.index': '/admin/lpm/proposals',
+        'admin.lpm.proposals.show': (id) => `/admin/lpm/proposals/${id}`,
+        'admin.lpm.proposals.verify-approve': (id) => `/admin/lpm/proposals/${id}/verify-approve`,
+        'admin.lpm.proposals.verify-return': (id) => `/admin/lpm/proposals/${id}/verify-return`,
+        'admin.lpm.proposals.verify-admin-approve': (id) => `/admin/lpm/proposals/${id}/verify-admin-approve`,
+        'admin.lpm.proposals.reject': (id) => `/admin/lpm/proposals/${id}/reject`,
+        'admin.lpm.proposals.assign-reviewers': (id) => `/admin/lpm/proposals/${id}/assign-reviewers`,
+        'admin.lpm.proposals.decide-review': (id) => `/admin/lpm/proposals/${id}/decide-review`,
+        'admin.lpm.proposals.fund': (id) => `/admin/lpm/proposals/${id}/fund`,
+        'admin.lpm.proposals.contract': (id) => `/admin/lpm/proposals/${id}/contract`,
+        'admin.lpm.proposals.start': (id) => `/admin/lpm/proposals/${id}/start`,
+        'admin.lpm.proposals.activities.store': (id) => `/admin/lpm/proposals/${id}/activities`,
+        'admin.lpm.reports.validate': (id) => `/admin/lpm/reports/${id}/validate`,
+        'admin.lpm.outputs.validate': (id) => `/admin/lpm/outputs/${id}/validate`,
+
+        // LPM Dosen
+        'dosen.lpm.proposals.index': '/dosen/lpm',
+        'dosen.lpm.proposals.create': '/dosen/lpm/proposals/create',
+        'dosen.lpm.proposals.store': '/dosen/lpm/proposals',
+        'dosen.lpm.proposals.show': (id) => `/dosen/lpm/${id}`,
+        'dosen.lpm.proposals.edit': (id) => `/dosen/lpm/${id}/edit`,
+        'dosen.lpm.proposals.update': (id) => `/dosen/lpm/${id}`,
+        'dosen.lpm.proposals.submit': (id) => `/dosen/lpm/${id}/submit`,
+        'dosen.lpm.proposals.confirm-membership': (id) => `/dosen/lpm/${id}/confirm-membership`,
+        'dosen.lpm.proposals.documents.upload': (id) => `/dosen/lpm/${id}/documents`,
+        'dosen.lpm.proposals.documents.destroy': (id) => `/dosen/lpm/documents/${id}`,
+        'dosen.lpm.proposals.reports.upload': (id) => `/dosen/lpm/${id}/reports`,
+        'dosen.lpm.proposals.outputs.store': (id) => `/dosen/lpm/${id}/outputs`,
+        'dosen.lpm.proposals.outputs.update': (id) => `/dosen/lpm/outputs/${id}`,
+        'dosen.lpm.reviews.index': '/dosen/lpm/reviews',
+        'dosen.lpm.reviews.edit': (id) => `/dosen/lpm/reviews/${id}`,
+        'dosen.lpm.reviews.update': (id) => `/dosen/lpm/reviews/${id}`,
+        'dosen.lpm.reviews.destroy': (id) => `/dosen/lpm/reviews/${id}`,
     };
 
     if (name === undefined) {
@@ -290,6 +350,22 @@ window.route = (name, params = {}) => {
     if (typeof route === 'function') {
         return route(params);
     }
+    if (typeof route === 'string') {
+        if (params && typeof params === 'object' && !Array.isArray(params) && Object.keys(params).length > 0) {
+            const queryParams = new URLSearchParams();
+            Object.entries(params).forEach(([key, val]) => {
+                if (val !== undefined && val !== null && val !== '') {
+                    queryParams.append(key, val);
+                }
+            });
+            const qs = queryParams.toString();
+            return qs ? `${route}?${qs}` : route;
+        }
+        return route;
+    }
+    if (name) {
+        console.warn(`[Route Helper] Route "${name}" not found.`);
+    }
     return route || '/';
 };
 
@@ -309,3 +385,7 @@ createInertiaApp({
         color: '#4B5563',
     },
 });
+
+// PWA: service worker + dukungan "Pasang aplikasi".
+registerServiceWorker();
+initInstallPrompt();

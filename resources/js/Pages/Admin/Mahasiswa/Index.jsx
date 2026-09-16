@@ -6,7 +6,7 @@ import TextInput from '@/Components/TextInput';
 function Box({ children, className = '', padded = true, variant = 'white' }) {
     const variants = {
         white: 'bg-white border-[#e4e4e7]',
-        dark: 'bg-[#0a0a0a] border-[#222] text-white',
+        dark: 'bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 border-transparent text-white rounded-2xl shadow-lg shadow-violet-500/20',
         accent: 'bg-black text-white border-black'
     };
     return (
@@ -149,7 +149,7 @@ export default function Index({ mahasiswas, filters, totalMahasiswa, filteredCou
                 {/* Table */}
                 <Box padded={false} className="overflow-hidden">
                     <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-[#e4e4e7]">
+                        <table className="min-w-full divide-y divide-[#e4e4e7] table-cards">
                             <thead className="bg-[#fafafa]">
                                 <tr>
                                     <th className="px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.15em] text-neutral-500">NIM</th>
@@ -164,15 +164,15 @@ export default function Index({ mahasiswas, filters, totalMahasiswa, filteredCou
                             <tbody className="bg-white divide-y divide-[#e4e4e7]">
                                 {mahasiswas.data.map((mahasiswa) => (
                                     <tr key={mahasiswa.id} className="hover:bg-[#fafafa] transition-colors">
-                                        <td className="px-5 py-4 whitespace-nowrap text-sm font-medium text-black">{mahasiswa.nim}</td>
-                                        <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-700">{mahasiswa.nama_lengkap}</td>
-                                        <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-700">
+                                        <td data-label="NIM" className="px-5 py-4 whitespace-nowrap text-sm font-medium text-black">{mahasiswa.nim}</td>
+                                        <td data-label="Nama Lengkap" className="px-5 py-4 whitespace-nowrap text-sm text-neutral-700">{mahasiswa.nama_lengkap}</td>
+                                        <td data-label="Program Studi" className="px-5 py-4 whitespace-nowrap text-sm text-neutral-700">
                                             {mahasiswa.prodi ? `${mahasiswa.prodi.kode_prodi} - ${mahasiswa.prodi.nama_prodi}` : mahasiswa.program_studi}
                                         </td>
-                                        <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-700">{mahasiswa.angkatan}</td>
-                                        <td className="px-5 py-4 whitespace-nowrap"><StatusBadge status={mahasiswa.status} /></td>
-                                        <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-700">{mahasiswa.user.email}</td>
-                                        <td className="px-5 py-4 whitespace-nowrap text-right">
+                                        <td data-label="Angkatan" className="px-5 py-4 whitespace-nowrap text-sm text-neutral-700">{mahasiswa.angkatan}</td>
+                                        <td data-label="Status" className="px-5 py-4 whitespace-nowrap"><StatusBadge status={mahasiswa.status} /></td>
+                                        <td data-label="Email" className="px-5 py-4 whitespace-nowrap text-sm text-neutral-700">{mahasiswa.user?.email || '-'}</td>
+                                        <td data-label="Aksi" className="px-5 py-4 whitespace-nowrap text-right">
                                             <div className="flex justify-end gap-2">
                                                 <ActionButton href={route('admin.mahasiswa.show', mahasiswa.id)} variant="secondary" size="sm">Detail</ActionButton>
                                                 <ActionButton href={route('admin.mahasiswa.edit', mahasiswa.id)} variant="primary" size="sm">Edit</ActionButton>
@@ -182,7 +182,7 @@ export default function Index({ mahasiswas, filters, totalMahasiswa, filteredCou
                                     </tr>
                                 ))}
                                 {mahasiswas.data.length === 0 && (
-                                    <tr>
+                                    <tr className="table-cards-empty">
                                         <td colSpan="7" className="px-5 py-12 text-center text-sm text-neutral-500">
                                             Tidak ada data mahasiswa.
                                         </td>

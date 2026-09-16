@@ -7,7 +7,7 @@ import Modal from '@/Components/Modal';
 function Box({ children, className = '', padded = true, variant = 'white' }) {
     const variants = {
         white: 'bg-white border-[#e4e4e7]',
-        dark: 'bg-[#0a0a0a] border-[#222] text-white',
+        dark: 'bg-gradient-to-br from-slate-800 via-indigo-700 to-indigo-600 border-transparent text-white rounded-2xl shadow-lg shadow-indigo-500/20',
         accent: 'bg-black text-white border-black'
     };
     return (
@@ -206,7 +206,7 @@ export default function Index({ mataKuliahs, prodis, filters }) {
                 {/* Table */}
                 <Box padded={false} className="overflow-hidden">
                     <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-[#e4e4e7]">
+                        <table className="min-w-full divide-y divide-[#e4e4e7] table-cards">
                             <thead className="bg-[#fafafa]">
                                 <tr>
                                     <th className="px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.15em] text-neutral-500">Mata Kuliah</th>
@@ -222,24 +222,24 @@ export default function Index({ mataKuliahs, prodis, filters }) {
                                 {mataKuliahs.data.length > 0 ? (
                                     mataKuliahs.data.map((mataKuliah) => (
                                         <tr key={mataKuliah.id} className="hover:bg-[#fafafa] transition-colors">
-                                            <td className="px-5 py-4 whitespace-nowrap">
+                                            <td data-label="Mata Kuliah" className="px-5 py-4 whitespace-nowrap">
                                                 <div className="text-sm font-medium text-black">{mataKuliah.nama_mata_kuliah}</div>
                                                 <div className="text-xs text-neutral-500">{mataKuliah.kode_mata_kuliah}</div>
                                             </td>
-                                            <td className="px-5 py-4 whitespace-nowrap">
+                                            <td data-label="Program Studi" className="px-5 py-4 whitespace-nowrap">
                                                 <div className="text-sm text-black">{mataKuliah.prodi.nama_prodi}</div>
                                                 <div className="text-xs text-neutral-500">{mataKuliah.prodi.kode_prodi}</div>
                                             </td>
-                                            <td className="px-5 py-4 whitespace-nowrap">
+                                            <td data-label="SKS/Semester" className="px-5 py-4 whitespace-nowrap">
                                                 <div className="flex items-center gap-2">
                                                     <CountBadge count={mataKuliah.sks} label="SKS" />
                                                     <CountBadge count={mataKuliah.semester} label="Sem" />
                                                 </div>
                                             </td>
-                                            <td className="px-5 py-4 whitespace-nowrap"><JenisBadge jenis={mataKuliah.jenis} /></td>
-                                            <td className="px-5 py-4 whitespace-nowrap"><StatusBadge status={mataKuliah.status} /></td>
-                                            <td className="px-5 py-4 whitespace-nowrap"><CountBadge count={mataKuliah.jadwal_kuliahs_count} label="Jadwal" /></td>
-                                            <td className="px-5 py-4 whitespace-nowrap text-right">
+                                            <td data-label="Jenis" className="px-5 py-4 whitespace-nowrap"><JenisBadge jenis={mataKuliah.jenis} /></td>
+                                            <td data-label="Status" className="px-5 py-4 whitespace-nowrap"><StatusBadge status={mataKuliah.status} /></td>
+                                            <td data-label="Jadwal" className="px-5 py-4 whitespace-nowrap"><CountBadge count={mataKuliah.jadwal_kuliahs_count} label="Jadwal" /></td>
+                                            <td data-label="Aksi" className="px-5 py-4 whitespace-nowrap text-right">
                                                 <div className="flex justify-end gap-2">
                                                     <ActionButton href={route('admin.mata-kuliah.show', mataKuliah.id)} variant="secondary" size="sm">Detail</ActionButton>
                                                     <ActionButton href={route('admin.mata-kuliah.edit', mataKuliah.id)} variant="primary" size="sm">Edit</ActionButton>
@@ -249,7 +249,7 @@ export default function Index({ mataKuliahs, prodis, filters }) {
                                         </tr>
                                     ))
                                 ) : (
-                                    <tr>
+                                    <tr className="table-cards-empty">
                                         <td colSpan={7} className="px-5 py-12 text-center text-sm text-neutral-500">
                                             Tidak ada data mata kuliah.
                                         </td>

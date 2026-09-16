@@ -5,7 +5,7 @@ import { useState } from 'react';
 function Box({ children, className = '', padded = true, variant = 'white' }) {
     const variants = {
         white: 'bg-white border-[#e5e5e5]',
-        black: 'bg-black border-black text-white',
+        black: 'bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 border-transparent text-white rounded-2xl shadow-lg shadow-violet-500/20',
         gray: 'bg-[#f5f5f5] border-[#e5e5e5]',
     };
     return (
@@ -90,11 +90,11 @@ export default function Index({ periodeKrs }) {
         <AdminLayout>
             <Head title="Periode KRS" />
 
-            <div className="p-6 lg:p-8 min-h-screen bg-[#fafafa]">
+            <div className="p-6 lg:p-8 min-h-dvh bg-[#fafafa]">
                 <Box variant="black" className="mb-6">
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div>
-                            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-neutral-400 mb-1">Manajemen Akademik</p>
+                            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/75 mb-1">Manajemen Akademik</p>
                             <h1 className="text-xl font-bold uppercase tracking-tight text-white">Periode KRS</h1>
                         </div>
                         <ActionButton href="/admin/periode-krs/create" variant="secondary">+ Tambah Periode KRS</ActionButton>
@@ -117,7 +117,7 @@ export default function Index({ periodeKrs }) {
                     </SectionTitle>
 
                     <div className="overflow-x-auto border border-[#e5e5e5]">
-                        <table className="min-w-full text-left">
+                        <table className="min-w-full text-left table-cards">
                             <thead className="bg-[#f5f5f5] border-b border-[#e5e5e5]">
                                 <tr>
                                     <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-neutral-500">Nama Periode</th>
@@ -130,7 +130,7 @@ export default function Index({ periodeKrs }) {
                             </thead>
                             <tbody className="divide-y divide-[#e5e5e5]">
                                 {filtered.length === 0 ? (
-                                    <tr>
+                                    <tr className="table-cards-empty">
                                         <td colSpan="6" className="px-4 py-8 text-center text-xs text-neutral-400 uppercase tracking-widest">
                                             Belum ada periode KRS yang sesuai.
                                         </td>
@@ -138,16 +138,16 @@ export default function Index({ periodeKrs }) {
                                 ) : (
                                     filtered.map((periode) => (
                                         <tr key={periode.id} className="hover:bg-[#fafafa]">
-                                            <td className="px-4 py-3 text-sm font-semibold text-neutral-900">{periode.nama_periode}</td>
-                                            <td className="px-4 py-3 text-sm text-neutral-600">
+                                            <td data-label="Nama Periode" className="px-4 py-3 text-sm font-semibold text-neutral-900">{periode.nama_periode}</td>
+                                            <td data-label="Tahun Ajaran" className="px-4 py-3 text-sm text-neutral-600">
                                                 {periode.tahun_ajaran?.tahun_mulai} - {periode.tahun_ajaran?.tahun_selesai}
                                             </td>
-                                            <td className="px-4 py-3 text-sm text-neutral-600">{periode.semester?.nama_semester}</td>
-                                            <td className="px-4 py-3 text-sm text-neutral-600">
+                                            <td data-label="Semester" className="px-4 py-3 text-sm text-neutral-600">{periode.semester?.nama_semester}</td>
+                                            <td data-label="Tanggal" className="px-4 py-3 text-sm text-neutral-600">
                                                 {new Date(periode.tanggal_mulai).toLocaleDateString('id-ID')} - {new Date(periode.tanggal_selesai).toLocaleDateString('id-ID')}
                                             </td>
-                                            <td className="px-4 py-3"><StatusBadge status={periode.status} /></td>
-                                            <td className="px-4 py-3 text-right">
+                                            <td data-label="Status" className="px-4 py-3"><StatusBadge status={periode.status} /></td>
+                                            <td data-label="Aksi" className="px-4 py-3 text-right">
                                                 <div className="flex items-center justify-end gap-2 flex-wrap">
                                                     <ActionButton href={`/admin/periode-krs/${periode.id}`} variant="ghost">Lihat</ActionButton>
                                                     <ActionButton href={`/admin/periode-krs/${periode.id}/edit`} variant="ghost">Edit</ActionButton>

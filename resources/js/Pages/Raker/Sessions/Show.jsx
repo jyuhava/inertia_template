@@ -59,7 +59,7 @@ export default function Show({ session, submissions, stats, grand_total_budget }
                     </div>
 
                     <div className="overflow-x-auto border border-[#e5e5e5]">
-                        <table className="min-w-full text-left">
+                        <table className="min-w-full text-left table-cards">
                             <thead className="bg-[#f5f5f5] border-b border-[#e5e5e5]">
                                 <tr>
                                     <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-neutral-500">User</th>
@@ -74,7 +74,7 @@ export default function Show({ session, submissions, stats, grand_total_budget }
                             </thead>
                             <tbody className="divide-y divide-[#e5e5e5]">
                                 {submissions.length === 0 ? (
-                                    <tr>
+                                    <tr className="table-cards-empty">
                                         <td colSpan="8" className="px-4 py-8 text-center text-xs text-neutral-400 uppercase tracking-widest">
                                             Belum ada user yang mengisi sesi ini.
                                         </td>
@@ -82,19 +82,19 @@ export default function Show({ session, submissions, stats, grand_total_budget }
                                 ) : (
                                     submissions.map((submission) => (
                                         <tr key={submission.id} className="hover:bg-[#fafafa]">
-                                            <td className="px-4 py-3">
+                                            <td data-label="User" className="px-4 py-3">
                                                 <p className="text-sm font-semibold text-neutral-900">{submission.user?.name}</p>
                                                 <p className="text-xs text-neutral-500">{submission.user?.email}</p>
                                             </td>
-                                            <td className="px-4 py-3 text-sm text-neutral-600">{submission.unit || '-'}</td>
-                                            <td className="px-4 py-3 text-sm text-neutral-600">{submission.jabatan || '-'}</td>
-                                            <td className="px-4 py-3 text-xs text-neutral-600 whitespace-nowrap">
+                                            <td data-label="Unit" className="px-4 py-3 text-sm text-neutral-600">{submission.unit || '-'}</td>
+                                            <td data-label="Jabatan" className="px-4 py-3 text-sm text-neutral-600">{submission.jabatan || '-'}</td>
+                                            <td data-label="Isian Borang" className="px-4 py-3 text-xs text-neutral-600 whitespace-nowrap">
                                                 B1: {submission.borang1_count} • B2: {submission.borang2_count} • B3: {submission.borang3_count} • B4: {submission.borang4_count} • B5: {submission.borang5_count} • B6: {submission.borang6_count}
                                             </td>
-                                            <td className="px-4 py-3 text-sm text-neutral-600">{submission.borang6_total ? formatRupiah(submission.borang6_total) : '-'}</td>
-                                            <td className="px-4 py-3"><SubmissionStatusBadge status={submission.status} /></td>
-                                            <td className="px-4 py-3 text-xs text-neutral-600">{formatDateTime(submission.submitted_at)}</td>
-                                            <td className="px-4 py-3 text-right">
+                                            <td data-label="Anggaran" className="px-4 py-3 text-sm text-neutral-600">{submission.borang6_total ? formatRupiah(submission.borang6_total) : '-'}</td>
+                                            <td data-label="Status" className="px-4 py-3"><SubmissionStatusBadge status={submission.status} /></td>
+                                            <td data-label="Tgl Submit" className="px-4 py-3 text-xs text-neutral-600">{formatDateTime(submission.submitted_at)}</td>
+                                            <td data-label="Aksi" className="px-4 py-3 text-right">
                                                 <ActionButton href={`/raker/submissions/${submission.id}`} variant="ghost">
                                                     Detail
                                                 </ActionButton>

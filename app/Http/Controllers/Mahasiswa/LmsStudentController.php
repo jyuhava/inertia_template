@@ -21,24 +21,88 @@ class LmsStudentController extends Controller
         $mahasiswa = auth()->user()->mahasiswa;
 
         // Get courses from KRS
-        $courses = $mahasiswa->krs()
+        $krsList = $mahasiswa->krs()
             ->whereIn('status', ['diambil', 'disetujui'])
             ->whereHas('jadwalKuliah.lmsCourse')
-            ->with(['jadwalKuliah.mataKuliah', 'jadwalKuliah.dosen', 'jadwalKuliah.lmsCourse'])
-            ->get()
-            ->map(function ($krs) {
-                return [
-                    'id' => $krs->jadwalKuliah->lmsCourse->id,
-                    'mata_kuliah' => $krs->jadwalKuliah->mataKuliah->nama_mata_kuliah,
-                    'kode' => $krs->jadwalKuliah->mataKuliah->kode_mata_kuliah,
-                    'dosen' => $krs->jadwalKuliah->dosen->nama_lengkap,
-                    'description' => $krs->jadwalKuliah->lmsCourse->description,
-                    'thumbnail' => $krs->jadwalKuliah->lmsCourse->thumbnail,
-                ];
-            });
+            ->with([
+                'jadwalKuliah.mataKuliah',
+                'jadwalKuliah.dosen',
+                'jadwalKuliah.lmsCourse.chapters.materials',
+                'jadwalKuliah.lmsCourse.chapters.assignments',
+                'jadwalKuliah.lmsCourse.chapters.forums',
+            ])
+            ->get();
+
+        // Kumpulkan id materi & tugas dari seluruh kelas untuk query progress sekali jalan
+        $materialIds = $krsList
+            ->flatMap(fn ($krs) => $krs->jadwalKuliah->lmsCourse->chapters->flatMap->materials->pluck('id'))
+            ->unique();
+
+        $assignmentIds = $krsList
+            ->flatMap(fn ($krs) => $krs->jadwalKuliah->lmsCourse->chapters->flatMap->assignments->pluck('id'))
+            ->unique();
+
+        $completedMaterialIds = LmsMaterialProgress::where('mahasiswa_id', $mahasiswa->id)
+            ->whereIn('lms_material_id', $materialIds)
+            ->pluck('lms_material_id')
+            ->flip();
+
+        $submittedAssignmentIds = LmsAssignmentSubmission::where('mahasiswa_id', $mahasiswa->id)
+            ->whereIn('lms_assignment_id', $assignmentIds)
+            ->pluck('lms_assignment_id')
+            ->flip();
+
+        $courses = $krsList->map(function ($krs) use ($completedMaterialIds, $submittedAssignmentIds) {
+            $jadwal = $krs->jadwalKuliah;
+            $course = $jadwal->lmsCourse;
+            $chapters = $course->chapters;
+
+            $materials = $chapters->flatMap->materials;
+            $assignments = $chapters->flatMap->assignments;
+
+            $totalMaterials = $materials->count();
+            $completedMaterials = $materials->filter(fn ($m) => $completedMaterialIds->has($m->id))->count();
+            $totalAssignments = $assignments->count();
+            $submittedAssignments = $assignments->filter(fn ($a) => $submittedAssignmentIds->has($a->id))->count();
+
+            return [
+                'id' => $course->id,
+                'mata_kuliah' => $jadwal->mataKuliah->nama_mata_kuliah,
+                'kode' => $jadwal->mataKuliah->kode_mata_kuliah,
+                'sks' => $jadwal->mataKuliah->sks,
+                'semester' => $jadwal->mataKuliah->semester,
+                'dosen' => $jadwal->dosen->nama_lengkap,
+                'hari' => $jadwal->hari,
+                'jam_mulai' => optional($jadwal->jam_mulai)->format('H:i'),
+                'jam_selesai' => optional($jadwal->jam_selesai)->format('H:i'),
+                'ruangan' => $jadwal->ruangan,
+                'description' => $course->description,
+                'thumbnail' => $course->thumbnail,
+                'chapters_count' => $chapters->count(),
+                'materials_count' => $totalMaterials,
+                'completed_materials' => $completedMaterials,
+                'assignments_count' => $totalAssignments,
+                'submitted_assignments' => $submittedAssignments,
+                'forums_count' => $chapters->flatMap->forums->count(),
+                'progress_percent' => $totalMaterials > 0
+                    ? (int) round($completedMaterials / $totalMaterials * 100)
+                    : 0,
+            ];
+        })->values();
+
+        $summary = [
+            'courses' => $courses->count(),
+            'materials' => $courses->sum('materials_count'),
+            'completed_materials' => $courses->sum('completed_materials'),
+            'assignments' => $courses->sum('assignments_count'),
+            'submitted_assignments' => $courses->sum('submitted_assignments'),
+            'pending_assignments' => $courses->sum('assignments_count') - $courses->sum('submitted_assignments'),
+            'forums' => $courses->sum('forums_count'),
+        ];
 
         return Inertia::render('Mahasiswa/Lms/Index', [
-            'courses' => $courses
+            'courses' => $courses,
+            'summary' => $summary,
         ]);
     }
 

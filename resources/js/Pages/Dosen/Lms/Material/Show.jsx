@@ -6,7 +6,7 @@ import { useState } from 'react';
 function Box({ children, className = '', padded = true, variant = 'white' }) {
     const variants = {
         white: 'bg-white border-[#e5e5e5]',
-        black: 'bg-black border-black text-white',
+        black: 'bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 border-transparent text-white rounded-2xl shadow-lg shadow-violet-500/20',
         gray: 'bg-[#f4f4f5] border-[#e5e5e5]',
         outline: 'bg-transparent border-[#e5e5e5]',
     };

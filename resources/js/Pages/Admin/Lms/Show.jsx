@@ -6,7 +6,7 @@ function Box({ children, className = '', padded = true, variant = 'white' }) {
     const variants = {
         white: 'bg-white border-neutral-200',
         gray: 'bg-neutral-50 border-neutral-200',
-        black: 'bg-black text-white border-black',
+        black: 'bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 border-transparent text-white rounded-2xl shadow-lg shadow-violet-500/20',
     };
     return (
         <div className={`border ${variants[variant]} ${padded ? 'p-6' : ''} ${className}`}>
@@ -105,14 +105,14 @@ export default function Show({ course }) {
                 {/* Header */}
                 <Box variant="black" className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                     <div>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 mb-2">Pantauan Kelas LMS</p>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-white/75 mb-2">Pantauan Kelas LMS</p>
                         <h1 className="text-2xl font-bold text-white">{course.jadwal_kuliah?.mata_kuliah?.nama_mata_kuliah}</h1>
-                        <p className="mt-2 text-sm text-neutral-300">
+                        <p className="mt-2 text-sm text-white/85">
                             {course.jadwal_kuliah?.mata_kuliah?.kode_mata_kuliah} • {course.jadwal_kuliah?.hari},{' '}
                             {String(course.jadwal_kuliah?.jam_mulai || '-').slice(0, 5)} - {String(course.jadwal_kuliah?.jam_selesai || '-').slice(0, 5)}
                         </p>
-                        <p className="text-xs text-neutral-400 mt-1">Dosen: {course.jadwal_kuliah?.dosen?.nama_lengkap || '-'}</p>
-                        <p className="text-xs text-neutral-400">Program Studi: {course.jadwal_kuliah?.mata_kuliah?.prodi?.nama_prodi || '-'}</p>
+                        <p className="text-xs text-white/75 mt-1">Dosen: {course.jadwal_kuliah?.dosen?.nama_lengkap || '-'}</p>
+                        <p className="text-xs text-white/75">Program Studi: {course.jadwal_kuliah?.mata_kuliah?.prodi?.nama_prodi || '-'}</p>
                     </div>
                     <ActionButton href={route('admin.lms-courses.index')} variant="secondary">
                         ← Kembali ke Daftar

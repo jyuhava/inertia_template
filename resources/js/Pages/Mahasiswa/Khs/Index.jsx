@@ -4,7 +4,7 @@ import { Head, Link } from '@inertiajs/react';
 function Box({ children, className = '', padded = true, variant = 'white' }) {
     const variants = {
         white: 'bg-white border border-neutral-200',
-        black: 'bg-black text-white border border-black',
+        black: 'bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 border-transparent text-white rounded-2xl shadow-lg shadow-violet-500/20',
         gray: 'bg-neutral-50 border border-neutral-200',
     };
     return (
@@ -54,20 +54,20 @@ export default function Index({ mahasiswa, periodeKrs, ipk }) {
 
             <div className="space-y-6">
                 <Box variant="black" className="relative overflow-hidden">
-                    <div className="absolute right-0 top-0 h-20 w-20 bg-neutral-800" />
+                    <div className="absolute right-0 top-0 h-20 w-20 bg-white/10" />
                     <div className="relative flex flex-col justify-between gap-4 md:flex-row md:items-start">
                         <div>
-                            <p className="text-xs font-bold uppercase tracking-widest text-neutral-400">Kartu Hasil Studi (KHS)</p>
+                            <p className="text-xs font-bold uppercase tracking-widest text-white/75">Kartu Hasil Studi (KHS)</p>
                             <h1 className="mt-2 text-2xl font-bold md:text-3xl">{mahasiswa.nama_lengkap}</h1>
-                            <p className="mt-1 text-sm text-neutral-300">
+                            <p className="mt-1 text-sm text-white/85">
                                 NIM {mahasiswa.nim} • {mahasiswa.prodi?.nama_prodi}
                             </p>
                         </div>
                         <Box variant="gray" className="min-w-[200px]">
-                            <p className="text-xs font-bold uppercase tracking-widest text-neutral-500">Indeks Prestasi Kumulatif (IPK)</p>
+                            <p className="text-xs font-bold uppercase tracking-widest text-white/70">Indeks Prestasi Kumulatif (IPK)</p>
                             <div className="mt-1 flex items-baseline">
                                 <span className="text-3xl font-bold text-neutral-900">{ipk}</span>
-                                <span className="ml-2 text-sm font-bold text-neutral-500">/ 4.00</span>
+                                <span className="ml-2 text-sm font-bold text-white/70">/ 4.00</span>
                             </div>
                         </Box>
                     </div>

@@ -53,8 +53,18 @@ const Content = ({
 
     let widthClasses = '';
 
-    if (width === '48') {
-        widthClasses = 'w-48';
+    const widthMap = {
+        40: 'w-40',
+        44: 'w-44',
+        48: 'w-48',
+        52: 'w-52',
+        56: 'w-56',
+        64: 'w-64',
+        72: 'w-72',
+    };
+
+    if (widthMap[width]) {
+        widthClasses = widthMap[width];
     }
 
     return (
@@ -69,7 +79,7 @@ const Content = ({
                 leaveTo="opacity-0 scale-95"
             >
                 <div
-                    className={`absolute z-50 mt-2 rounded-md shadow-lg ${alignmentClasses} ${widthClasses}`}
+                    className={`absolute z-50 mt-2 max-w-[calc(100vw-1.5rem)] rounded-md shadow-lg ${alignmentClasses} ${widthClasses}`}
                     onClick={() => setOpen(false)}
                 >
                     <div
@@ -91,7 +101,7 @@ const DropdownLink = ({ className = '', children, ...props }) => {
         <Link
             {...props}
             className={
-                'block w-full px-4 py-2 text-start text-sm leading-5 text-gray-700 transition duration-150 ease-in-out hover:bg-gray-100 focus:bg-gray-100 focus:outline-none ' +
+                'block w-full px-3.5 py-2.5 text-start text-xs leading-4 text-gray-700 transition duration-150 ease-in-out hover:bg-gray-100 focus:bg-gray-100 focus:outline-none sm:py-1.5 ' +
                 className
             }
         >

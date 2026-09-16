@@ -76,33 +76,33 @@ export default function Index({ dosen, periodeAktif, jadwalKuliahs }) {
             <Head title="Jadwal Mengajar" />
 
             <div className="space-y-6">
-                <section className="relative overflow-hidden border border-neutral-900 bg-neutral-900 p-7 text-white shadow-sm">
+                <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-600 shadow-teal-500/20 p-4 text-white shadow-lg sm:p-5">
                     <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                         <div>
-                            <p className="text-xs font-semibold uppercase tracking-widest text-neutral-400">Jadwal Pengajaran</p>
+                            <p className="text-xs font-semibold uppercase tracking-widest text-white/75">Jadwal Pengajaran</p>
                             <h1 className="mt-2 text-2xl font-bold tracking-tight md:text-3xl">Jadwal Mengajar Dosen</h1>
-                            <p className="mt-2 text-sm text-neutral-300">
+                            <p className="mt-2 text-sm text-white/85">
                                 {dosen?.nama_lengkap || '-'} • NIP {dosen?.nip || '-'}
                             </p>
-                            <p className="text-sm text-neutral-300">
+                            <p className="text-sm text-white/85">
                                 {periodeAktif.nama_periode || 'Periode Aktif'} • Semester {periodeAktif.semester?.nama_semester || '-'}
                             </p>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
-                            <Box variant="dark" className="!p-3 !border-white/20">
-                                <p className="text-[11px] font-semibold uppercase tracking-widest text-neutral-400">Kelas Aktif</p>
+                            <Box variant="dark" className="!bg-white/10 !p-3 !border-white/20">
+                                <p className="text-[11px] font-semibold uppercase tracking-widest text-white/75">Kelas Aktif</p>
                                 <p className="mt-1 text-xl font-bold">{jadwalKuliahs.length}</p>
                             </Box>
-                            <Box variant="dark" className="!p-3 !border-white/20">
-                                <p className="text-[11px] font-semibold uppercase tracking-widest text-neutral-400">Total Mahasiswa</p>
+                            <Box variant="dark" className="!bg-white/10 !p-3 !border-white/20">
+                                <p className="text-[11px] font-semibold uppercase tracking-widest text-white/75">Total Mahasiswa</p>
                                 <p className="mt-1 text-xl font-bold">{totalMahasiswa}</p>
                             </Box>
-                            <Box variant="dark" className="!p-3 !border-white/20">
-                                <p className="text-[11px] font-semibold uppercase tracking-widest text-neutral-400">Total SKS</p>
+                            <Box variant="dark" className="!bg-white/10 !p-3 !border-white/20">
+                                <p className="text-[11px] font-semibold uppercase tracking-widest text-white/75">Total SKS</p>
                                 <p className="mt-1 text-xl font-bold">{totalSks}</p>
                             </Box>
-                            <Box variant="dark" className="!p-3 !border-white/20">
-                                <p className="text-[11px] font-semibold uppercase tracking-widest text-neutral-400">Kelas Hari Ini</p>
+                            <Box variant="dark" className="!bg-white/10 !p-3 !border-white/20">
+                                <p className="text-[11px] font-semibold uppercase tracking-widest text-white/75">Kelas Hari Ini</p>
                                 <p className="mt-1 text-xl font-bold">{jumlahKelasHariIni}</p>
                             </Box>
                         </div>

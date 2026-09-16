@@ -6,7 +6,7 @@ import TextInput from '@/Components/TextInput';
 function Box({ children, className = '', padded = true, variant = 'white' }) {
     const variants = {
         white: 'bg-white border-[#e4e4e7]',
-        dark: 'bg-[#0a0a0a] border-[#222] text-white',
+        dark: 'bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-600 border-transparent text-white rounded-2xl shadow-lg shadow-teal-500/20',
         accent: 'bg-black text-white border-black'
     };
     return (
@@ -139,7 +139,7 @@ export default function Index({ dosens, filters }) {
                 {/* Table */}
                 <Box padded={false} className="overflow-hidden">
                     <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-[#e4e4e7]">
+                        <table className="min-w-full divide-y divide-[#e4e4e7] table-cards">
                             <thead className="bg-[#fafafa]">
                                 <tr>
                                     <th className="px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.15em] text-neutral-500">NIP</th>
@@ -154,13 +154,13 @@ export default function Index({ dosens, filters }) {
                             <tbody className="bg-white divide-y divide-[#e4e4e7]">
                                 {dosens.data.map((dosen) => (
                                     <tr key={dosen.id} className="hover:bg-[#fafafa] transition-colors">
-                                        <td className="px-5 py-4 whitespace-nowrap text-sm font-medium text-black">{dosen.nip}</td>
-                                        <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-700">{dosen.nama_lengkap}</td>
-                                        <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-700">{dosen.bidang_keahlian}</td>
-                                        <td className="px-5 py-4 whitespace-nowrap"><JabatanBadge jabatan={dosen.jabatan_akademik} /></td>
-                                        <td className="px-5 py-4 whitespace-nowrap"><StatusBadge status={dosen.status} /></td>
-                                        <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-700">{dosen.user.email}</td>
-                                        <td className="px-5 py-4 whitespace-nowrap text-right">
+                                        <td data-label="NIP" className="px-5 py-4 whitespace-nowrap text-sm font-medium text-black">{dosen.nip}</td>
+                                        <td data-label="Nama Lengkap" className="px-5 py-4 whitespace-nowrap text-sm text-neutral-700">{dosen.nama_lengkap}</td>
+                                        <td data-label="Bidang Keahlian" className="px-5 py-4 whitespace-nowrap text-sm text-neutral-700">{dosen.bidang_keahlian}</td>
+                                        <td data-label="Jabatan Akademik" className="px-5 py-4 whitespace-nowrap"><JabatanBadge jabatan={dosen.jabatan_akademik} /></td>
+                                        <td data-label="Status" className="px-5 py-4 whitespace-nowrap"><StatusBadge status={dosen.status} /></td>
+                                        <td data-label="Email" className="px-5 py-4 whitespace-nowrap text-sm text-neutral-700">{dosen.user.email}</td>
+                                        <td data-label="Aksi" className="px-5 py-4 whitespace-nowrap text-right">
                                             <div className="flex justify-end gap-2">
                                                 <ActionButton href={`/admin/dosen/${dosen.id}`} variant="secondary" size="sm">Detail</ActionButton>
                                                 <ActionButton href={`/admin/dosen/${dosen.id}/edit`} variant="primary" size="sm">Edit</ActionButton>
@@ -170,7 +170,7 @@ export default function Index({ dosens, filters }) {
                                     </tr>
                                 ))}
                                 {dosens.data.length === 0 && (
-                                    <tr>
+                                    <tr className="table-cards-empty">
                                         <td colSpan="7" className="px-5 py-12 text-center text-sm text-neutral-500">
                                             Tidak ada data dosen.
                                         </td>

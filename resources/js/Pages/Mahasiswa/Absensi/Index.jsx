@@ -6,7 +6,7 @@ import { router } from '@inertiajs/react';
 function Box({ children, className = '', padded = true, variant = 'white' }) {
     const variants = {
         white: 'bg-white border border-neutral-200',
-        black: 'bg-black text-white border border-black',
+        black: 'bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 border-transparent text-white rounded-2xl shadow-lg shadow-violet-500/20',
         gray: 'bg-neutral-50 border border-neutral-200',
     };
     return (
@@ -80,11 +80,24 @@ export default function Index({ auth, mahasiswa, periodeKrs, periodeKrsList, krs
 
             <div className="space-y-6">
                 <Box variant="black" className="relative overflow-hidden">
-                    <div className="absolute right-0 top-0 h-20 w-20 bg-neutral-800" />
-                    <div className="relative">
-                        <p className="text-xs font-bold uppercase tracking-widest text-neutral-400">Rekap Kehadiran</p>
-                        <h1 className="mt-2 text-2xl font-bold md:text-3xl">Daftar Kehadiran</h1>
-                        <p className="mt-1 text-sm text-neutral-300">{mahasiswa.nama} • NIM {mahasiswa.nim}</p>
+                    <div className="absolute right-0 top-0 h-20 w-20 bg-white/10" />
+                    <div className="relative flex flex-col justify-between gap-4 md:flex-row md:items-start">
+                        <div>
+                            <p className="text-xs font-bold uppercase tracking-widest text-white/75">Rekap Kehadiran</p>
+                            <h1 className="mt-2 text-2xl font-bold md:text-3xl">Daftar Kehadiran</h1>
+                            <p className="mt-1 text-sm text-white/85">{mahasiswa.nama} • NIM {mahasiswa.nim}</p>
+                        </div>
+                        {periodeKrs && krsList.length > 0 && (
+                            <a
+                                href={`/mahasiswa/absensi/cetak?periode_krs_id=${periodeKrs.id}`}
+                                className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-xs font-bold uppercase tracking-widest text-neutral-900 shadow-sm transition hover:bg-white/85 active:scale-[0.98]"
+                            >
+                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                </svg>
+                                Cetak Rekap Kehadiran
+                            </a>
+                        )}
                     </div>
                 </Box>
 
@@ -151,7 +164,7 @@ export default function Index({ auth, mahasiswa, periodeKrs, periodeKrsList, krs
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
-                            <table className="min-w-full text-sm">
+                            <table className="min-w-full text-sm table-cards">
                                 <thead>
                                     <tr className="border-b border-neutral-200 text-left text-xs font-bold uppercase tracking-widest text-neutral-500">
                                         <th className="py-3 pr-4">Mata Kuliah</th>
@@ -168,19 +181,19 @@ export default function Index({ auth, mahasiswa, periodeKrs, periodeKrsList, krs
                                 <tbody className="divide-y divide-neutral-100">
                                     {krsList.map((krs) => (
                                         <tr key={krs.id} className="hover:bg-neutral-50">
-                                            <td className="py-4 pr-4">
+                                            <td data-label="Mata Kuliah" className="py-4 pr-4">
                                                 <p className="font-bold text-neutral-900">{krs.nama_mata_kuliah}</p>
                                                 <p className="text-xs text-neutral-500">{krs.kode_mata_kuliah}</p>
                                             </td>
-                                            <td className="py-4 pr-4 text-center font-bold text-neutral-900">{krs.sks}</td>
-                                            <td className="py-4 pr-4 text-neutral-700">{krs.dosen}</td>
-                                            <td className="py-4 pr-4 text-center">
+                                            <td data-label="SKS" className="py-4 pr-4 text-center font-bold text-neutral-900">{krs.sks}</td>
+                                            <td data-label="Dosen" className="py-4 pr-4 text-neutral-700">{krs.dosen}</td>
+                                            <td data-label="Jadwal" className="py-4 pr-4 text-center">
                                                 <p className="font-bold text-neutral-900">{krs.hari}</p>
                                                 <p className="text-xs text-neutral-500">{krs.jam_mulai} - {krs.jam_selesai}</p>
                                                 <p className="text-xs text-neutral-500">{krs.ruangan}</p>
                                             </td>
-                                            <td className="py-4 pr-4 text-center text-neutral-700">{krs.total_pertemuan}</td>
-                                            <td className="py-4 pr-4 text-center">
+                                            <td data-label="Pertemuan" className="py-4 pr-4 text-center text-neutral-700">{krs.total_pertemuan}</td>
+                                            <td data-label="Kehadiran" className="py-4 pr-4 text-center">
                                                 <div className="flex flex-col items-center gap-1">
                                                     <CountPill variant="hadir" label="H" count={krs.hadir} />
                                                     {(krs.tidak_hadir > 0 || krs.izin > 0 || krs.sakit > 0) && (
@@ -192,15 +205,15 @@ export default function Index({ auth, mahasiswa, periodeKrs, periodeKrsList, krs
                                                     )}
                                                 </div>
                                             </td>
-                                            <td className="py-4 pr-4 text-center">
+                                            <td data-label="Persentase" className="py-4 pr-4 text-center">
                                                 <span className={`text-lg font-bold ${getPercentageClass(krs.persentase_kehadiran)}`}>
                                                     {krs.persentase_kehadiran}%
                                                 </span>
                                             </td>
-                                            <td className="py-4 pr-4 text-center">
+                                            <td data-label="Status" className="py-4 pr-4 text-center">
                                                 <StatusBadge status={krs.status_kehadiran} />
                                             </td>
-                                            <td className="py-4 text-center">
+                                            <td data-label="Aksi" className="py-4 text-center">
                                                 <Link
                                                     href={`/mahasiswa/absensi/${krs.jadwal_kuliah_id}?periode_krs_id=${periodeKrs.id}`}
                                                     className="text-xs font-bold uppercase tracking-widest text-neutral-900 hover:underline"

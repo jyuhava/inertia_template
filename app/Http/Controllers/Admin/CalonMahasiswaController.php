@@ -9,6 +9,7 @@ use App\Models\Prodi;
 use App\Models\User;
 use App\Models\Mahasiswa;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -153,51 +154,119 @@ class CalonMahasiswaController extends Controller
      */
     public function convertToMahasiswa(Request $request, CalonMahasiswa $calonMahasiswa)
     {
-        if ($calonMahasiswa->status_pendaftaran !== 'accepted') {
-            return back()->with('error', 'Hanya calon mahasiswa yang diterima yang dapat dikonversi!');
+        // Whatever the status, allow conversion
+        $prodiId = $request->prodi_id 
+            ?: ($calonMahasiswa->prodi_pilihan_1 
+                ?: ($calonMahasiswa->prodi_pilihan_2 
+                    ?: (Prodi::where('status', 'aktif')->value('id') ?? 1)));
+
+        $angkatan = $request->angkatan ?: (string) now()->year;
+
+        $nim = $request->nim ?: $this->generateNim($prodiId, $angkatan);
+
+        // Ensure NIM uniqueness
+        if (Mahasiswa::where('nim', $nim)->exists()) {
+            $nim = $this->generateNim($prodiId, $angkatan);
         }
 
-        $request->validate([
-            'nim' => 'required|string|max:20|unique:mahasiswas,nim',
-            'prodi_id' => 'required|exists:prodis,id',
-            'angkatan' => 'required|string|max:4',
-        ]);
+        $prodi = Prodi::find($prodiId);
 
         try {
-            // Create or update user account
+            DB::beginTransaction();
+
+            // 1. Create or update user account
             $user = $calonMahasiswa->user;
+            $email = $calonMahasiswa->email ?: "{$nim}@student.alwafi.ac.id";
+
             if (!$user) {
-                $user = User::create([
-                    'name' => $calonMahasiswa->nama_lengkap,
-                    'email' => $calonMahasiswa->email,
-                    'password' => Hash::make('password'), // Default password
-                    'role' => 'mahasiswa',
-                    'email_verified_at' => now(),
-                ]);
+                // Check if user with this email already exists
+                $user = User::where('email', $email)->first();
+                if (!$user) {
+                    $user = User::create([
+                        'name' => $calonMahasiswa->nama_lengkap,
+                        'email' => $email,
+                        'password' => Hash::make('password123'), // Default password
+                        'role' => 'mahasiswa',
+                        'email_verified_at' => now(),
+                    ]);
+                } else {
+                    $user->update(['role' => 'mahasiswa']);
+                }
                 $calonMahasiswa->update(['user_id' => $user->id]);
             } else {
                 $user->update(['role' => 'mahasiswa']);
             }
 
-            // Create mahasiswa record
-            Mahasiswa::create([
-                'user_id' => $user->id,
-                'nim' => $request->nim,
-                'nama_lengkap' => $calonMahasiswa->nama_lengkap,
-                'jenis_kelamin' => $calonMahasiswa->jenis_kelamin,
-                'tempat_lahir' => $calonMahasiswa->tempat_lahir,
-                'tanggal_lahir' => $calonMahasiswa->tanggal_lahir,
-                'alamat' => $calonMahasiswa->alamat,
-                'no_hp' => $calonMahasiswa->no_hp,
-                'prodi_id' => $request->prodi_id,
-                'angkatan' => $request->angkatan,
-                'status' => 'aktif',
+            // 2. Check if mahasiswa record already exists for this user
+            $mahasiswa = Mahasiswa::where('user_id', $user->id)->first();
+            if (!$mahasiswa) {
+                $mahasiswa = Mahasiswa::create([
+                    'user_id' => $user->id,
+                    'nim' => $nim,
+                    'nama_lengkap' => $calonMahasiswa->nama_lengkap,
+                    'jenis_kelamin' => $calonMahasiswa->jenis_kelamin ?? 'L',
+                    'tempat_lahir' => $calonMahasiswa->tempat_lahir ?? '-',
+                    'tanggal_lahir' => $calonMahasiswa->tanggal_lahir ?? now()->subYears(18)->format('Y-m-d'),
+                    'alamat' => $calonMahasiswa->alamat ?? '-',
+                    'no_hp' => $calonMahasiswa->no_hp ?? '-',
+                    'prodi_id' => $prodiId,
+                    'program_studi' => $prodi?->nama_prodi ?? 'Pendidikan Agama Islam',
+                    'angkatan' => $angkatan,
+                    'status' => 'aktif',
+                ]);
+            } else {
+                $mahasiswa->update([
+                    'prodi_id' => $prodiId,
+                    'program_studi' => $prodi?->nama_prodi ?? $mahasiswa->program_studi,
+                    'angkatan' => $angkatan,
+                    'status' => 'aktif',
+                ]);
+            }
+
+            // 3. Mark calon mahasiswa as accepted & verified
+            $calonMahasiswa->update([
+                'status_pendaftaran' => 'accepted',
+                'tanggal_verifikasi' => $calonMahasiswa->tanggal_verifikasi ?? now(),
+                'verified_by' => $calonMahasiswa->verified_by ?? auth()->id(),
             ]);
 
-            return back()->with('success', 'Calon mahasiswa berhasil dikonversi menjadi mahasiswa!');
+            DB::commit();
+
+            return back()->with('success', "Calon mahasiswa berhasil dikonversi menjadi mahasiswa dengan NIM {$mahasiswa->nim}!");
         } catch (\Exception $e) {
+            DB::rollBack();
             return back()->with('error', 'Gagal mengkonversi calon mahasiswa: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Helper to auto-generate unique NIM
+     */
+    private function generateNim($prodiId, $angkatan)
+    {
+        $prodi = Prodi::find($prodiId);
+        $prodiCode = $prodi ? str_pad($prodi->id, 3, '0', STR_PAD_LEFT) : '001';
+        $prefix = $angkatan . $prodiCode;
+        
+        $lastMahasiswa = Mahasiswa::where('nim', 'like', "{$prefix}%")
+            ->orderBy('nim', 'desc')
+            ->first();
+            
+        if ($lastMahasiswa) {
+            $lastSequence = (int) substr($lastMahasiswa->nim, -3);
+            $newSequence = $lastSequence + 1;
+        } else {
+            $newSequence = 1;
+        }
+        
+        $nim = $prefix . str_pad($newSequence, 3, '0', STR_PAD_LEFT);
+        
+        while (Mahasiswa::where('nim', $nim)->exists()) {
+            $newSequence++;
+            $nim = $prefix . str_pad($newSequence, 3, '0', STR_PAD_LEFT);
+        }
+        
+        return $nim;
     }
 
     /**

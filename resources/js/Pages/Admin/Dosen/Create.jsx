@@ -5,7 +5,7 @@ function Box({ children, className = '', padded = true, variant = 'white' }) {
     const variants = {
         white: 'bg-white border-neutral-200',
         gray: 'bg-neutral-50 border-neutral-200',
-        black: 'bg-black text-white border-black',
+        black: 'bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 border-transparent text-white rounded-2xl shadow-lg shadow-violet-500/20',
     };
     return (
         <div className={`border ${variants[variant]} ${padded ? 'p-6' : ''} ${className}`}>
@@ -130,7 +130,7 @@ export default function Create() {
             <div className="space-y-6">
                 <Box variant="black" className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                     <div>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 mb-2">Dosen</p>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-white/75 mb-2">Dosen</p>
                         <h1 className="text-2xl font-bold text-white">Tambah Dosen Baru</h1>
                     </div>
                     <ActionButton href="/admin/dosen" variant="secondary">

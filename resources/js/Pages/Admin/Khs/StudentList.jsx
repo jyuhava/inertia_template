@@ -5,7 +5,7 @@ import Pagination from '@/Components/Pagination';
 function Box({ children, className = '', padded = true, variant = 'white' }) {
     const variants = {
         white: 'bg-white border-[#e5e5e5]',
-        black: 'bg-black border-black text-white',
+        black: 'bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 border-transparent text-white rounded-2xl shadow-lg shadow-violet-500/20',
         gray: 'bg-[#f5f5f5] border-[#e5e5e5]',
     };
     return (
@@ -60,10 +60,10 @@ export default function StudentList({ mahasiswas, filters }) {
         <AdminLayout>
             <Head title="Daftar Mahasiswa - KHS" />
 
-            <div className="p-6 lg:p-8 min-h-screen bg-[#fafafa]">
+            <div className="p-6 lg:p-8 min-h-dvh bg-[#fafafa]">
                 <Box variant="black" className="mb-6">
                     <div>
-                        <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-neutral-400 mb-1">Manajemen Akademik</p>
+                        <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/75 mb-1">Manajemen Akademik</p>
                         <h1 className="text-xl font-bold uppercase tracking-tight text-white">Daftar Mahasiswa (KHS)</h1>
                     </div>
                 </Box>
@@ -88,7 +88,7 @@ export default function StudentList({ mahasiswas, filters }) {
                     </form>
 
                     <div className="overflow-x-auto border border-[#e5e5e5]">
-                        <table className="min-w-full text-left">
+                        <table className="min-w-full text-left table-cards">
                             <thead className="bg-[#f5f5f5] border-b border-[#e5e5e5]">
                                 <tr>
                                     <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-neutral-500">NIM</th>
@@ -100,7 +100,7 @@ export default function StudentList({ mahasiswas, filters }) {
                             </thead>
                             <tbody className="divide-y divide-[#e5e5e5]">
                                 {mahasiswas.data.length === 0 ? (
-                                    <tr>
+                                    <tr className="table-cards-empty">
                                         <td colSpan="5" className="px-4 py-8 text-center text-xs text-neutral-400 uppercase tracking-widest">
                                             Tidak ada data mahasiswa ditemukan.
                                         </td>
@@ -108,11 +108,11 @@ export default function StudentList({ mahasiswas, filters }) {
                                 ) : (
                                     mahasiswas.data.map((mahasiswa) => (
                                         <tr key={mahasiswa.id} className="hover:bg-[#fafafa]">
-                                            <td className="px-4 py-3 text-sm font-semibold text-neutral-900">{mahasiswa.nim}</td>
-                                            <td className="px-4 py-3 text-sm text-neutral-900">{mahasiswa.nama_lengkap}</td>
-                                            <td className="px-4 py-3 text-sm text-neutral-600">{mahasiswa.prodi?.nama_prodi}</td>
-                                            <td className="px-4 py-3 text-sm text-neutral-600">{mahasiswa.angkatan}</td>
-                                            <td className="px-4 py-3 text-right">
+                                            <td data-label="NIM" className="px-4 py-3 text-sm font-semibold text-neutral-900">{mahasiswa.nim}</td>
+                                            <td data-label="Nama Lengkap" className="px-4 py-3 text-sm text-neutral-900">{mahasiswa.nama_lengkap}</td>
+                                            <td data-label="Program Studi" className="px-4 py-3 text-sm text-neutral-600">{mahasiswa.prodi?.nama_prodi}</td>
+                                            <td data-label="Angkatan" className="px-4 py-3 text-sm text-neutral-600">{mahasiswa.angkatan}</td>
+                                            <td data-label="Aksi" className="px-4 py-3 text-right">
                                                 <ActionButton href={route('admin.mahasiswa.khs.index', mahasiswa.id)} variant="primary">Lihat KHS</ActionButton>
                                             </td>
                                         </tr>

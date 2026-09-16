@@ -6,7 +6,7 @@ import { useState } from 'react';
 function Box({ children, className = '', padded = true, variant = 'white' }) {
     const variants = {
         white: 'bg-white border border-neutral-200',
-        black: 'bg-black text-white border border-black',
+        black: 'bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 border-transparent text-white rounded-2xl shadow-lg shadow-violet-500/20',
         gray: 'bg-neutral-50 border border-neutral-200',
     };
     return (
@@ -85,13 +85,13 @@ export default function MaterialShow({ material, chapter, course, isCompleted })
 
             <div className="space-y-6">
                 <Box variant="black" className="relative overflow-hidden">
-                    <div className="absolute right-0 top-0 h-32 w-32 bg-neutral-800/30" />
-                    <div className="absolute bottom-0 left-0 h-24 w-24 bg-neutral-800/20" />
+                    <div className="absolute right-0 top-0 h-32 w-32 bg-white/10" />
+                    <div className="absolute bottom-0 left-0 h-24 w-24 bg-white/10" />
                     <div className="relative flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                         <div>
-                            <p className="text-xs font-bold uppercase tracking-widest text-neutral-400">Detail Materi</p>
+                            <p className="text-xs font-bold uppercase tracking-widest text-white/75">Detail Materi</p>
                             <h1 className="mt-1 text-2xl font-bold md:text-3xl">{material.title}</h1>
-                            <p className="mt-2 text-sm text-neutral-300">
+                            <p className="mt-2 text-sm text-white/85">
                                 {course?.jadwal_kuliah?.mata_kuliah?.nama_mata_kuliah || '-'} • Bab: {chapter?.title || '-'}
                             </p>
                             <div className="mt-3 inline-flex items-center gap-2 border border-white/20 bg-white/10 px-3 py-1 text-xs font-bold uppercase text-neutral-200">

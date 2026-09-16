@@ -7,7 +7,7 @@ import Modal from '@/Components/Modal';
 function Box({ children, className = '', padded = true, variant = 'white' }) {
     const variants = {
         white: 'bg-white border-[#e4e4e7]',
-        dark: 'bg-[#0a0a0a] border-[#222] text-white',
+        dark: 'bg-gradient-to-br from-slate-800 via-indigo-700 to-indigo-600 border-transparent text-white rounded-2xl shadow-lg shadow-indigo-500/20',
         accent: 'bg-black text-white border-black'
     };
     return (
@@ -146,7 +146,7 @@ export default function Index({ tahunAjarans, filters }) {
                 {/* Table */}
                 <Box padded={false} className="overflow-hidden">
                     <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-[#e4e4e7]">
+                        <table className="min-w-full divide-y divide-[#e4e4e7] table-cards">
                             <thead className="bg-[#fafafa]">
                                 <tr>
                                     <th className="px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.15em] text-neutral-500">Tahun Ajaran</th>
@@ -160,19 +160,19 @@ export default function Index({ tahunAjarans, filters }) {
                                 {tahunAjarans.data.length > 0 ? (
                                     tahunAjarans.data.map((tahunAjaran) => (
                                         <tr key={tahunAjaran.id} className="hover:bg-[#fafafa] transition-colors">
-                                            <td className="px-5 py-4 whitespace-nowrap">
+                                            <td data-label="Tahun Ajaran" className="px-5 py-4 whitespace-nowrap">
                                                 <div className="text-sm font-medium text-black">{tahunAjaran.nama_tahun_ajaran}</div>
                                                 {tahunAjaran.keterangan && (
                                                     <div className="text-xs text-neutral-500 mt-0.5">{tahunAjaran.keterangan}</div>
                                                 )}
                                             </td>
-                                            <td className="px-5 py-4 whitespace-nowrap text-sm text-neutral-700">
+                                            <td data-label="Periode" className="px-5 py-4 whitespace-nowrap text-sm text-neutral-700">
                                                 <div>{new Date(tahunAjaran.tanggal_mulai).toLocaleDateString('id-ID')}</div>
                                                 <div className="text-neutral-400 text-xs">s/d {new Date(tahunAjaran.tanggal_selesai).toLocaleDateString('id-ID')}</div>
                                             </td>
-                                            <td className="px-5 py-4 whitespace-nowrap"><StatusBadge status={tahunAjaran.status} /></td>
-                                            <td className="px-5 py-4 whitespace-nowrap"><CountBadge count={tahunAjaran.semesters_count} label="Semester" /></td>
-                                            <td className="px-5 py-4 whitespace-nowrap text-right">
+                                            <td data-label="Status" className="px-5 py-4 whitespace-nowrap"><StatusBadge status={tahunAjaran.status} /></td>
+                                            <td data-label="Semester" className="px-5 py-4 whitespace-nowrap"><CountBadge count={tahunAjaran.semesters_count} label="Semester" /></td>
+                                            <td data-label="Aksi" className="px-5 py-4 whitespace-nowrap text-right">
                                                 <div className="flex justify-end gap-2">
                                                     <ActionButton href={route('admin.tahun-ajaran.show', tahunAjaran.id)} variant="secondary" size="sm">Detail</ActionButton>
                                                     <ActionButton href={route('admin.tahun-ajaran.edit', tahunAjaran.id)} variant="primary" size="sm">Edit</ActionButton>
@@ -182,7 +182,7 @@ export default function Index({ tahunAjarans, filters }) {
                                         </tr>
                                     ))
                                 ) : (
-                                    <tr>
+                                    <tr className="table-cards-empty">
                                         <td colSpan={5} className="px-5 py-12 text-center text-sm text-neutral-500">
                                             Tidak ada data tahun ajaran.
                                         </td>

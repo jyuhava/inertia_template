@@ -81,29 +81,28 @@ class DashboardController extends Controller
                 ->value('rate') ?? 0;
         }
 
-        $approvedKrsWithScores = Krs::with(['jadwalKuliah.mataKuliah', 'penilaian'])
+        $approvedKrs = Krs::with('jadwalKuliah.mataKuliah')
             ->where('mahasiswa_id', $mahasiswa->id)
             ->where('status', 'disetujui')
-            ->whereHas('penilaian', function ($query) {
-                $query->whereNotNull('nilai_akhir');
-            })
             ->get();
 
-        $totalSksLulus = $approvedKrsWithScores
-            ->filter(function ($krs) {
-                return $krs->penilaian && (float) $krs->penilaian->nilai_akhir >= 50;
-            })
-            ->sum(function ($krs) {
-                return $krs->jadwalKuliah->mataKuliah->sks ?? 0;
-            });
-
+        $totalSksLulus = 0;
         $totalSksIpk = 0;
         $totalMutuIpk = 0;
-        foreach ($approvedKrsWithScores as $krs) {
-            $sks = (int) ($krs->jadwalKuliah->mataKuliah->sks ?? 0);
-            $nilaiAkhir = (float) ($krs->penilaian->nilai_akhir ?? 0);
-            $bobot = $this->nilaiKeBobot($nilaiAkhir);
+        foreach ($approvedKrs as $krs) {
+            $penilaian = $krs->penilaian;
+            if (! $penilaian || $penilaian->nilai_akhir === null) {
+                continue;
+            }
 
+            $nilaiAkhir = (float) $penilaian->nilai_akhir;
+            $sks = (int) ($krs->jadwalKuliah->mataKuliah->sks ?? 0);
+
+            if ($nilaiAkhir >= 50) {
+                $totalSksLulus += $sks;
+            }
+
+            $bobot = $this->nilaiKeBobot($nilaiAkhir);
             $totalSksIpk += $sks;
             $totalMutuIpk += $bobot * $sks;
         }

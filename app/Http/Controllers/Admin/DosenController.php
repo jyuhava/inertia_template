@@ -199,6 +199,10 @@ class DosenController extends Controller
             'password' => 'required|string|min:8|confirmed',
         ]);
 
+        if (!$dosen->user) {
+            return redirect()->back()->with('error', 'Akun user untuk dosen ini tidak ditemukan!');
+        }
+
         // Update password user
         $dosen->user->update([
             'password' => Hash::make($request->password),

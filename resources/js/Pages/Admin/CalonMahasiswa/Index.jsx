@@ -5,7 +5,7 @@ import { useState } from 'react';
 function Box({ children, className = '', padded = true, variant = 'white' }) {
     const variants = {
         white: 'bg-white border-[#e5e5e5]',
-        black: 'bg-black border-black text-white',
+        black: 'bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 border-transparent text-white rounded-2xl shadow-lg shadow-violet-500/20',
         gray: 'bg-[#f5f5f5] border-[#e5e5e5]',
     };
     return (
@@ -137,11 +137,11 @@ export default function Index({ calonMahasiswa = {}, filters = {}, periodePmb })
         <AdminLayout title="Calon Mahasiswa">
             <Head title="Calon Mahasiswa" />
 
-            <div className="p-6 lg:p-8 min-h-screen bg-[#fafafa]">
+            <div className="p-6 lg:p-8 min-h-dvh bg-[#fafafa]">
                 <Box variant="black" className="mb-6">
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div>
-                            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-neutral-400 mb-1">Penerimaan Mahasiswa Baru</p>
+                            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/75 mb-1">Penerimaan Mahasiswa Baru</p>
                             <h1 className="text-xl font-bold uppercase tracking-tight text-white">Calon Mahasiswa</h1>
                         </div>
                         <ActionButton href={route('admin.calon-mahasiswa.export')} variant="secondary">Export CSV</ActionButton>
@@ -205,7 +205,7 @@ export default function Index({ calonMahasiswa = {}, filters = {}, periodePmb })
                     <SectionTitle>Daftar Calon Mahasiswa</SectionTitle>
 
                     <div className="overflow-x-auto border border-[#e5e5e5]">
-                        <table className="min-w-full text-left">
+                        <table className="min-w-full text-left table-cards">
                             <thead className="bg-[#f5f5f5] border-b border-[#e5e5e5]">
                                 <tr>
                                     <th className="px-4 py-3">
@@ -227,7 +227,7 @@ export default function Index({ calonMahasiswa = {}, filters = {}, periodePmb })
                             <tbody className="divide-y divide-[#e5e5e5]">
                                 {(calonMahasiswa?.data || []).map((calon) => (
                                     <tr key={calon.id} className="hover:bg-[#fafafa]">
-                                        <td className="px-4 py-3">
+                                        <td data-label="0} className=&quot;w-4 h-4 border-[#ccc] text-black focus:ring-black&quot; />" className="px-4 py-3">
                                             <input
                                                 type="checkbox"
                                                 checked={selectedItems.includes(calon.id)}
@@ -235,29 +235,29 @@ export default function Index({ calonMahasiswa = {}, filters = {}, periodePmb })
                                                 className="w-4 h-4 border-[#ccc] text-black focus:ring-black"
                                             />
                                         </td>
-                                        <td className="px-4 py-3">
+                                        <td data-label="Calon Mahasiswa" className="px-4 py-3">
                                             <div className="text-sm font-semibold text-neutral-900">{calon.nama_lengkap}</div>
                                             <div className="text-xs text-neutral-500">{calon.no_pendaftaran}</div>
                                             <div className="text-[10px] uppercase tracking-widest text-neutral-400 mt-0.5">NIK: {calon.nik}</div>
                                         </td>
-                                        <td className="px-4 py-3 text-sm text-neutral-600">
+                                        <td data-label="Kontak" className="px-4 py-3 text-sm text-neutral-600">
                                             <div>{calon.email}</div>
                                             <div>{calon.no_hp}</div>
                                         </td>
-                                        <td className="px-4 py-3 text-sm text-neutral-600">
+                                        <td data-label="Pilihan Prodi" className="px-4 py-3 text-sm text-neutral-600">
                                             <div className="font-medium">1. {calon.prodi_pilihan_1?.nama_prodi}</div>
                                             {calon.prodi_pilihan_2 && (
                                                 <div>2. {calon.prodi_pilihan_2?.nama_prodi}</div>
                                             )}
                                         </td>
-                                        <td className="px-4 py-3"><StatusBadge status={calon.status_pendaftaran} /></td>
-                                        <td className="px-4 py-3 text-sm text-neutral-600">
+                                        <td data-label="Status" className="px-4 py-3"><StatusBadge status={calon.status_pendaftaran} /></td>
+                                        <td data-label="Tanggal" className="px-4 py-3 text-sm text-neutral-600">
                                             <div>Daftar: {calon.tanggal_daftar ? new Date(calon.tanggal_daftar).toLocaleDateString('id-ID') : '-'}</div>
                                             {calon.tanggal_verifikasi && (
                                                 <div>Verifikasi: {new Date(calon.tanggal_verifikasi).toLocaleDateString('id-ID')}</div>
                                             )}
                                         </td>
-                                        <td className="px-4 py-3 text-right">
+                                        <td data-label="Aksi" className="px-4 py-3 text-right">
                                             <ActionButton href={route('admin.calon-mahasiswa.show', calon.id)} variant="ghost">Detail</ActionButton>
                                         </td>
                                     </tr>

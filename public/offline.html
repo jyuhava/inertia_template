@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="id">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+        <meta name="theme-color" content="#0a0a0a">
+        <title>Offline — SIAKAD STIT Al Wafi</title>
+        <style>
+            * { box-sizing: border-box; }
+
+            body {
+                margin: 0;
+                min-height: 100vh;
+                min-height: 100dvh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 1.5rem;
+                padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+                background: #f4f4f5;
+                color: #0a0a0a;
+                font-family: Figtree, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+                -webkit-text-size-adjust: 100%;
+            }
+
+            .card {
+                width: 100%;
+                max-width: 26rem;
+                background: #ffffff;
+                border: 1px solid #e4e4e7;
+                padding: 1.5rem;
+            }
+
+            .brand {
+                display: flex;
+                align-items: center;
+                gap: 0.625rem;
+                padding-bottom: 1rem;
+                border-bottom: 1px solid #e4e4e7;
+            }
+
+            .brand img { height: 1.75rem; width: auto; display: block; }
+
+            .brand span {
+                font-size: 0.6875rem;
+                font-weight: 700;
+                letter-spacing: 0.2em;
+                text-transform: uppercase;
+            }
+
+            h1 {
+                margin: 1.25rem 0 0;
+                font-size: 1.125rem;
+                font-weight: 700;
+                letter-spacing: -0.01em;
+            }
+
+            p {
+                margin: 0.5rem 0 0;
+                font-size: 0.8125rem;
+                line-height: 1.6;
+                color: #52525b;
+            }
+
+            ul {
+                margin: 0.875rem 0 0;
+                padding-left: 1.1rem;
+                font-size: 0.8125rem;
+                line-height: 1.7;
+                color: #52525b;
+            }
+
+            .actions {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                margin-top: 1.5rem;
+            }
+
+            button {
+                flex: 1 1 auto;
+                min-height: 2.75rem;
+                padding: 0.625rem 1rem;
+                font-size: 0.6875rem;
+                font-weight: 700;
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                cursor: pointer;
+                border: 1px solid #0a0a0a;
+                background: #0a0a0a;
+                color: #ffffff;
+            }
+
+            button.secondary {
+                background: #ffffff;
+                color: #0a0a0a;
+                border-color: #e4e4e7;
+            }
+
+            .status {
+                margin-top: 1rem;
+                font-size: 0.6875rem;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                color: #a1a1aa;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="card">
+            <div class="brand">
+                <img src="https://alwafi.ac.id/assets/img/stit.png" alt="STIT Al Wafi">
+                <span>SIAKAD</span>
+            </div>
+
+            <h1>Anda sedang offline</h1>
+            <p>
+                Koneksi internet tidak terdeteksi. SIAKAD tetap bisa dibuka kembali setelah
+                jaringan tersambung.
+            </p>
+
+            <ul>
+                <li>Periksa sinyal seluler atau Wi-Fi Anda.</li>
+                <li>Matikan lalu nyalakan kembali mode pesawat.</li>
+                <li>Halaman yang pernah dibuka mungkin masih tersimpan di perangkat.</li>
+            </ul>
+
+            <div class="actions">
+                <button type="button" onclick="window.location.reload()">Coba Lagi</button>
+                <button type="button" class="secondary" onclick="window.location.href = '/'">Ke Beranda</button>
+            </div>
+
+            <p class="status" id="status">Menunggu koneksi…</p>
+        </div>
+
+        <script>
+            window.addEventListener('online', function () {
+                document.getElementById('status').textContent = 'Koneksi kembali — memuat ulang…';
+                window.location.reload();
+            });
+        </script>
+    </body>
+</html>

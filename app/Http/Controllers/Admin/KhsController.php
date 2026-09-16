@@ -215,12 +215,9 @@ class KhsController extends Controller
      */
     private function hitungIPK($mahasiswaId, $sampaiPeriodeId = null)
     {
-        $query = Krs::with(['jadwalKuliah.mataKuliah', 'penilaian'])
+        $query = Krs::with('jadwalKuliah.mataKuliah')
             ->where('mahasiswa_id', $mahasiswaId)
-            ->whereIn('status', ['disetujui'])
-            ->whereHas('penilaian', function($q) {
-                $q->whereNotNull('nilai_akhir');
-            });
+            ->whereIn('status', ['disetujui']);
 
         if ($sampaiPeriodeId) {
             // Get semua periode sampai periode yang ditentukan
@@ -235,9 +232,20 @@ class KhsController extends Controller
         $totalMutu = 0;
 
         foreach ($allKrs as $krs) {
-            $sks = $krs->jadwalKuliah->mataKuliah->sks;
-            $bobot = $this->hitungBobot($krs->penilaian->nilai_akhir);
-            
+            // Ambil penilaian dengan nilai akhir yang sudah terisi
+            $penilaian = Penilaian::where('mahasiswa_id', $krs->mahasiswa_id)
+                ->where('jadwal_kuliah_id', $krs->jadwal_kuliah_id)
+                ->where('periode_krs_id', $krs->periode_krs_id)
+                ->whereNotNull('nilai_akhir')
+                ->first();
+
+            if (! $penilaian) {
+                continue;
+            }
+
+            $sks = (int) ($krs->jadwalKuliah->mataKuliah->sks ?? 0);
+            $bobot = $this->hitungBobot($penilaian->nilai_akhir);
+
             $totalSks += $sks;
             $totalMutu += ($bobot * $sks);
         }

@@ -4,7 +4,7 @@ import AdminLayout from '@/Layouts/AdminLayout';
 function Box({ children, className = '', padded = true, variant = 'white' }) {
     const variants = {
         white: 'bg-white border border-neutral-200',
-        black: 'bg-black border border-black',
+        black: 'bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 border-transparent text-white rounded-2xl shadow-lg shadow-violet-500/20',
         gray: 'bg-neutral-50 border border-neutral-200'
     };
     return (
@@ -118,9 +118,9 @@ export default function Edit({ jadwalKuliah, mataKuliahs, dosens, semesters }) {
             <div className="space-y-6">
                 <Box variant="black" className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                     <div>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 mb-2">Jadwal Kuliah</p>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-white/75 mb-2">Jadwal Kuliah</p>
                         <h1 className="text-2xl font-bold text-white">Edit Jadwal Kuliah</h1>
-                        <p className="text-sm text-neutral-400 mt-1">
+                        <p className="text-sm text-white/75 mt-1">
                             {jadwalKuliah.mata_kuliah?.nama_mata_kuliah || 'Mata Kuliah'} — {jadwalKuliah.hari}, {jadwalKuliah.jam_mulai} s/d {jadwalKuliah.jam_selesai}
                         </p>
                     </div>

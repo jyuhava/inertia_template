@@ -5,7 +5,7 @@ function Box({ children, className = '', padded = true, variant = 'white' }) {
     const variants = {
         white: 'bg-white border-neutral-200',
         gray: 'bg-neutral-50 border-neutral-200',
-        black: 'bg-black text-white border-black',
+        black: 'bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 border-transparent text-white rounded-2xl shadow-lg shadow-violet-500/20',
     };
     return (
         <div className={`border ${variants[variant]} ${padded ? 'p-6' : ''} ${className}`}>
@@ -82,9 +82,9 @@ export default function Show({ mahasiswa, periodeKrs, krs, ips, ipk, totalSks, t
                 {/* Header */}
                 <Box variant="black" className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                     <div>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 mb-2">Kartu Hasil Studi</p>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-white/75 mb-2">Kartu Hasil Studi</p>
                         <h1 className="text-2xl font-bold text-white">{periodeKrs.nama_periode}</h1>
-                        <p className="mt-1 text-sm text-neutral-300">
+                        <p className="mt-1 text-sm text-white/85">
                             {mahasiswa.nama_lengkap} • {mahasiswa.nim}
                         </p>
                     </div>
@@ -117,7 +117,7 @@ export default function Show({ mahasiswa, periodeKrs, krs, ips, ipk, totalSks, t
                         <SectionTitle>Daftar Nilai</SectionTitle>
                     </div>
                     <div className="overflow-x-auto">
-                        <table className="min-w-full text-sm">
+                        <table className="min-w-full text-sm table-cards">
                             <thead className="bg-neutral-50 border-b border-neutral-200">
                                 <tr>
                                     <th className="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-neutral-500 w-12">No</th>
@@ -132,22 +132,22 @@ export default function Show({ mahasiswa, periodeKrs, krs, ips, ipk, totalSks, t
                             <tbody className="divide-y divide-neutral-200">
                                 {krs.map((item, index) => (
                                     <tr key={index} className="hover:bg-neutral-50">
-                                        <td className="px-6 py-4 text-center text-neutral-500">{index + 1}</td>
-                                        <td className="px-6 py-4 font-mono text-neutral-900">{item.kode_mata_kuliah}</td>
-                                        <td className="px-6 py-4 text-neutral-900">{item.nama_mata_kuliah}</td>
-                                        <td className="px-6 py-4 text-center text-neutral-900">{item.sks}</td>
-                                        <td className="px-6 py-4 text-center"><GradeCell nilai={item.nilai_huruf} /></td>
-                                        <td className="px-6 py-4 text-center text-neutral-900">{item.bobot}</td>
-                                        <td className="px-6 py-4 text-center font-medium text-neutral-900">{item.mutu}</td>
+                                        <td data-label="No" className="px-6 py-4 text-center text-neutral-500">{index + 1}</td>
+                                        <td data-label="Kode" className="px-6 py-4 font-mono text-neutral-900">{item.kode_mata_kuliah}</td>
+                                        <td data-label="Mata Kuliah" className="px-6 py-4 text-neutral-900">{item.nama_mata_kuliah}</td>
+                                        <td data-label="SKS" className="px-6 py-4 text-center text-neutral-900">{item.sks}</td>
+                                        <td data-label="Nilai" className="px-6 py-4 text-center"><GradeCell nilai={item.nilai_huruf} /></td>
+                                        <td data-label="Bobot" className="px-6 py-4 text-center text-neutral-900">{item.bobot}</td>
+                                        <td data-label="Mutu" className="px-6 py-4 text-center font-medium text-neutral-900">{item.mutu}</td>
                                     </tr>
                                 ))}
                             </tbody>
                             <tfoot className="bg-neutral-50 border-t border-neutral-200">
-                                <tr>
+                                <tr className="table-cards-empty">className="table-cards-empty">
                                     <td colSpan="3" className="px-6 py-4 text-right text-sm font-bold text-neutral-900">Total</td>
-                                    <td className="px-6 py-4 text-center text-sm font-bold text-neutral-900">{totalSks}</td>
+                                    <td data-label="Kode" className="px-6 py-4 text-center text-sm font-bold text-neutral-900">{totalSks}</td>
                                     <td colSpan="2"></td>
-                                    <td className="px-6 py-4 text-center text-sm font-bold text-neutral-900">{totalMutu}</td>
+                                    <td data-label="SKS" className="px-6 py-4 text-center text-sm font-bold text-neutral-900">{totalMutu}</td>
                                 </tr>
                             </tfoot>
                         </table>

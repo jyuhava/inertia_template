@@ -5,7 +5,7 @@ import { useState } from 'react';
 function Box({ children, className = '', padded = true, variant = 'white' }) {
     const variants = {
         white: 'bg-white border-[#e5e5e5]',
-        black: 'bg-black border-black text-white',
+        black: 'bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 border-transparent text-white rounded-2xl shadow-lg shadow-violet-500/20',
         gray: 'bg-[#f5f5f5] border-[#e5e5e5]',
         info: 'bg-[#f5f5f5] border-[#e5e5e5]',
         warning: 'bg-white border-yellow-200',
@@ -74,12 +74,12 @@ export default function Index({ prodis, errors, flash }) {
         <AdminLayout title="Import Mahasiswa Bulk">
             <Head title="Import Mahasiswa Bulk" />
 
-            <div className="p-6 lg:p-8 min-h-screen bg-[#fafafa]">
+            <div className="p-6 lg:p-8 min-h-dvh bg-[#fafafa]">
                 <Box variant="black" className="mb-6">
                     <div>
-                        <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-neutral-400 mb-1">Manajemen Akademik</p>
+                        <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/75 mb-1">Manajemen Akademik</p>
                         <h1 className="text-xl font-bold uppercase tracking-tight text-white">Import Mahasiswa Bulk</h1>
-                        <p className="mt-2 text-xs text-neutral-300">Upload file CSV untuk menambahkan mahasiswa secara massal.</p>
+                        <p className="mt-2 text-xs text-white/85">Upload file CSV untuk menambahkan mahasiswa secara massal.</p>
                     </div>
                 </Box>
 

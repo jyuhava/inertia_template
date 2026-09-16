@@ -5,7 +5,7 @@ import { useState } from 'react';
 function Box({ children, className = '', padded = true, variant = 'white' }) {
     const variants = {
         white: 'bg-white border-[#e5e5e5]',
-        black: 'bg-black border-black text-white',
+        black: 'bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 border-transparent text-white rounded-2xl shadow-lg shadow-violet-500/20',
         gray: 'bg-[#f5f5f5] border-[#e5e5e5]',
     };
     return (
@@ -88,11 +88,11 @@ export default function Index({ dokumenPmb, filters }) {
         <AdminLayout title="Dokumen PMB">
             <Head title="Dokumen PMB" />
 
-            <div className="p-6 lg:p-8 min-h-screen bg-[#fafafa]">
+            <div className="p-6 lg:p-8 min-h-dvh bg-[#fafafa]">
                 <Box variant="black" className="mb-6">
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div>
-                            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-neutral-400 mb-1">Penerimaan Mahasiswa Baru</p>
+                            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/75 mb-1">Penerimaan Mahasiswa Baru</p>
                             <h1 className="text-xl font-bold uppercase tracking-tight text-white">Dokumen PMB</h1>
                         </div>
                         <ActionButton href={route('admin.dokumen-pmb.create')} variant="secondary">+ Tambah Dokumen</ActionButton>
@@ -119,7 +119,7 @@ export default function Index({ dokumenPmb, filters }) {
                     <SectionTitle>Daftar Dokumen PMB</SectionTitle>
 
                     <div className="overflow-x-auto border border-[#e5e5e5]">
-                        <table className="min-w-full text-left">
+                        <table className="min-w-full text-left table-cards">
                             <thead className="bg-[#f5f5f5] border-b border-[#e5e5e5]">
                                 <tr>
                                     <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-neutral-500">Dokumen</th>
@@ -133,7 +133,7 @@ export default function Index({ dokumenPmb, filters }) {
                             <tbody className="divide-y divide-[#e5e5e5]">
                                 {dokumenPmb.data.map((dokumen) => (
                                     <tr key={dokumen.id} className="hover:bg-[#fafafa]">
-                                        <td className="px-4 py-3">
+                                        <td data-label="Dokumen" className="px-4 py-3">
                                             <div className="text-sm font-semibold text-neutral-900 flex items-center flex-wrap">
                                                 {dokumen.nama_dokumen}
                                                 <WajibBadge wajib={dokumen.wajib} />
@@ -142,15 +142,15 @@ export default function Index({ dokumenPmb, filters }) {
                                                 <div className="text-xs text-neutral-500 mt-1">{dokumen.deskripsi}</div>
                                             )}
                                         </td>
-                                        <td className="px-4 py-3">
+                                        <td data-label="Kode" className="px-4 py-3">
                                             <code className="px-2 py-1 text-[10px] font-bold uppercase tracking-widest bg-[#f5f5f5] border border-[#e5e5e5] text-neutral-700">
                                                 {dokumen.kode_dokumen}
                                             </code>
                                         </td>
-                                        <td className="px-4 py-3 text-sm text-neutral-600">{dokumen.jenis_file.toUpperCase()}</td>
-                                        <td className="px-4 py-3 text-sm text-neutral-600">{dokumen.max_size_mb} MB</td>
-                                        <td className="px-4 py-3"><StatusBadge aktif={dokumen.aktif} /></td>
-                                        <td className="px-4 py-3 text-right">
+                                        <td data-label="Jenis File" className="px-4 py-3 text-sm text-neutral-600">{dokumen.jenis_file.toUpperCase()}</td>
+                                        <td data-label="Ukuran Max" className="px-4 py-3 text-sm text-neutral-600">{dokumen.max_size_mb} MB</td>
+                                        <td data-label="Status" className="px-4 py-3"><StatusBadge aktif={dokumen.aktif} /></td>
+                                        <td data-label="Aksi" className="px-4 py-3 text-right">
                                             <div className="flex items-center justify-end gap-2 flex-wrap">
                                                 <ActionButton href={route('admin.dokumen-pmb.show', dokumen.id)} variant="ghost">Lihat</ActionButton>
                                                 <ActionButton href={route('admin.dokumen-pmb.edit', dokumen.id)} variant="ghost">Edit</ActionButton>

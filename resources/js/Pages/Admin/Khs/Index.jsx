@@ -4,7 +4,7 @@ import { Head, Link } from '@inertiajs/react';
 function Box({ children, className = '', padded = true, variant = 'white' }) {
     const variants = {
         white: 'bg-white border-[#e5e5e5]',
-        black: 'bg-black border-black text-white',
+        black: 'bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 border-transparent text-white rounded-2xl shadow-lg shadow-violet-500/20',
         gray: 'bg-[#f5f5f5] border-[#e5e5e5]',
     };
     return (
@@ -50,18 +50,18 @@ export default function Index({ mahasiswa, periodeKrs, ipk }) {
         <AdminLayout>
             <Head title="KHS Mahasiswa" />
 
-            <div className="p-6 lg:p-8 min-h-screen bg-[#fafafa]">
+            <div className="p-6 lg:p-8 min-h-dvh bg-[#fafafa]">
                 <Box variant="black" className="mb-6">
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div>
-                            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-neutral-400 mb-1">Manajemen Akademik</p>
+                            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/75 mb-1">Manajemen Akademik</p>
                             <h1 className="text-xl font-bold uppercase tracking-tight text-white">Kartu Hasil Studi (KHS)</h1>
-                            <div className="mt-2 text-xs text-neutral-300">
+                            <div className="mt-2 text-xs text-white/85">
                                 {mahasiswa.nama_lengkap} ({mahasiswa.nim}) • {mahasiswa.prodi?.nama_prodi}
                             </div>
                         </div>
                         <div className="text-right">
-                            <div className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">IPK Saat Ini</div>
+                            <div className="text-[10px] font-bold uppercase tracking-widest text-white/75">IPK Saat Ini</div>
                             <div className="text-3xl font-bold text-white">{ipk}</div>
                         </div>
                     </div>

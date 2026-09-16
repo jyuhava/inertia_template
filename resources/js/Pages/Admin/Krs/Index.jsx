@@ -5,7 +5,7 @@ import { useState } from 'react';
 function Box({ children, className = '', padded = true, variant = 'white' }) {
     const variants = {
         white: 'bg-white border-[#e5e5e5]',
-        black: 'bg-black border-black text-white',
+        black: 'bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 border-transparent text-white rounded-2xl shadow-lg shadow-violet-500/20',
         gray: 'bg-[#f5f5f5] border-[#e5e5e5]',
     };
     return (
@@ -171,7 +171,7 @@ export default function Index({ krsData = {}, filters = {}, periodeKrsList = [],
         <AdminLayout title="Manajemen KRS">
             <Head title="Manajemen KRS" />
 
-            <div className="p-6 lg:p-8 min-h-screen bg-[#fafafa]">
+            <div className="p-6 lg:p-8 min-h-dvh bg-[#fafafa]">
                 {flash.message && (
                     <Box variant="black" className="mb-6">
                         <p className="text-xs font-bold uppercase tracking-widest">{flash.message}</p>
@@ -181,7 +181,7 @@ export default function Index({ krsData = {}, filters = {}, periodeKrsList = [],
                 <Box variant="black" className="mb-6">
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div>
-                            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-neutral-400 mb-1">Manajemen Akademik</p>
+                            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/75 mb-1">Manajemen Akademik</p>
                             <h1 className="text-xl font-bold uppercase tracking-tight text-white">KRS Mahasiswa</h1>
                         </div>
                         {selectedItems.length > 0 && (
@@ -269,7 +269,7 @@ export default function Index({ krsData = {}, filters = {}, periodeKrsList = [],
                     </div>
 
                     <div className="overflow-x-auto border border-[#e5e5e5]">
-                        <table className="min-w-full text-left">
+                        <table className="min-w-full text-left table-cards">
                             <thead className="bg-[#f5f5f5] border-b border-[#e5e5e5]">
                                 <tr>
                                     <th className="px-4 py-3">
@@ -291,7 +291,7 @@ export default function Index({ krsData = {}, filters = {}, periodeKrsList = [],
                             <tbody className="divide-y divide-[#e5e5e5]">
                                 {safeKrsData.data.map((krs) => (
                                     <tr key={krs.id} className="hover:bg-[#fafafa]">
-                                        <td className="px-4 py-3">
+                                        <td data-label="krs.status === 'menunggu_persetujuan').length && safeKrsData.data.filter(krs => krs.status === 'menunggu_persetujuan').length > 0} onChange={toggleSelectAll} className=&quot;w-4 h-4 border-[#ccc] text-black focus:ring-black&quot; />" className="px-4 py-3">
                                             {krs.status === 'menunggu_persetujuan' && (
                                                 <input
                                                     type="checkbox"
@@ -301,21 +301,21 @@ export default function Index({ krsData = {}, filters = {}, periodeKrsList = [],
                                                 />
                                             )}
                                         </td>
-                                        <td className="px-4 py-3">
+                                        <td data-label="Mahasiswa" className="px-4 py-3">
                                             <div className="text-sm font-semibold text-neutral-900">{krs.mahasiswa?.nama_lengkap || 'N/A'}</div>
                                             <div className="text-xs text-neutral-500">{krs.mahasiswa?.nim || 'N/A'} • {krs.mahasiswa?.prodi?.nama_prodi || 'N/A'}</div>
                                         </td>
-                                        <td className="px-4 py-3">
+                                        <td data-label="Mata Kuliah" className="px-4 py-3">
                                             <div className="text-sm font-semibold text-neutral-900">{krs.jadwal_kuliah?.mata_kuliah?.nama_mata_kuliah || 'N/A'}</div>
                                             <div className="text-xs text-neutral-500">{krs.jadwal_kuliah?.mata_kuliah?.kode_mata_kuliah || 'N/A'} • {krs.jadwal_kuliah?.mata_kuliah?.sks || 0} SKS</div>
                                             <div className="text-xs text-neutral-500">Dosen: {krs.jadwal_kuliah?.dosen?.nama_lengkap || 'N/A'}</div>
                                         </td>
-                                        <td className="px-4 py-3 text-sm text-neutral-600">
+                                        <td data-label="Jadwal" className="px-4 py-3 text-sm text-neutral-600">
                                             <div>{krs.jadwal_kuliah?.hari || 'N/A'}</div>
                                             <div>{krs.jadwal_kuliah?.jam_mulai || 'N/A'} - {krs.jadwal_kuliah?.jam_selesai || 'N/A'}</div>
                                             <div>Ruang: {krs.jadwal_kuliah?.ruangan || 'N/A'}</div>
                                         </td>
-                                        <td className="px-4 py-3">
+                                        <td data-label="Status" className="px-4 py-3">
                                             <StatusBadge status={krs.status} label={krs.status_display || krs.status} />
                                             {krs.catatan_admin && (
                                                 <div className="text-[10px] uppercase tracking-widest text-neutral-400 mt-1">
@@ -323,13 +323,13 @@ export default function Index({ krsData = {}, filters = {}, periodeKrsList = [],
                                                 </div>
                                             )}
                                         </td>
-                                        <td className="px-4 py-3 text-sm text-neutral-600">
+                                        <td data-label="Tanggal Pengajuan" className="px-4 py-3 text-sm text-neutral-600">
                                             {krs.created_at ? new Date(krs.created_at).toLocaleDateString('id-ID') : 'N/A'}
                                             {krs.tanggal_approval && (
                                                 <div className="text-xs">Disetujui: {new Date(krs.tanggal_approval).toLocaleDateString('id-ID')}</div>
                                             )}
                                         </td>
-                                        <td className="px-4 py-3 text-right">
+                                        <td data-label="Aksi" className="px-4 py-3 text-right">
                                             <div className="flex justify-end gap-2 flex-wrap">
                                                 <ActionButton
                                                     href={`/admin/krs/mahasiswa/${krs.mahasiswa?.id || 0}?periode_krs_id=${krs.periode_krs_id || 0}`}

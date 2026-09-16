@@ -117,7 +117,7 @@ export default function Welcome({ auth }) {
                 }
             `}</style>
 
-            <div className="min-h-screen bg-[#f5f0eb] text-[#22130d]">
+            <div className="min-h-dvh bg-[#f5f0eb] text-[#22130d]">
                 {/* Header */}
                 <header className="sticky top-0 z-50 border-b border-[#e8d4c2] bg-[#f5f0eb]/95 backdrop-blur">
                     <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">

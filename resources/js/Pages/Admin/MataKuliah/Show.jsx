@@ -4,7 +4,7 @@ import AdminLayout from '@/Layouts/AdminLayout';
 function Box({ children, className = '', padded = true, variant = 'white' }) {
     const variants = {
         white: 'bg-white border-[#e5e5e5]',
-        black: 'bg-black border-black text-white',
+        black: 'bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 border-transparent text-white rounded-2xl shadow-lg shadow-violet-500/20',
         gray: 'bg-[#f5f5f5] border-[#e5e5e5]',
     };
     return (
@@ -88,11 +88,11 @@ export default function Show({ mataKuliah }) {
         <AdminLayout title={`Detail Mata Kuliah - ${mataKuliah.nama_mata_kuliah}`}>
             <Head title={`Detail Mata Kuliah - ${mataKuliah.nama_mata_kuliah}`} />
 
-            <div className="p-6 lg:p-8 min-h-screen bg-[#fafafa]">
+            <div className="p-6 lg:p-8 min-h-dvh bg-[#fafafa]">
                 <Box variant="black" className="mb-6">
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div>
-                            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-neutral-400 mb-1">Manajemen Akademik</p>
+                            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/75 mb-1">Manajemen Akademik</p>
                             <h1 className="text-xl font-bold uppercase tracking-tight text-white">Detail Mata Kuliah</h1>
                         </div>
                         <div className="flex items-center gap-2 flex-wrap">
@@ -157,7 +157,7 @@ export default function Show({ mataKuliah }) {
                             <Box>
                                 <SectionTitle>Jadwal Kuliah ({mataKuliah.jadwal_kuliahs.length})</SectionTitle>
                                 <div className="overflow-x-auto">
-                                    <table className="min-w-full border border-[#e5e5e5]">
+                                    <table className="min-w-full border border-[#e5e5e5] table-cards">
                                         <thead className="bg-[#f5f5f5]">
                                             <tr>
                                                 <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-neutral-500 border-b border-[#e5e5e5]">Dosen</th>
@@ -170,14 +170,14 @@ export default function Show({ mataKuliah }) {
                                         <tbody className="bg-white divide-y divide-[#e5e5e5]">
                                             {mataKuliah.jadwal_kuliahs.map((jadwal) => (
                                                 <tr key={jadwal.id} className="hover:bg-[#fafafa]">
-                                                    <td className="px-4 py-3 text-sm font-bold text-neutral-900">{jadwal.dosen?.nama_lengkap}</td>
-                                                    <td className="px-4 py-3 text-sm text-neutral-900">
+                                                    <td data-label="Dosen" className="px-4 py-3 text-sm font-bold text-neutral-900">{jadwal.dosen?.nama_lengkap}</td>
+                                                    <td data-label="Hari & Waktu" className="px-4 py-3 text-sm text-neutral-900">
                                                         {jadwal.hari}
                                                         <div className="text-xs text-neutral-500">{jadwal.jam_mulai} - {jadwal.jam_selesai}</div>
                                                     </td>
-                                                    <td className="px-4 py-3 text-sm text-neutral-900">{jadwal.ruangan}</td>
-                                                    <td className="px-4 py-3 text-sm text-neutral-900">{jadwal.kapasitas}</td>
-                                                    <td className="px-4 py-3"><StatusBadge status={jadwal.status} /></td>
+                                                    <td data-label="Ruangan" className="px-4 py-3 text-sm text-neutral-900">{jadwal.ruangan}</td>
+                                                    <td data-label="Kapasitas" className="px-4 py-3 text-sm text-neutral-900">{jadwal.kapasitas}</td>
+                                                    <td data-label="Status" className="px-4 py-3"><StatusBadge status={jadwal.status} /></td>
                                                 </tr>
                                             ))}
                                         </tbody>
