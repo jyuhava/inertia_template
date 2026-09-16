@@ -132,6 +132,16 @@ class Dosen extends Model
         return $this->hasMany(PddiktiDosenSyncLog::class)->orderByDesc('created_at');
     }
 
+    public function kelasKuliahPengajars()
+    {
+        return $this->hasMany(KelasKuliahPengajar::class);
+    }
+
+    public function kelasKuliahs()
+    {
+        return $this->belongsToMany(KelasKuliah::class, 'kelas_kuliah_pengajars')->withPivot(['peran', 'status'])->withTimestamps();
+    }
+
     /**
      * Get the display name for jenis kelamin
      */

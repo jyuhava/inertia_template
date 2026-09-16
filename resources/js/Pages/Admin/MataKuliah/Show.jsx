@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 
 function Box({ children, className = '', padded = true, variant = 'white' }) {
@@ -185,6 +185,30 @@ export default function Show({ mataKuliah }) {
                                 </div>
                             </Box>
                         )}
+
+                        <Box>
+                            <SectionTitle>Prasyarat dan Kurikulum</SectionTitle>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <DetailItem label="Prasyarat Mata Kuliah">
+                                    {mataKuliah.prasyarats?.length
+                                        ? mataKuliah.prasyarats.map(p => <div key={p.id}>{p.kode_mata_kuliah} - {p.nama_mata_kuliah}</div>)
+                                        : '-'}
+                                </DetailItem>
+                                <DetailItem label="Menjadi Prasyarat Untuk">
+                                    {mataKuliah.menjadi_prasyarat_untuk?.length
+                                        ? mataKuliah.menjadi_prasyarat_untuk.map(p => <div key={p.id}>{p.kode_mata_kuliah} - {p.nama_mata_kuliah}</div>)
+                                        : '-'}
+                                </DetailItem>
+                                <DetailItem label="Digunakan pada Kurikulum">
+                                    {mataKuliah.kurikulums?.length
+                                        ? mataKuliah.kurikulums.map(k => <div key={k.id}>{k.kode} - {k.nama}</div>)
+                                        : '-'}
+                                </DetailItem>
+                                <DetailItem label="Status PDDikti">
+                                    {mataKuliah.pddikti_mapping?.sync_status || 'not_synced'}
+                                </DetailItem>
+                            </div>
+                        </Box>
 
                         <Box>
                             <SectionTitle>Informasi Tambahan</SectionTitle>
