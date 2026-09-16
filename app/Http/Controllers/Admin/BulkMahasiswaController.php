@@ -116,6 +116,13 @@ class BulkMahasiswaController extends Controller
                     continue;
                 }
 
+                // Check if NIK (no_ktp) already exists
+                if (!empty($data['no_ktp']) && Mahasiswa::where('no_ktp', $data['no_ktp'])->exists()) {
+                    $errors[] = "Baris {$rowNumber}: NIK {$data['no_ktp']} sudah ada";
+                    $errorCount++;
+                    continue;
+                }
+
                 // Check if email already exists
                 if (User::where('email', $email)->exists()) {
                     $errors[] = "Baris {$rowNumber}: Email {$email} sudah ada";
@@ -150,7 +157,7 @@ class BulkMahasiswaController extends Controller
                     'nim' => $data['nim'],
                     'nama_lengkap' => $data['nama_lengkap'],
                     'jenis_kelamin' => strtoupper($data['jenis_kelamin']),
-                    'no_ktp' => $data['no_ktp'] ?? null,
+                    'no_ktp' => !empty($data['no_ktp']) ? $data['no_ktp'] : null,
                     'tempat_lahir' => $data['tempat_lahir'] ?? 'Bogor',
                     'tanggal_lahir' => $tanggalLahir ?? '2000-01-01',
                     'alamat' => $data['alamat'] ?? 'Bogor, Jawa Barat',

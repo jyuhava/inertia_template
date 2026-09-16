@@ -4,21 +4,28 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Mahasiswa extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'user_id',
         'nim',
         'no_ktp',
+        'nisn',
+        'npwp',
         'nama_lengkap',
         'jenis_kelamin',
         'tempat_lahir',
         'tanggal_lahir',
+        'agama',
+        'kewarganegaraan',
         'alamat',
         'no_hp',
+        'email',
+        'foto',
         'prodi_id',
         'program_studi', // Keep for backward compatibility during migration
         'angkatan',
@@ -156,5 +163,131 @@ class Mahasiswa extends Model
     public function getKomitmenUrl()
     {
         return $this->surat_komitmen ? asset('uploads/komitmen/' . $this->surat_komitmen) : null;
+    }
+
+    /**
+     * Relasi ke Registrasi (bisa lebih dari satu, misal transfer/re-admisi)
+     */
+    public function registrasis()
+    {
+        return $this->hasMany(MahasiswaRegistrasi::class);
+    }
+
+    /**
+     * Registrasi terakhir/terbaru
+     */
+    public function registrasiTerbaru()
+    {
+        return $this->hasOne(MahasiswaRegistrasi::class)->latestOfMany();
+    }
+
+    /**
+     * Riwayat status mahasiswa
+     */
+    public function statusHistories()
+    {
+        return $this->hasMany(MahasiswaStatusHistory::class)->orderByDesc('tanggal_berlaku');
+    }
+
+    public function statusTerbaru()
+    {
+        return $this->hasOne(MahasiswaStatusHistory::class)->latestOfMany('tanggal_berlaku');
+    }
+
+    /**
+     * Alamat (KTP & domisili)
+     */
+    public function alamats()
+    {
+        return $this->hasMany(MahasiswaAlamat::class);
+    }
+
+    public function alamatKtp()
+    {
+        return $this->hasOne(MahasiswaAlamat::class)->where('jenis', 'ktp');
+    }
+
+    public function alamatDomisili()
+    {
+        return $this->hasOne(MahasiswaAlamat::class)->where('jenis', 'domisili');
+    }
+
+    /**
+     * Kontak
+     */
+    public function kontaks()
+    {
+        return $this->hasMany(MahasiswaKontak::class);
+    }
+
+    /**
+     * Orang tua / wali
+     */
+    public function orangTuas()
+    {
+        return $this->hasMany(MahasiswaOrangTua::class);
+    }
+
+    public function ayah()
+    {
+        return $this->hasOne(MahasiswaOrangTua::class)->where('jenis', 'ayah');
+    }
+
+    public function ibu()
+    {
+        return $this->hasOne(MahasiswaOrangTua::class)->where('jenis', 'ibu');
+    }
+
+    public function wali()
+    {
+        return $this->hasOne(MahasiswaOrangTua::class)->where('jenis', 'wali');
+    }
+
+    /**
+     * Riwayat pendidikan sebelumnya
+     */
+    public function riwayatPendidikans()
+    {
+        return $this->hasMany(MahasiswaRiwayatPendidikan::class);
+    }
+
+    /**
+     * Kebutuhan khusus (bisa lebih dari satu)
+     */
+    public function kebutuhanKhusus()
+    {
+        return $this->hasMany(MahasiswaKebutuhanKhusus::class);
+    }
+
+    /**
+     * Beasiswa / bantuan
+     */
+    public function beasiswas()
+    {
+        return $this->hasMany(MahasiswaBeasiswa::class);
+    }
+
+    /**
+     * Dokumen mahasiswa
+     */
+    public function dokumens()
+    {
+        return $this->hasMany(MahasiswaDokumen::class);
+    }
+
+    /**
+     * Mapping PDDikti
+     */
+    public function pddiktiMapping()
+    {
+        return $this->hasOne(PddiktiMahasiswaMapping::class);
+    }
+
+    /**
+     * Log sinkronisasi PDDikti
+     */
+    public function pddiktiSyncLogs()
+    {
+        return $this->hasMany(PddiktiSyncLog::class)->orderByDesc('created_at');
     }
 }
