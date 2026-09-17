@@ -25,7 +25,7 @@ Route::get('/', function () {
 // Admin routes
 Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
-    
+
     // Mahasiswa CRUD routes
     Route::resource('mahasiswa', \App\Http\Controllers\Admin\MahasiswaController::class);
     Route::get('mahasiswa-export', [\App\Http\Controllers\Admin\MahasiswaController::class, 'export'])->name('mahasiswa.export');
@@ -62,40 +62,121 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
         Route::put('pddikti/mapping', [\App\Http\Controllers\Admin\Mahasiswa\PddiktiController::class, 'updateMapping'])->name('pddikti.mapping.update');
         Route::post('pddikti/sync', [\App\Http\Controllers\Admin\Mahasiswa\PddiktiController::class, 'sync'])->name('pddikti.sync');
     });
-    
+
     // Bulk Import Mahasiswa routes
     Route::prefix('bulk-mahasiswa')->name('bulk-mahasiswa.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\BulkMahasiswaController::class, 'index'])->name('index');
         Route::post('/import', [\App\Http\Controllers\Admin\BulkMahasiswaController::class, 'import'])->name('import');
         Route::get('/template', [\App\Http\Controllers\Admin\BulkMahasiswaController::class, 'downloadTemplate'])->name('template');
     });
-    
+
+    // Mata Kuliah restore (archived via soft delete)
+    Route::post('mata-kuliah/{id}/restore', [\App\Http\Controllers\Admin\MataKuliahController::class, 'restore'])->name('mata-kuliah.restore');
+    Route::prefix('mata-kuliah/{mataKuliah}')->name('mata-kuliah.')->group(function () {
+        Route::put('pddikti/mapping', [\App\Http\Controllers\Admin\MataKuliah\PddiktiController::class, 'updateMapping'])->name('pddikti.mapping.update');
+        Route::post('pddikti/sync', [\App\Http\Controllers\Admin\MataKuliah\PddiktiController::class, 'sync'])->name('pddikti.sync');
+    });
+
+    // Ruangan CRUD routes
+    Route::resource('ruangan', \App\Http\Controllers\Admin\RuanganController::class);
+
+    // Kurikulum CRUD routes
+    Route::resource('kurikulum', \App\Http\Controllers\Admin\KurikulumController::class);
+    Route::post('kurikulum/{kurikulum}/activate', [\App\Http\Controllers\Admin\KurikulumController::class, 'activate'])->name('kurikulum.activate');
+    Route::post('kurikulum/{kurikulum}/archive', [\App\Http\Controllers\Admin\KurikulumController::class, 'archive'])->name('kurikulum.archive');
+    Route::prefix('kurikulum/{kurikulum}')->name('kurikulum.')->group(function () {
+        Route::post('mata-kuliah', [\App\Http\Controllers\Admin\Kurikulum\CourseController::class, 'store'])->name('mata-kuliah.store');
+        Route::put('mata-kuliah/{item}', [\App\Http\Controllers\Admin\Kurikulum\CourseController::class, 'update'])->name('mata-kuliah.update');
+        Route::delete('mata-kuliah/{item}', [\App\Http\Controllers\Admin\Kurikulum\CourseController::class, 'destroy'])->name('mata-kuliah.destroy');
+        Route::put('pddikti/mapping', [\App\Http\Controllers\Admin\Kurikulum\PddiktiController::class, 'updateMapping'])->name('pddikti.mapping.update');
+        Route::post('pddikti/sync', [\App\Http\Controllers\Admin\Kurikulum\PddiktiController::class, 'sync'])->name('pddikti.sync');
+    });
+
+    // Kelas Kuliah CRUD routes
+    Route::resource('kelas-kuliah', \App\Http\Controllers\Admin\KelasKuliahController::class);
+    Route::prefix('kelas-kuliah/{kelasKuliah}')->name('kelas-kuliah.')->group(function () {
+        Route::post('pengajar', [\App\Http\Controllers\Admin\KelasKuliah\PengajarController::class, 'store'])->name('pengajar.store');
+        Route::delete('pengajar/{pengajar}', [\App\Http\Controllers\Admin\KelasKuliah\PengajarController::class, 'destroy'])->name('pengajar.destroy');
+        Route::post('jadwal', [\App\Http\Controllers\Admin\KelasKuliah\JadwalController::class, 'store'])->name('jadwal.store');
+        Route::put('jadwal/{jadwal}', [\App\Http\Controllers\Admin\KelasKuliah\JadwalController::class, 'update'])->name('jadwal.update');
+        Route::delete('jadwal/{jadwal}', [\App\Http\Controllers\Admin\KelasKuliah\JadwalController::class, 'destroy'])->name('jadwal.destroy');
+        Route::put('pddikti/mapping', [\App\Http\Controllers\Admin\KelasKuliah\PddiktiController::class, 'updateMapping'])->name('pddikti.mapping.update');
+        Route::post('pddikti/sync', [\App\Http\Controllers\Admin\KelasKuliah\PddiktiController::class, 'sync'])->name('pddikti.sync');
+    });
+
+    // Jadwal (calendar/table view across all classes)
+    Route::get('jadwal-akademik', [\App\Http\Controllers\Admin\JadwalAkademikController::class, 'index'])->name('jadwal-akademik.index');
+
     // Prodi CRUD routes
     Route::resource('prodi', \App\Http\Controllers\Admin\ProdiController::class);
-    
+
     // Dosen CRUD routes
     Route::resource('dosen', \App\Http\Controllers\Admin\DosenController::class);
     Route::put('dosen/{dosen}/reset-password', [\App\Http\Controllers\Admin\DosenController::class, 'resetPassword'])->name('dosen.reset-password');
-    
+    Route::post('dosen/{id}/restore', [\App\Http\Controllers\Admin\DosenController::class, 'restore'])->name('dosen.restore');
+    Route::prefix('dosen/{dosen}')->name('dosen.')->group(function () {
+        Route::post('alamat', [\App\Http\Controllers\Admin\Dosen\DetailController::class, 'storeAlamat'])->name('alamat.store');
+        Route::post('status-history', [\App\Http\Controllers\Admin\Dosen\DetailController::class, 'storeStatus'])->name('status-history.store');
+        Route::post('homebase-history', [\App\Http\Controllers\Admin\Dosen\DetailController::class, 'storeHomebase'])->name('homebase-history.store');
+        Route::post('riwayat-pendidikan', [\App\Http\Controllers\Admin\Dosen\DetailController::class, 'storePendidikan'])->name('riwayat-pendidikan.store');
+        Route::post('jabatan-akademik-history', [\App\Http\Controllers\Admin\Dosen\DetailController::class, 'storeJabatan'])->name('jabatan-akademik-history.store');
+        Route::post('pangkat-golongan', [\App\Http\Controllers\Admin\Dosen\DetailController::class, 'storePangkat'])->name('pangkat-golongan.store');
+        Route::post('sertifikasi', [\App\Http\Controllers\Admin\Dosen\DetailController::class, 'storeSertifikasi'])->name('sertifikasi.store');
+        Route::delete('detail/{type}/{id}', [\App\Http\Controllers\Admin\Dosen\DetailController::class, 'destroy'])->name('detail.destroy');
+        Route::post('dokumen', [\App\Http\Controllers\Admin\Dosen\DokumenController::class, 'store'])->name('dokumen.store');
+        Route::patch('dokumen/{dokumen}/verify', [\App\Http\Controllers\Admin\Dosen\DokumenController::class, 'verify'])->name('dokumen.verify');
+        Route::get('dokumen/{dokumen}/download', [\App\Http\Controllers\Admin\Dosen\DokumenController::class, 'download'])->name('dokumen.download');
+        Route::delete('dokumen/{dokumen}', [\App\Http\Controllers\Admin\Dosen\DokumenController::class, 'destroy'])->name('dokumen.destroy');
+        Route::put('pddikti/mapping', [\App\Http\Controllers\Admin\Dosen\PddiktiController::class, 'updateMapping'])->name('pddikti.mapping.update');
+        Route::post('pddikti/sync', [\App\Http\Controllers\Admin\Dosen\PddiktiController::class, 'sync'])->name('pddikti.sync');
+    });
+
     // Tahun Ajaran CRUD routes
     Route::resource('tahun-ajaran', \App\Http\Controllers\Admin\TahunAjaranController::class);
-    
+
     // Semester CRUD routes
     Route::resource('semester', \App\Http\Controllers\Admin\SemesterController::class);
-    
+
     // Mata Kuliah CRUD routes
     Route::resource('mata-kuliah', \App\Http\Controllers\Admin\MataKuliahController::class);
-    
+
     // Jadwal Kuliah CRUD routes
     Route::resource('jadwal-kuliah', \App\Http\Controllers\Admin\JadwalKuliahController::class);
-    
+
     // Periode KRS CRUD routes
     Route::resource('periode-krs', \App\Http\Controllers\Admin\PeriodeKrsController::class);
     Route::post('periode-krs/{periodeKrs}/activate', [\App\Http\Controllers\Admin\PeriodeKrsController::class, 'activate'])->name('periode-krs.activate');
     Route::post('periode-krs/{periodeKrs}/deactivate', [\App\Http\Controllers\Admin\PeriodeKrsController::class, 'deactivate'])->name('periode-krs.deactivate');
-    
+    Route::post('periode-krs/{periodeKrs}/open-krs', [\App\Http\Controllers\Admin\PeriodeKrsController::class, 'openKrs'])->name('periode-krs.open-krs');
+    Route::post('periode-krs/{periodeKrs}/close-krs', [\App\Http\Controllers\Admin\PeriodeKrsController::class, 'closeKrs'])->name('periode-krs.close-krs');
+
+    // KRS / Student Enrollment (baru, berbasis Kelas Kuliah)
+    Route::prefix('krs-enrollment')->name('krs-enrollment.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\KrsEnrollmentController::class, 'index'])->name('index');
+        Route::get('/{registration}', [\App\Http\Controllers\Admin\KrsEnrollmentController::class, 'show'])->name('show');
+        Route::post('/{registration}/approve', [\App\Http\Controllers\Admin\KrsEnrollmentController::class, 'approve'])->name('approve');
+        Route::post('/{registration}/reject', [\App\Http\Controllers\Admin\KrsEnrollmentController::class, 'reject'])->name('reject');
+        Route::post('/{registration}/request-revision', [\App\Http\Controllers\Admin\KrsEnrollmentController::class, 'requestRevision'])->name('request-revision');
+        Route::post('/{registration}/lock', [\App\Http\Controllers\Admin\KrsEnrollmentController::class, 'lock'])->name('lock');
+        Route::post('/{registration}/unlock', [\App\Http\Controllers\Admin\KrsEnrollmentController::class, 'unlock'])->name('unlock');
+        Route::post('/{registration}/cancel', [\App\Http\Controllers\Admin\KrsEnrollmentController::class, 'cancel'])->name('cancel');
+        Route::put('/{registration}/pddikti/sync', [\App\Http\Controllers\Admin\KrsEnrollment\PddiktiController::class, 'sync'])->name('pddikti.sync');
+        Route::post('bulk-approve', [\App\Http\Controllers\Admin\KrsEnrollmentController::class, 'bulkApprove'])->name('bulk-approve');
+    });
+
+    // Dosen Pembimbing Akademik (Student Advisor)
+    Route::resource('student-advisor', \App\Http\Controllers\Admin\StudentAdvisorController::class)->only(['index', 'store', 'destroy']);
+
     // KHS Student List (for Sidebar)
     Route::get('/khs', [\App\Http\Controllers\Admin\KhsController::class, 'studentList'])->name('khs.student-list');
+    Route::get('/study-results', [\App\Http\Controllers\Admin\StudyResultController::class, 'index'])->name('study-results.index');
+    Route::post('/study-results/publish', [\App\Http\Controllers\Admin\StudyResultController::class, 'publish'])->name('study-results.publish');
+    Route::post('/study-results/{studyResult}/lock', [\App\Http\Controllers\Admin\StudyResultController::class, 'lock'])->name('study-results.lock');
+    Route::get('/surveys', [\App\Http\Controllers\Admin\SurveyController::class, 'index'])->name('surveys.index');
+    Route::post('/surveys', [\App\Http\Controllers\Admin\SurveyController::class, 'store'])->name('surveys.store');
+    Route::post('/surveys/{survey}/publish', [\App\Http\Controllers\Admin\SurveyController::class, 'publish'])->name('surveys.publish');
+    Route::post('/surveys/{survey}/questions', [\App\Http\Controllers\Admin\SurveyController::class, 'question'])->name('surveys.questions.store');
+    Route::post('/surveys/{survey}/targets', [\App\Http\Controllers\Admin\SurveyController::class, 'target'])->name('surveys.targets.store');
 
     // KHS Admin Routes
     Route::prefix('mahasiswa/{mahasiswa}/khs')->name('mahasiswa.khs.')->group(function () {
@@ -119,7 +200,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
         Route::post('/bulk-approve', [\App\Http\Controllers\Admin\KrsController::class, 'bulkApprove'])->name('bulk-approve');
         Route::post('/bulk-reject', [\App\Http\Controllers\Admin\KrsController::class, 'bulkReject'])->name('bulk-reject');
     });
-    
+
     // User Management routes
     Route::prefix('user-management')->name('user-management.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\UserManagementController::class, 'index'])->name('index');
@@ -135,8 +216,8 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
     Route::resource('periode-pmb', \App\Http\Controllers\Admin\PeriodePmbController::class);
     Route::post('periode-pmb/{periodePmb}/activate', [\App\Http\Controllers\Admin\PeriodePmbController::class, 'activate'])->name('periode-pmb.activate');
     Route::post('periode-pmb/{periodePmb}/deactivate', [\App\Http\Controllers\Admin\PeriodePmbController::class, 'deactivate'])->name('periode-pmb.deactivate');
-    
-// LPM (Lembaga Penjaminan Mutu) routes
+
+    // LPM (Lembaga Penjaminan Mutu) routes
     Route::prefix('lpm')->name('lpm.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\Lpm\DashboardController::class, 'index'])->name('dashboard');
         Route::get('/dashboard', [\App\Http\Controllers\Admin\Lpm\DashboardController::class, 'index'])->name('overview');
@@ -164,10 +245,10 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
         Route::post('reports/{report}/validate', [\App\Http\Controllers\Admin\Lpm\ProposalController::class, 'validateReport'])->name('reports.validate');
         Route::post('outputs/{output}/validate', [\App\Http\Controllers\Admin\Lpm\ProposalController::class, 'validateOutput'])->name('outputs.validate');
     });
-    
+
     Route::resource('dokumen-pmb', \App\Http\Controllers\Admin\DokumenPmbController::class);
     Route::post('dokumen-pmb/{dokumenPmb}/toggle-status', [\App\Http\Controllers\Admin\DokumenPmbController::class, 'toggleStatus'])->name('dokumen-pmb.toggle-status');
-    
+
     Route::prefix('calon-mahasiswa')->name('calon-mahasiswa.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\CalonMahasiswaController::class, 'index'])->name('index');
         Route::get('/dokumen/{uploadId}/download', [\App\Http\Controllers\Admin\CalonMahasiswaController::class, 'downloadDokumen'])->name('download-dokumen');
@@ -177,6 +258,68 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
         Route::post('/bulk-update-status', [\App\Http\Controllers\Admin\CalonMahasiswaController::class, 'bulkUpdateStatus'])->name('bulk-update-status');
         Route::get('/export/csv', [\App\Http\Controllers\Admin\CalonMahasiswaController::class, 'export'])->name('export');
     });
+    Route::prefix('mbkm')->name('mbkm.')->group(function () {
+        Route::get('programs', [\App\Http\Controllers\Admin\MbkmController::class, 'index'])->name('programs.index');
+        Route::get('programs/create', [\App\Http\Controllers\Admin\MbkmController::class, 'create'])->name('programs.create');
+        Route::post('programs', [\App\Http\Controllers\Admin\MbkmController::class, 'store'])->name('programs.store');
+        Route::get('programs/{program}', [\App\Http\Controllers\Admin\MbkmController::class, 'show'])->name('programs.show');
+        Route::patch('programs/{program}/status', [\App\Http\Controllers\Admin\MbkmController::class, 'updateStatus'])->name('programs.status');
+        Route::get('applications', [\App\Http\Controllers\Admin\MbkmController::class, 'applications'])->name('applications.index');
+        Route::post('applications/{application}/accept', [\App\Http\Controllers\Admin\MbkmController::class, 'accept'])->name('applications.accept');
+        Route::post('recognitions/{recognition}/approve', [\App\Http\Controllers\Admin\MbkmController::class, 'approveRecognition'])->name('recognitions.approve');
+    });
+
+    // Outcome-Based Education (OBE)
+    Route::prefix('obe')->name('obe.')->group(function () {
+        Route::get('taxonomy-levels', [\App\Http\Controllers\Admin\Obe\TaxonomyController::class, 'index'])->name('taxonomy-levels.index');
+        Route::post('taxonomy-levels', [\App\Http\Controllers\Admin\Obe\TaxonomyController::class, 'store'])->name('taxonomy-levels.store');
+        Route::put('taxonomy-levels/{taxonomyLevel}', [\App\Http\Controllers\Admin\Obe\TaxonomyController::class, 'update'])->name('taxonomy-levels.update');
+        Route::delete('taxonomy-levels/{taxonomyLevel}', [\App\Http\Controllers\Admin\Obe\TaxonomyController::class, 'destroy'])->name('taxonomy-levels.destroy');
+
+        Route::get('cpl', [\App\Http\Controllers\Admin\Obe\CplController::class, 'index'])->name('cpl.index');
+        Route::post('cpl', [\App\Http\Controllers\Admin\Obe\CplController::class, 'store'])->name('cpl.store');
+        Route::put('cpl/{cpl}', [\App\Http\Controllers\Admin\Obe\CplController::class, 'update'])->name('cpl.update');
+        Route::delete('cpl/{cpl}', [\App\Http\Controllers\Admin\Obe\CplController::class, 'destroy'])->name('cpl.destroy');
+
+        Route::get('cpmk', [\App\Http\Controllers\Admin\Obe\CpmkController::class, 'index'])->name('cpmk.index');
+        Route::post('cpmk', [\App\Http\Controllers\Admin\Obe\CpmkController::class, 'store'])->name('cpmk.store');
+        Route::put('cpmk/{cpmk}', [\App\Http\Controllers\Admin\Obe\CpmkController::class, 'update'])->name('cpmk.update');
+        Route::delete('cpmk/{cpmk}', [\App\Http\Controllers\Admin\Obe\CpmkController::class, 'destroy'])->name('cpmk.destroy');
+        Route::post('cpmk/{cpmk}/sub-cpmk', [\App\Http\Controllers\Admin\Obe\CpmkController::class, 'storeSubCpmk'])->name('sub-cpmk.store');
+        Route::put('cpmk/{cpmk}/sub-cpmk/{subCpmk}', [\App\Http\Controllers\Admin\Obe\CpmkController::class, 'updateSubCpmk'])->name('sub-cpmk.update');
+        Route::delete('cpmk/{cpmk}/sub-cpmk/{subCpmk}', [\App\Http\Controllers\Admin\Obe\CpmkController::class, 'destroySubCpmk'])->name('sub-cpmk.destroy');
+
+        Route::post('mappings/cpl-course', [\App\Http\Controllers\Admin\Obe\MappingController::class, 'storeCplCourse'])->name('mappings.cpl-course.store');
+        Route::delete('mappings/cpl-course/{mapping}', [\App\Http\Controllers\Admin\Obe\MappingController::class, 'destroyCplCourse'])->name('mappings.cpl-course.destroy');
+        Route::post('mappings/cpmk-cpl', [\App\Http\Controllers\Admin\Obe\MappingController::class, 'storeCpmkCpl'])->name('mappings.cpmk-cpl.store');
+        Route::delete('mappings/cpmk-cpl/{mapping}', [\App\Http\Controllers\Admin\Obe\MappingController::class, 'destroyCpmkCpl'])->name('mappings.cpmk-cpl.destroy');
+
+        Route::get('assessments', [\App\Http\Controllers\Admin\Obe\AssessmentController::class, 'index'])->name('assessments.index');
+        Route::post('assessments', [\App\Http\Controllers\Admin\Obe\AssessmentController::class, 'store'])->name('assessments.store');
+        Route::put('assessments/{assessment}', [\App\Http\Controllers\Admin\Obe\AssessmentController::class, 'update'])->name('assessments.update');
+        Route::delete('assessments/{assessment}', [\App\Http\Controllers\Admin\Obe\AssessmentController::class, 'destroy'])->name('assessments.destroy');
+        Route::post('assessment-mappings', [\App\Http\Controllers\Admin\Obe\AssessmentController::class, 'storeMapping'])->name('assessment-mappings.store');
+        Route::delete('assessment-mappings/{mapping}', [\App\Http\Controllers\Admin\Obe\AssessmentController::class, 'destroyMapping'])->name('assessment-mappings.destroy');
+        Route::post('assessments/{assessment}/scores', [\App\Http\Controllers\Admin\Obe\AssessmentController::class, 'storeScore'])->name('assessments.scores.store');
+
+        Route::get('kurikulum/{kurikulum}/matrix', [\App\Http\Controllers\Admin\Obe\ReportController::class, 'matrix'])->name('matrix');
+        Route::get('kurikulum/{kurikulum}/mahasiswa/{mahasiswa}/gap-report', [\App\Http\Controllers\Admin\Obe\ReportController::class, 'gap'])->name('gap-report');
+    });
+
+    Route::prefix('tugas-akhir')->name('tugas-akhir.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\ThesisController::class, 'index'])->name('index');
+        Route::post('/types', [\App\Http\Controllers\Admin\ThesisController::class, 'storeType'])->name('types.store');
+        Route::put('/settings/{prodi}', [\App\Http\Controllers\Admin\ThesisController::class, 'saveSetting'])->name('settings.save');
+        Route::get('/{thesis}', [\App\Http\Controllers\Admin\ThesisController::class, 'show'])->name('show');
+        Route::patch('/{thesis}/title-review', [\App\Http\Controllers\Admin\ThesisController::class, 'reviewLatestTitle'])->name('title-review');
+        Route::post('/title-submissions/{submission}/review', [\App\Http\Controllers\Admin\ThesisController::class, 'reviewTitle'])->name('title-submissions.review');
+        Route::post('/{thesis}/supervisors', [\App\Http\Controllers\Admin\ThesisController::class, 'assignSupervisor'])->name('supervisors.assign');
+        Route::post('/{thesis}/supervisors/bulk', [\App\Http\Controllers\Admin\ThesisController::class, 'assignSupervisors'])->name('supervisors.assign-bulk');
+        Route::post('/{thesis}/events', [\App\Http\Controllers\Admin\ThesisController::class, 'scheduleEvent'])->name('events.schedule');
+        Route::post('/revisions/{revision}/review', [\App\Http\Controllers\Admin\ThesisController::class, 'reviewRevision'])->name('revisions.review');
+        Route::post('/{thesis}/finalize', [\App\Http\Controllers\Admin\ThesisController::class, 'finalize'])->name('finalize');
+    });
+
 });
 
 // Mahasiswa routes
@@ -190,47 +333,77 @@ Route::middleware(['auth', 'verified', 'role:mahasiswa'])->prefix('mahasiswa')->
     });
 
     // Routes yang memerlukan surat komitmen
-    Route::middleware([\App\Http\Middleware\CheckSuratKomitmen::class])->group(function () {        
+    Route::middleware([\App\Http\Middleware\CheckSuratKomitmen::class])->group(function () {
         Route::get('/dashboard', [\App\Http\Controllers\Mahasiswa\DashboardController::class, 'index'])->name('dashboard');
-        
+
         // KRS routes
         Route::get('/krs', [\App\Http\Controllers\KrsController::class, 'index'])->name('krs.index');
         Route::post('/krs', [\App\Http\Controllers\KrsController::class, 'store'])->name('krs.store');
         Route::delete('/krs/{krs}', [\App\Http\Controllers\KrsController::class, 'destroy'])->name('krs.destroy');
         Route::get('/krs/print', [\App\Http\Controllers\KrsController::class, 'print'])->name('krs.print');
-        
+
+        // KRS / Student Enrollment (baru, berbasis Kelas Kuliah)
+        Route::prefix('krs-enrollment')->name('krs-enrollment.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Mahasiswa\KrsEnrollmentController::class, 'index'])->name('index');
+            Route::post('/add-class', [\App\Http\Controllers\Mahasiswa\KrsEnrollmentController::class, 'addClass'])->name('add-class');
+            Route::delete('/{registration}/item/{item}', [\App\Http\Controllers\Mahasiswa\KrsEnrollmentController::class, 'removeClass'])->name('remove-class');
+            Route::post('/{registration}/submit', [\App\Http\Controllers\Mahasiswa\KrsEnrollmentController::class, 'submit'])->name('submit');
+        });
+
         // KHS routes
         Route::get('/khs', [\App\Http\Controllers\Mahasiswa\KhsController::class, 'index'])->name('khs.index');
         Route::get('/khs/{periodeKrs}', [\App\Http\Controllers\Mahasiswa\KhsController::class, 'show'])->name('khs.show');
         Route::get('/khs/{periodeKrs}/cetak', [\App\Http\Controllers\Mahasiswa\KhsController::class, 'cetakKhs'])->name('khs.cetak');
-        
+        Route::get('/surveys', [\App\Http\Controllers\Mahasiswa\SurveyController::class, 'index'])->name('surveys.index');
+        Route::post('/surveys/{survey}/submit', [\App\Http\Controllers\Mahasiswa\SurveyController::class, 'submit'])->name('surveys.submit');
+
         // Absensi routes
         Route::get('/absensi', [\App\Http\Controllers\Mahasiswa\AbsensiController::class, 'index'])->name('absensi.index');
         Route::get('/absensi/cetak', [\App\Http\Controllers\Mahasiswa\AbsensiController::class, 'cetak'])->name('absensi.cetak');
         Route::get('/absensi/{jadwalKuliah}', [\App\Http\Controllers\Mahasiswa\AbsensiController::class, 'show'])->name('absensi.show');
         Route::get('/absensi/{jadwalKuliah}/cetak', [\App\Http\Controllers\Mahasiswa\AbsensiController::class, 'cetakDetail'])->name('absensi.detail.cetak');
-        
+
         // Surat Keterangan Mahasiswa Aktif routes
         Route::get('/surat-aktif', [\App\Http\Controllers\Mahasiswa\SuratAktifController::class, 'index'])->name('surat-aktif.index');
         Route::get('/surat-aktif/cetak', [\App\Http\Controllers\Mahasiswa\SuratAktifController::class, 'cetak'])->name('surat-aktif.cetak');
-        
+
+        Route::prefix('mbkm')->name('mbkm.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Mahasiswa\MbkmController::class, 'index'])->name('index');
+            Route::get('programs', [\App\Http\Controllers\Mahasiswa\MbkmController::class, 'index'])->name('programs.index');
+            Route::get('programs/{program}', [\App\Http\Controllers\Mahasiswa\MbkmController::class, 'showProgram'])->name('programs.show');
+            Route::post('programs/{program}', [\App\Http\Controllers\Mahasiswa\MbkmController::class, 'store'])->name('applications.store');
+            Route::get('activities', [\App\Http\Controllers\Mahasiswa\MbkmController::class, 'activities'])->name('activities.index');
+            Route::post('applications/{application}/submit', [\App\Http\Controllers\Mahasiswa\MbkmController::class, 'submit'])->name('applications.submit');
+            Route::post('placements/{placement}/activities', [\App\Http\Controllers\Mahasiswa\MbkmController::class, 'storeActivity'])->name('activities.store');
+        });
+
+        Route::prefix('tugas-akhir')->name('tugas-akhir.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Mahasiswa\ThesisController::class, 'index'])->name('index');
+            Route::post('/', [\App\Http\Controllers\Mahasiswa\ThesisController::class, 'submitTitle'])->name('store');
+            Route::post('/title-submissions', [\App\Http\Controllers\Mahasiswa\ThesisController::class, 'submitTitle'])->name('title-submissions.store');
+            Route::get('/sessions', [\App\Http\Controllers\Mahasiswa\ThesisController::class, 'sessions'])->name('sessions.index');
+            Route::post('/{thesis}/sessions', [\App\Http\Controllers\Mahasiswa\ThesisController::class, 'storeSession'])->name('sessions.store');
+            Route::post('/{thesis}/documents', [\App\Http\Controllers\Mahasiswa\ThesisController::class, 'uploadDocument'])->name('documents.store');
+        });
+
         // LMS Routes
         Route::prefix('lms')->name('lms.')->group(function () {
-             Route::get('/', [\App\Http\Controllers\Mahasiswa\LmsStudentController::class, 'index'])->name('index');
-             Route::get('/{lmsCourse}', [\App\Http\Controllers\Mahasiswa\LmsStudentController::class, 'show'])->name('show');
-             Route::get('/materials/{material}', [\App\Http\Controllers\Mahasiswa\LmsStudentController::class, 'showMaterial'])->name('materials.show');
-             Route::post('/materials/{material}/toggle', [\App\Http\Controllers\Mahasiswa\LmsStudentController::class, 'toggleProgress'])->name('materials.toggle');
-             Route::post('/materials/{material}/assistant', [\App\Http\Controllers\Mahasiswa\LmsStudentController::class, 'askMaterialAssistant'])->name('materials.assistant');
-             Route::post('/assignments/{assignment}/submit', [\App\Http\Controllers\Mahasiswa\LmsStudentController::class, 'submitAssignment'])->name('assignments.submit');
-             Route::get('/forums/{forum}', [\App\Http\Controllers\Mahasiswa\LmsStudentController::class, 'showForum'])->name('forums.show');
-             Route::get('/forum-threads/{thread}', [\App\Http\Controllers\Mahasiswa\LmsStudentController::class, 'showForumThread'])->name('forums.threads.show');
-             Route::post('/forum-threads/{thread}/replies', [\App\Http\Controllers\Mahasiswa\LmsStudentController::class, 'storeForumReply'])->name('forums.replies.store');
+            Route::get('/', [\App\Http\Controllers\Mahasiswa\LmsStudentController::class, 'index'])->name('index');
+            Route::get('/{lmsCourse}', [\App\Http\Controllers\Mahasiswa\LmsStudentController::class, 'show'])->name('show');
+            Route::get('/materials/{material}', [\App\Http\Controllers\Mahasiswa\LmsStudentController::class, 'showMaterial'])->name('materials.show');
+            Route::post('/materials/{material}/toggle', [\App\Http\Controllers\Mahasiswa\LmsStudentController::class, 'toggleProgress'])->name('materials.toggle');
+            Route::post('/materials/{material}/assistant', [\App\Http\Controllers\Mahasiswa\LmsStudentController::class, 'askMaterialAssistant'])->name('materials.assistant');
+            Route::post('/assignments/{assignment}/submit', [\App\Http\Controllers\Mahasiswa\LmsStudentController::class, 'submitAssignment'])->name('assignments.submit');
+            Route::get('/forums/{forum}', [\App\Http\Controllers\Mahasiswa\LmsStudentController::class, 'showForum'])->name('forums.show');
+            Route::get('/forum-threads/{thread}', [\App\Http\Controllers\Mahasiswa\LmsStudentController::class, 'showForumThread'])->name('forums.threads.show');
+            Route::post('/forum-threads/{thread}/replies', [\App\Http\Controllers\Mahasiswa\LmsStudentController::class, 'storeForumReply'])->name('forums.replies.store');
         });
     });
 });
 
 // Dosen routes
 Route::middleware(['auth', 'verified', 'role:dosen'])->prefix('dosen')->name('dosen.')->group(function () {
+    Route::get('obe/kelas/{kelasKuliah}', [\App\Http\Controllers\Dosen\ObeController::class, 'class'])->name('obe.kelas.show');
     Route::get('/dashboard', [\App\Http\Controllers\Dosen\DosenController::class, 'dashboard'])->name('dashboard');
     Route::get('/jadwal', [\App\Http\Controllers\Dosen\DosenController::class, 'jadwal'])->name('jadwal');
     Route::get('/mahasiswa/{jadwalKuliah}', [\App\Http\Controllers\Dosen\DosenController::class, 'mahasiswa'])->name('mahasiswa');
@@ -238,16 +411,43 @@ Route::middleware(['auth', 'verified', 'role:dosen'])->prefix('dosen')->name('do
     Route::put('/penilaian/{penilaian}', [\App\Http\Controllers\Dosen\DosenController::class, 'updatePenilaian'])->name('penilaian.update');
     Route::post('/penilaian/{jadwalKuliah}/finalisasi', [\App\Http\Controllers\Dosen\DosenController::class, 'finalisasiNilai'])->name('penilaian.finalisasi');
     Route::post('/penilaian/{jadwalKuliah}/unfinalisasi', [\App\Http\Controllers\Dosen\DosenController::class, 'unfinalisasiNilai'])->name('penilaian.unfinalisasi');
-    
+
     // Absensi routes
     Route::get('/absensi/{jadwalKuliah}', [\App\Http\Controllers\Dosen\AbsensiController::class, 'index'])->name('absensi.index');
     Route::post('/absensi/{jadwalKuliah}/pertemuan', [\App\Http\Controllers\Dosen\AbsensiController::class, 'createPertemuan'])->name('absensi.pertemuan.create');
     Route::put('/absensi/{jadwalKuliah}/update', [\App\Http\Controllers\Dosen\AbsensiController::class, 'updateAbsensi'])->name('absensi.update');
     Route::delete('/absensi/{jadwalKuliah}/pertemuan', [\App\Http\Controllers\Dosen\AbsensiController::class, 'deletePertemuan'])->name('absensi.pertemuan.delete');
     Route::get('/absensi/{jadwalKuliah}/rekap', [\App\Http\Controllers\Dosen\AbsensiController::class, 'rekap'])->name('absensi.rekap');
-    
+    Route::get('/kelas-kuliah/{class}/absensi', [\App\Http\Controllers\Dosen\CourseAttendanceController::class, 'index'])->name('kelas-absensi.index');
+    Route::post('/kelas-kuliah/{class}/absensi', [\App\Http\Controllers\Dosen\CourseAttendanceController::class, 'open'])->name('kelas-absensi.open');
+    Route::get('/kelas-kuliah/{class}/absensi/{meeting}', [\App\Http\Controllers\Dosen\CourseAttendanceController::class, 'show'])->name('kelas-absensi.show');
+    Route::put('/kelas-kuliah/{class}/absensi/{meeting}', [\App\Http\Controllers\Dosen\CourseAttendanceController::class, 'record'])->name('kelas-absensi.record');
+    Route::post('/kelas-kuliah/{class}/absensi/{meeting}/complete', [\App\Http\Controllers\Dosen\CourseAttendanceController::class, 'complete'])->name('kelas-absensi.complete');
+
+    Route::prefix('mbkm')->name('mbkm.')->group(function () {
+        Route::get('activities', [\App\Http\Controllers\Dosen\MbkmController::class, 'activities'])->name('activities.index');
+        Route::post('activities/{activity}/approve', [\App\Http\Controllers\Dosen\MbkmController::class, 'approveActivity'])->name('activities.approve');
+    });
+
+    Route::prefix('tugas-akhir')->name('tugas-akhir.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Dosen\ThesisController::class, 'index'])->name('index');
+        Route::post('/sessions/{session}/review', [\App\Http\Controllers\Dosen\ThesisController::class, 'reviewSession'])->name('sessions.review');
+        Route::patch('/sessions/{session}/review', [\App\Http\Controllers\Dosen\ThesisController::class, 'reviewSession'])->name('sessions.review.patch');
+        Route::post('/supervisors/{supervisor}/approve', [\App\Http\Controllers\Dosen\ThesisController::class, 'approveSupervisor'])->name('supervisors.approve');
+        Route::post('/{thesis}/proposal/review', [\App\Http\Controllers\Dosen\ThesisController::class, 'reviewProposal'])->name('proposal.review');
+    });
+
     // LMS Login route for dosen
     Route::get('/lms-login', [\App\Http\Controllers\LmsLoginController::class, 'redirectToLms'])->name('lms.login');
+
+    // KRS Advisor (Dosen PA) review routes
+    Route::prefix('krs-advisor')->name('krs-advisor.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Dosen\AdvisorKrsController::class, 'index'])->name('index');
+        Route::get('/{registration}', [\App\Http\Controllers\Dosen\AdvisorKrsController::class, 'show'])->name('show');
+        Route::post('/{registration}/approve', [\App\Http\Controllers\Dosen\AdvisorKrsController::class, 'approve'])->name('approve');
+        Route::post('/{registration}/reject', [\App\Http\Controllers\Dosen\AdvisorKrsController::class, 'reject'])->name('reject');
+        Route::post('/{registration}/request-revision', [\App\Http\Controllers\Dosen\AdvisorKrsController::class, 'requestRevision'])->name('request-revision');
+    });
 
     // LMS Dosen Routes
     Route::prefix('lms')->name('lms.')->group(function () {
@@ -338,23 +538,24 @@ Route::middleware(['auth', 'verified', 'role:calon_mahasiswa'])->prefix('calon-m
 // Default dashboard route (redirects based on role)
 Route::get('/dashboard', function () {
     $user = auth()->user();
-    
+
     if ($user->isAdmin()) {
         return redirect()->route('admin.dashboard');
     } elseif ($user->isMahasiswa()) {
         // Check if mahasiswa has uploaded surat komitmen
         $mahasiswa = $user->mahasiswa;
-        if (!$mahasiswa || !$mahasiswa->hasUploadedKomitmen()) {
+        if (! $mahasiswa || ! $mahasiswa->hasUploadedKomitmen()) {
             return redirect()->route('mahasiswa.surat-komitmen.index')
                 ->with('warning', 'Anda harus mengupload surat komitmen terlebih dahulu.');
         }
+
         return redirect()->route('mahasiswa.dashboard');
     } elseif ($user->isDosen()) {
         return redirect()->route('dosen.dashboard');
     } elseif ($user->isCalonMahasiswa()) {
         return redirect()->route('calon-mahasiswa.dashboard');
     }
-    
+
     return redirect('/');
 })->middleware(['auth', 'verified'])->name('dashboard');
 

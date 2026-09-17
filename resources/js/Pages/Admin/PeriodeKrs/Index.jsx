@@ -80,6 +80,18 @@ export default function Index({ periodeKrs }) {
         }
     };
 
+    const handleOpenKrs = (id) => {
+        if (confirm('Buka KRS untuk periode ini? Mahasiswa akan dapat mulai mengisi KRS.')) {
+            router.post(route('admin.periode-krs.open-krs', id));
+        }
+    };
+
+    const handleCloseKrs = (id) => {
+        if (confirm('Tutup KRS untuk periode ini?')) {
+            router.post(route('admin.periode-krs.close-krs', id));
+        }
+    };
+
     const filtered = periodeKrs.data.filter((p) =>
         p.nama_periode?.toLowerCase().includes(search.toLowerCase()) ||
         p.tahun_ajaran?.tahun_mulai?.toString().includes(search) ||
@@ -125,6 +137,7 @@ export default function Index({ periodeKrs }) {
                                     <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-neutral-500">Semester</th>
                                     <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-neutral-500">Tanggal</th>
                                     <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-neutral-500">Status</th>
+                                    <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-neutral-500">Status KRS</th>
                                     <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-neutral-500 text-right">Aksi</th>
                                 </tr>
                             </thead>
@@ -147,6 +160,7 @@ export default function Index({ periodeKrs }) {
                                                 {new Date(periode.tanggal_mulai).toLocaleDateString('id-ID')} - {new Date(periode.tanggal_selesai).toLocaleDateString('id-ID')}
                                             </td>
                                             <td data-label="Status" className="px-4 py-3"><StatusBadge status={periode.status} /></td>
+                                            <td data-label="Status KRS" className="px-4 py-3 uppercase text-xs font-bold">{periode.krs_status || 'draft'}</td>
                                             <td data-label="Aksi" className="px-4 py-3 text-right">
                                                 <div className="flex items-center justify-end gap-2 flex-wrap">
                                                     <ActionButton href={`/admin/periode-krs/${periode.id}`} variant="ghost">Lihat</ActionButton>
@@ -155,6 +169,11 @@ export default function Index({ periodeKrs }) {
                                                         <ActionButton onClick={() => handleActivate(periode.id)} variant="primary">Aktifkan</ActionButton>
                                                     ) : (
                                                         <ActionButton onClick={() => handleDeactivate(periode.id)} variant="secondary">Nonaktifkan</ActionButton>
+                                                    )}
+                                                    {periode.krs_status !== 'open' ? (
+                                                        <ActionButton onClick={() => handleOpenKrs(periode.id)} variant="primary">Buka KRS</ActionButton>
+                                                    ) : (
+                                                        <ActionButton onClick={() => handleCloseKrs(periode.id)} variant="secondary">Tutup KRS</ActionButton>
                                                     )}
                                                     <ActionButton onClick={() => handleDelete(periode.id)} variant="danger">Hapus</ActionButton>
                                                 </div>

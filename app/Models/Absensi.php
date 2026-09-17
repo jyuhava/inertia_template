@@ -16,13 +16,15 @@ class Absensi extends Model
         'jam_selesai',
         'status',
         'keterangan',
-        'created_by'
+        'created_by', 'course_meeting_id', 'registration_item_id', 'attendance_status', 'check_in_at', 'check_out_at', 'recorded_by',
     ];
 
     protected $casts = [
         'tanggal' => 'date',
         'jam_mulai' => 'datetime:H:i',
         'jam_selesai' => 'datetime:H:i',
+        'check_in_at' => 'datetime',
+        'check_out_at' => 'datetime',
     ];
 
     /**
@@ -55,6 +57,21 @@ class Absensi extends Model
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function courseMeeting(): BelongsTo
+    {
+        return $this->belongsTo(CourseMeeting::class);
+    }
+
+    public function registrationItem(): BelongsTo
+    {
+        return $this->belongsTo(StudentCourseRegistrationItem::class, 'registration_item_id');
+    }
+
+    public function audits()
+    {
+        return $this->hasMany(AttendanceAudit::class, 'absensi_id');
     }
 
     /**
@@ -94,7 +111,7 @@ class Absensi extends Model
      */
     public function getStatusDisplayAttribute()
     {
-        return match($this->status) {
+        return match ($this->status) {
             'hadir' => 'Hadir',
             'tidak_hadir' => 'Tidak Hadir',
             'izin' => 'Izin',
@@ -108,7 +125,7 @@ class Absensi extends Model
      */
     public function getStatusBadgeColorAttribute()
     {
-        return match($this->status) {
+        return match ($this->status) {
             'hadir' => 'green',
             'tidak_hadir' => 'red',
             'izin' => 'yellow',
@@ -123,7 +140,7 @@ class Absensi extends Model
     public function scopeByPeriodeAndJadwal($query, $periodeKrsId, $jadwalKuliahId)
     {
         return $query->where('periode_krs_id', $periodeKrsId)
-                    ->where('jadwal_kuliah_id', $jadwalKuliahId);
+            ->where('jadwal_kuliah_id', $jadwalKuliahId);
     }
 
     /**

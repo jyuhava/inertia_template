@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             TahunAjaranSeeder::class,
             MataKuliahSeeder::class,
             PmbSeeder::class, // PMB system
+            AkademikLengkapSeeder::class,
         ]);
     }
 }

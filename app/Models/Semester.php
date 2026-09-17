@@ -35,7 +35,7 @@ class Semester extends Model
 
     public function getStatusBadgeColorAttribute()
     {
-        return match($this->status) {
+        return match ($this->status) {
             'aktif' => 'green',
             'nonaktif' => 'gray',
             default => 'gray'
@@ -44,7 +44,7 @@ class Semester extends Model
 
     public function getFullNameAttribute()
     {
-        return $this->tahunAjaran->nama_tahun_ajaran . ' - ' . $this->nama_semester;
+        return $this->tahunAjaran->nama_tahun_ajaran.' - '.$this->nama_semester;
     }
 
     public function scopeAktif($query)
@@ -65,5 +65,15 @@ class Semester extends Model
     public function scopeGenap($query)
     {
         return $query->where('nama_semester', 'Genap');
+    }
+
+    public function kelasKuliahs()
+    {
+        return $this->hasMany(KelasKuliah::class);
+    }
+
+    public function kurikulumsMulai()
+    {
+        return $this->hasMany(Kurikulum::class, 'semester_mulai_id');
     }
 }

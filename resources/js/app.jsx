@@ -120,6 +120,14 @@ window.route = (name, params = {}) => {
         'dosen.absensi.update': (id) => `/dosen/absensi/${id}/update`,
         'dosen.absensi.pertemuan.delete': (id) => `/dosen/absensi/${id}/pertemuan`,
         'dosen.absensi.rekap': (id) => `/dosen/absensi/${id}/rekap`,
+        // Outcome-Based Education routes
+        'admin.obe.cpl.index': '/admin/obe/cpl',
+        'admin.obe.cpl.create': '/admin/obe/cpl/create',
+        'admin.obe.cpmk.index': '/admin/obe/cpmk',
+        'admin.obe.mapping.index': '/admin/obe/mapping',
+        'admin.obe.assessments.index': '/admin/obe/assessments',
+        'admin.obe.report': '/admin/obe/report',
+        'dosen.obe.index': '/dosen/obe',
         // Profile routes
         'profile.edit': '/profile',
         'logout': '/logout',

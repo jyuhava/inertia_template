@@ -30,6 +30,31 @@ class Prodi extends Model
         return $this->hasMany(MataKuliah::class);
     }
 
+    public function dosenHomebaseHistories()
+    {
+        return $this->hasMany(DosenHomebaseHistory::class);
+    }
+
+    public function kurikulums()
+    {
+        return $this->hasMany(Kurikulum::class);
+    }
+
+    public function obeCpls()
+    {
+        return $this->hasMany(ObeCpl::class);
+    }
+
+    public function thesisSetting()
+    {
+        return $this->hasOne(ThesisSetting::class);
+    }
+
+    public function theses()
+    {
+        return $this->hasMany(Thesis::class);
+    }
+
     /**
      * Get the display name for status
      */

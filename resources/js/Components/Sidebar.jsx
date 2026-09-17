@@ -59,6 +59,8 @@ function StaffSidebar({ isOpen, isCollapsed, toggleSidebar, toggleCollapse }) {
                 { name: 'Tahun Ajaran', href: '/admin/tahun-ajaran' },
                 { name: 'Semester', href: '/admin/semester' },
                 { name: 'Mata Kuliah', href: '/admin/mata-kuliah' },
+                { name: 'Kurikulum', href: '/admin/kurikulum' },
+                { name: 'Ruangan', href: '/admin/ruangan' },
             ]
         },
         {
@@ -83,9 +85,14 @@ function StaffSidebar({ isOpen, isCollapsed, toggleSidebar, toggleCollapse }) {
             ),
             items: [
                 { name: 'Jadwal Kuliah', href: '/admin/jadwal-kuliah' },
+                { name: 'Kelas Kuliah', href: '/admin/kelas-kuliah' },
+                { name: 'Jadwal Akademik', href: '/admin/jadwal-akademik' },
                 { name: 'Periode KRS', href: '/admin/periode-krs' },
+                { name: 'KRS / Enrollment', href: route('admin.krs-enrollment.index') },
+                { name: 'Dosen Pembimbing Akademik', href: route('admin.student-advisor.index') },
                 { name: 'Manajemen KRS', href: '/admin/krs' },
                 { name: 'KHS', href: '/admin/khs' },
+                { name: 'Tugas Akhir', href: '/admin/tugas-akhir' },
             ]
         },
         {
@@ -113,6 +120,21 @@ function StaffSidebar({ isOpen, isCollapsed, toggleSidebar, toggleCollapse }) {
             ]
         },
         {
+            category: 'Outcome-Based Education',
+            icon: (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            ),
+            items: [
+                { name: 'CPL', href: '/admin/obe/cpl' },
+                { name: 'CPMK & Sub-CPMK', href: '/admin/obe/cpmk' },
+                { name: 'Pemetaan OBE', href: '/admin/obe/mapping' },
+                { name: 'Assessment OBE', href: '/admin/obe/assessments' },
+                { name: 'Laporan OBE', href: '/admin/obe/report' },
+            ]
+        },
+        {
             category: 'LPM',
             icon: (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -137,8 +159,10 @@ function StaffSidebar({ isOpen, isCollapsed, toggleSidebar, toggleCollapse }) {
             ),
             items: [
                 { name: 'KRS', href: '/mahasiswa/krs' },
+                { name: 'KRS Enrollment', href: route('mahasiswa.krs-enrollment.index') },
                 { name: 'KHS', href: '/mahasiswa/khs' },
                 { name: 'Kehadiran', href: '/mahasiswa/absensi' },
+                { name: 'Tugas Akhir', href: '/mahasiswa/tugas-akhir' },
                 { name: 'Surat Aktif', href: '/mahasiswa/surat-aktif' },
             ]
         },
@@ -167,6 +191,9 @@ function StaffSidebar({ isOpen, isCollapsed, toggleSidebar, toggleCollapse }) {
                 { name: 'Jadwal Mengajar', href: '/dosen/jadwal' },
                 { name: 'Penilaian', href: '/dosen/jadwal' },
                 { name: 'Absensi', href: '/dosen/jadwal' },
+                { name: 'Capaian OBE', href: '/dosen/obe' },
+                { name: 'Review KRS (PA)', href: route('dosen.krs-advisor.index') },
+                { name: 'Bimbingan Tugas Akhir', href: '/dosen/tugas-akhir' },
             ]
         },
         {
@@ -619,6 +646,7 @@ function MahasiswaSidebar({ isOpen, isCollapsed, toggleSidebar, toggleCollapse }
             label: 'Akademik',
             items: [
                 { name: 'KRS', href: '/mahasiswa/krs', icon: MhsIcons.krs },
+                { name: 'KRS Enrollment', href: route('mahasiswa.krs-enrollment.index'), icon: MhsIcons.krs },
                 { name: 'KHS', href: '/mahasiswa/khs', icon: MhsIcons.khs },
                 { name: 'Kehadiran', href: '/mahasiswa/absensi', icon: MhsIcons.kehadiran },
                 { name: 'Surat Aktif', href: '/mahasiswa/surat-aktif', icon: MhsIcons.surat },
