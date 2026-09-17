@@ -65,6 +65,11 @@ class KelasKuliah extends Model
         return $this->hasMany(StudentCourseRegistrationItem::class);
     }
 
+    public function meetings()
+    {
+        return $this->hasMany(CourseMeeting::class, 'kelas_kuliah_id');
+    }
+
     /**
      * Jumlah mahasiswa terdaftar aktif — dihitung dari KRS/enrollment,
      * bukan dari field statis, per aturan modul KRS.
