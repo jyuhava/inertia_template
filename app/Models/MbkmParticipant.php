@@ -20,6 +20,11 @@ class MbkmParticipant extends Model
         return $this->belongsTo(Mahasiswa::class);
     }
 
+    public function program()
+    {
+        return $this->hasOneThrough(MbkmProgram::class, MbkmApplication::class, 'id', 'id', 'mbkm_application_id', 'mbkm_program_id');
+    }
+
     public function placement()
     {
         return $this->hasOne(MbkmPlacement::class);

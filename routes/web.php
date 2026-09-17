@@ -259,6 +259,11 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
         Route::get('/export/csv', [\App\Http\Controllers\Admin\CalonMahasiswaController::class, 'export'])->name('export');
     });
     Route::prefix('mbkm')->name('mbkm.')->group(function () {
+        Route::get('programs', [\App\Http\Controllers\Admin\MbkmController::class, 'index'])->name('programs.index');
+        Route::get('programs/create', [\App\Http\Controllers\Admin\MbkmController::class, 'create'])->name('programs.create');
+        Route::post('programs', [\App\Http\Controllers\Admin\MbkmController::class, 'store'])->name('programs.store');
+        Route::get('programs/{program}', [\App\Http\Controllers\Admin\MbkmController::class, 'show'])->name('programs.show');
+        Route::patch('programs/{program}/status', [\App\Http\Controllers\Admin\MbkmController::class, 'updateStatus'])->name('programs.status');
         Route::get('applications', [\App\Http\Controllers\Admin\MbkmController::class, 'applications'])->name('applications.index');
         Route::post('applications/{application}/accept', [\App\Http\Controllers\Admin\MbkmController::class, 'accept'])->name('applications.accept');
         Route::post('recognitions/{recognition}/approve', [\App\Http\Controllers\Admin\MbkmController::class, 'approveRecognition'])->name('recognitions.approve');
@@ -313,7 +318,10 @@ Route::middleware(['auth', 'verified', 'role:mahasiswa'])->prefix('mahasiswa')->
 
         Route::prefix('mbkm')->name('mbkm.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Mahasiswa\MbkmController::class, 'index'])->name('index');
+            Route::get('programs', [\App\Http\Controllers\Mahasiswa\MbkmController::class, 'index'])->name('programs.index');
+            Route::get('programs/{program}', [\App\Http\Controllers\Mahasiswa\MbkmController::class, 'showProgram'])->name('programs.show');
             Route::post('programs/{program}', [\App\Http\Controllers\Mahasiswa\MbkmController::class, 'store'])->name('applications.store');
+            Route::get('activities', [\App\Http\Controllers\Mahasiswa\MbkmController::class, 'activities'])->name('activities.index');
             Route::post('applications/{application}/submit', [\App\Http\Controllers\Mahasiswa\MbkmController::class, 'submit'])->name('applications.submit');
             Route::post('placements/{placement}/activities', [\App\Http\Controllers\Mahasiswa\MbkmController::class, 'storeActivity'])->name('activities.store');
         });
