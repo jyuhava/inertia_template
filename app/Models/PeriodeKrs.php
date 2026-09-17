@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class PeriodeKrs extends Model
 {
     protected $table = 'periode_krs';
-    
+
     protected $fillable = [
         'nama_periode',
         'tahun_ajaran_id',
@@ -17,12 +17,21 @@ class PeriodeKrs extends Model
         'tanggal_mulai',
         'tanggal_selesai',
         'status',
-        'keterangan'
+        'keterangan',
+        'krs_status',
+        'revisi_mulai',
+        'revisi_selesai',
+        'wajib_persetujuan_pa',
+        'maksimal_sks',
+        'minimal_sks',
     ];
 
     protected $casts = [
         'tanggal_mulai' => 'date',
         'tanggal_selesai' => 'date',
+        'revisi_mulai' => 'date',
+        'revisi_selesai' => 'date',
+        'wajib_persetujuan_pa' => 'boolean',
     ];
 
     /**
@@ -63,8 +72,41 @@ class PeriodeKrs extends Model
     public function isBerlangsung(): bool
     {
         $today = now()->toDateString();
-        return $this->status === 'aktif' 
-            && $today >= $this->tanggal_mulai->toDateString() 
+
+        return $this->status === 'aktif'
+            && $today >= $this->tanggal_mulai->toDateString()
             && $today <= $this->tanggal_selesai->toDateString();
+    }
+
+    /**
+     * Enrollment (KRS baru) untuk periode ini.
+     */
+    public function studentCourseRegistrations()
+    {
+        return $this->hasMany(StudentCourseRegistration::class, 'periode_krs_id');
+    }
+
+    /**
+     * Apakah pendaftaran KRS baru sedang dibuka (terpisah dari status
+     * aktif/tidak_aktif lama yang dipakai modul KRS legacy).
+     */
+    public function isKrsOpenForRegistration(): bool
+    {
+        $today = now()->toDateString();
+
+        return $this->krs_status === 'open'
+            && $today >= $this->tanggal_mulai->toDateString()
+            && $today <= $this->tanggal_selesai->toDateString();
+    }
+
+    public function isInRevisionWindow(): bool
+    {
+        if (! $this->revisi_mulai || ! $this->revisi_selesai) {
+            return false;
+        }
+
+        $today = now()->toDateString();
+
+        return $today >= $this->revisi_mulai->toDateString() && $today <= $this->revisi_selesai->toDateString();
     }
 }

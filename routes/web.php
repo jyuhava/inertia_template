@@ -147,6 +147,25 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
     Route::resource('periode-krs', \App\Http\Controllers\Admin\PeriodeKrsController::class);
     Route::post('periode-krs/{periodeKrs}/activate', [\App\Http\Controllers\Admin\PeriodeKrsController::class, 'activate'])->name('periode-krs.activate');
     Route::post('periode-krs/{periodeKrs}/deactivate', [\App\Http\Controllers\Admin\PeriodeKrsController::class, 'deactivate'])->name('periode-krs.deactivate');
+    Route::post('periode-krs/{periodeKrs}/open-krs', [\App\Http\Controllers\Admin\PeriodeKrsController::class, 'openKrs'])->name('periode-krs.open-krs');
+    Route::post('periode-krs/{periodeKrs}/close-krs', [\App\Http\Controllers\Admin\PeriodeKrsController::class, 'closeKrs'])->name('periode-krs.close-krs');
+
+    // KRS / Student Enrollment (baru, berbasis Kelas Kuliah)
+    Route::prefix('krs-enrollment')->name('krs-enrollment.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\KrsEnrollmentController::class, 'index'])->name('index');
+        Route::get('/{registration}', [\App\Http\Controllers\Admin\KrsEnrollmentController::class, 'show'])->name('show');
+        Route::post('/{registration}/approve', [\App\Http\Controllers\Admin\KrsEnrollmentController::class, 'approve'])->name('approve');
+        Route::post('/{registration}/reject', [\App\Http\Controllers\Admin\KrsEnrollmentController::class, 'reject'])->name('reject');
+        Route::post('/{registration}/request-revision', [\App\Http\Controllers\Admin\KrsEnrollmentController::class, 'requestRevision'])->name('request-revision');
+        Route::post('/{registration}/lock', [\App\Http\Controllers\Admin\KrsEnrollmentController::class, 'lock'])->name('lock');
+        Route::post('/{registration}/unlock', [\App\Http\Controllers\Admin\KrsEnrollmentController::class, 'unlock'])->name('unlock');
+        Route::post('/{registration}/cancel', [\App\Http\Controllers\Admin\KrsEnrollmentController::class, 'cancel'])->name('cancel');
+        Route::put('/{registration}/pddikti/sync', [\App\Http\Controllers\Admin\KrsEnrollment\PddiktiController::class, 'sync'])->name('pddikti.sync');
+        Route::post('bulk-approve', [\App\Http\Controllers\Admin\KrsEnrollmentController::class, 'bulkApprove'])->name('bulk-approve');
+    });
+
+    // Dosen Pembimbing Akademik (Student Advisor)
+    Route::resource('student-advisor', \App\Http\Controllers\Admin\StudentAdvisorController::class)->only(['index', 'store', 'destroy']);
 
     // KHS Student List (for Sidebar)
     Route::get('/khs', [\App\Http\Controllers\Admin\KhsController::class, 'studentList'])->name('khs.student-list');
@@ -253,6 +272,14 @@ Route::middleware(['auth', 'verified', 'role:mahasiswa'])->prefix('mahasiswa')->
         Route::delete('/krs/{krs}', [\App\Http\Controllers\KrsController::class, 'destroy'])->name('krs.destroy');
         Route::get('/krs/print', [\App\Http\Controllers\KrsController::class, 'print'])->name('krs.print');
 
+        // KRS / Student Enrollment (baru, berbasis Kelas Kuliah)
+        Route::prefix('krs-enrollment')->name('krs-enrollment.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Mahasiswa\KrsEnrollmentController::class, 'index'])->name('index');
+            Route::post('/add-class', [\App\Http\Controllers\Mahasiswa\KrsEnrollmentController::class, 'addClass'])->name('add-class');
+            Route::delete('/{registration}/item/{item}', [\App\Http\Controllers\Mahasiswa\KrsEnrollmentController::class, 'removeClass'])->name('remove-class');
+            Route::post('/{registration}/submit', [\App\Http\Controllers\Mahasiswa\KrsEnrollmentController::class, 'submit'])->name('submit');
+        });
+
         // KHS routes
         Route::get('/khs', [\App\Http\Controllers\Mahasiswa\KhsController::class, 'index'])->name('khs.index');
         Route::get('/khs/{periodeKrs}', [\App\Http\Controllers\Mahasiswa\KhsController::class, 'show'])->name('khs.show');
@@ -302,6 +329,15 @@ Route::middleware(['auth', 'verified', 'role:dosen'])->prefix('dosen')->name('do
 
     // LMS Login route for dosen
     Route::get('/lms-login', [\App\Http\Controllers\LmsLoginController::class, 'redirectToLms'])->name('lms.login');
+
+    // KRS Advisor (Dosen PA) review routes
+    Route::prefix('krs-advisor')->name('krs-advisor.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Dosen\AdvisorKrsController::class, 'index'])->name('index');
+        Route::get('/{registration}', [\App\Http\Controllers\Dosen\AdvisorKrsController::class, 'show'])->name('show');
+        Route::post('/{registration}/approve', [\App\Http\Controllers\Dosen\AdvisorKrsController::class, 'approve'])->name('approve');
+        Route::post('/{registration}/reject', [\App\Http\Controllers\Dosen\AdvisorKrsController::class, 'reject'])->name('reject');
+        Route::post('/{registration}/request-revision', [\App\Http\Controllers\Dosen\AdvisorKrsController::class, 'requestRevision'])->name('request-revision');
+    });
 
     // LMS Dosen Routes
     Route::prefix('lms')->name('lms.')->group(function () {

@@ -142,6 +142,11 @@ class Dosen extends Model
         return $this->belongsToMany(KelasKuliah::class, 'kelas_kuliah_pengajars')->withPivot(['peran', 'status'])->withTimestamps();
     }
 
+    public function advisees()
+    {
+        return $this->hasMany(StudentAdvisor::class);
+    }
+
     /**
      * Get the display name for jenis kelamin
      */

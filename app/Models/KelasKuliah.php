@@ -59,4 +59,26 @@ class KelasKuliah extends Model
     {
         return $query->where('status', $status);
     }
+
+    public function registrationItems()
+    {
+        return $this->hasMany(StudentCourseRegistrationItem::class);
+    }
+
+    /**
+     * Jumlah mahasiswa terdaftar aktif — dihitung dari KRS/enrollment,
+     * bukan dari field statis, per aturan modul KRS.
+     */
+    public function getJumlahTerdaftarAttribute(): int
+    {
+        return $this->registrationItems()
+            ->where('status', 'active')
+            ->whereHas('registration', fn ($q) => $q->whereIn('status', ['draft', 'submitted', 'revision', 'approved', 'locked']))
+            ->count();
+    }
+
+    public function getSisaKapasitasAttribute(): int
+    {
+        return max($this->kapasitas - $this->jumlah_terdaftar, 0);
+    }
 }
