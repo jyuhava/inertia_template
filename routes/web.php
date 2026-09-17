@@ -70,6 +70,43 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
         Route::get('/template', [\App\Http\Controllers\Admin\BulkMahasiswaController::class, 'downloadTemplate'])->name('template');
     });
 
+    // Mata Kuliah restore (archived via soft delete)
+    Route::post('mata-kuliah/{id}/restore', [\App\Http\Controllers\Admin\MataKuliahController::class, 'restore'])->name('mata-kuliah.restore');
+    Route::prefix('mata-kuliah/{mataKuliah}')->name('mata-kuliah.')->group(function () {
+        Route::put('pddikti/mapping', [\App\Http\Controllers\Admin\MataKuliah\PddiktiController::class, 'updateMapping'])->name('pddikti.mapping.update');
+        Route::post('pddikti/sync', [\App\Http\Controllers\Admin\MataKuliah\PddiktiController::class, 'sync'])->name('pddikti.sync');
+    });
+
+    // Ruangan CRUD routes
+    Route::resource('ruangan', \App\Http\Controllers\Admin\RuanganController::class);
+
+    // Kurikulum CRUD routes
+    Route::resource('kurikulum', \App\Http\Controllers\Admin\KurikulumController::class);
+    Route::post('kurikulum/{kurikulum}/activate', [\App\Http\Controllers\Admin\KurikulumController::class, 'activate'])->name('kurikulum.activate');
+    Route::post('kurikulum/{kurikulum}/archive', [\App\Http\Controllers\Admin\KurikulumController::class, 'archive'])->name('kurikulum.archive');
+    Route::prefix('kurikulum/{kurikulum}')->name('kurikulum.')->group(function () {
+        Route::post('mata-kuliah', [\App\Http\Controllers\Admin\Kurikulum\CourseController::class, 'store'])->name('mata-kuliah.store');
+        Route::put('mata-kuliah/{item}', [\App\Http\Controllers\Admin\Kurikulum\CourseController::class, 'update'])->name('mata-kuliah.update');
+        Route::delete('mata-kuliah/{item}', [\App\Http\Controllers\Admin\Kurikulum\CourseController::class, 'destroy'])->name('mata-kuliah.destroy');
+        Route::put('pddikti/mapping', [\App\Http\Controllers\Admin\Kurikulum\PddiktiController::class, 'updateMapping'])->name('pddikti.mapping.update');
+        Route::post('pddikti/sync', [\App\Http\Controllers\Admin\Kurikulum\PddiktiController::class, 'sync'])->name('pddikti.sync');
+    });
+
+    // Kelas Kuliah CRUD routes
+    Route::resource('kelas-kuliah', \App\Http\Controllers\Admin\KelasKuliahController::class);
+    Route::prefix('kelas-kuliah/{kelasKuliah}')->name('kelas-kuliah.')->group(function () {
+        Route::post('pengajar', [\App\Http\Controllers\Admin\KelasKuliah\PengajarController::class, 'store'])->name('pengajar.store');
+        Route::delete('pengajar/{pengajar}', [\App\Http\Controllers\Admin\KelasKuliah\PengajarController::class, 'destroy'])->name('pengajar.destroy');
+        Route::post('jadwal', [\App\Http\Controllers\Admin\KelasKuliah\JadwalController::class, 'store'])->name('jadwal.store');
+        Route::put('jadwal/{jadwal}', [\App\Http\Controllers\Admin\KelasKuliah\JadwalController::class, 'update'])->name('jadwal.update');
+        Route::delete('jadwal/{jadwal}', [\App\Http\Controllers\Admin\KelasKuliah\JadwalController::class, 'destroy'])->name('jadwal.destroy');
+        Route::put('pddikti/mapping', [\App\Http\Controllers\Admin\KelasKuliah\PddiktiController::class, 'updateMapping'])->name('pddikti.mapping.update');
+        Route::post('pddikti/sync', [\App\Http\Controllers\Admin\KelasKuliah\PddiktiController::class, 'sync'])->name('pddikti.sync');
+    });
+
+    // Jadwal (calendar/table view across all classes)
+    Route::get('jadwal-akademik', [\App\Http\Controllers\Admin\JadwalAkademikController::class, 'index'])->name('jadwal-akademik.index');
+
     // Prodi CRUD routes
     Route::resource('prodi', \App\Http\Controllers\Admin\ProdiController::class);
 

@@ -59,6 +59,8 @@ function StaffSidebar({ isOpen, isCollapsed, toggleSidebar, toggleCollapse }) {
                 { name: 'Tahun Ajaran', href: '/admin/tahun-ajaran' },
                 { name: 'Semester', href: '/admin/semester' },
                 { name: 'Mata Kuliah', href: '/admin/mata-kuliah' },
+                { name: 'Kurikulum', href: '/admin/kurikulum' },
+                { name: 'Ruangan', href: '/admin/ruangan' },
             ]
         },
         {
@@ -83,6 +85,8 @@ function StaffSidebar({ isOpen, isCollapsed, toggleSidebar, toggleCollapse }) {
             ),
             items: [
                 { name: 'Jadwal Kuliah', href: '/admin/jadwal-kuliah' },
+                { name: 'Kelas Kuliah', href: '/admin/kelas-kuliah' },
+                { name: 'Jadwal Akademik', href: '/admin/jadwal-akademik' },
                 { name: 'Periode KRS', href: '/admin/periode-krs' },
                 { name: 'Manajemen KRS', href: '/admin/krs' },
                 { name: 'KHS', href: '/admin/khs' },

@@ -35,6 +35,11 @@ class Prodi extends Model
         return $this->hasMany(DosenHomebaseHistory::class);
     }
 
+    public function kurikulums()
+    {
+        return $this->hasMany(Kurikulum::class);
+    }
+
     /**
      * Get the display name for status
      */

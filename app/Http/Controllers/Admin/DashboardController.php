@@ -5,16 +5,19 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Absensi;
 use App\Models\CalonMahasiswa;
-use App\Models\Mahasiswa;
 use App\Models\Dosen;
-use App\Models\Prodi;
-use App\Models\MataKuliah;
+use App\Models\JadwalKelasKuliah;
 use App\Models\JadwalKuliah;
+use App\Models\KelasKuliah;
 use App\Models\Krs;
+use App\Models\Kurikulum;
 use App\Models\LmsCourse;
+use App\Models\Mahasiswa;
+use App\Models\MataKuliah;
 use App\Models\Penilaian;
 use App\Models\PeriodeKrs;
 use App\Models\PeriodePmb;
+use App\Models\Prodi;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -29,7 +32,7 @@ class DashboardController extends Controller
         $mahasiswaAktif = Mahasiswa::where('status', 'aktif')->count();
         $mahasiswaLulus = Mahasiswa::where('status', 'lulus')->count();
         $mahasiswaNonaktif = Mahasiswa::where('status', 'nonaktif')->count();
-        
+
         $totalDosen = Dosen::count();
         $totalProdi = Prodi::count();
         $totalMataKuliah = MataKuliah::count();
@@ -37,12 +40,28 @@ class DashboardController extends Controller
         $totalLmsCourse = LmsCourse::count();
         $totalUsers = User::count();
         $totalCalonMahasiswa = CalonMahasiswa::count();
-        
+
+        // Academic foundation statistics (kurikulum/kelas/jadwal)
+        $totalKurikulum = Kurikulum::count();
+        $kurikulumAktif = Kurikulum::where('status', 'aktif')->count();
+        $totalKelasKuliah = KelasKuliah::count();
+        $totalJadwalAkademik = JadwalKelasKuliah::count();
+        $mataKuliahBelumPddikti = MataKuliah::doesntHave('pddiktiMapping')->count();
+        $kurikulumBelumPddikti = Kurikulum::doesntHave('pddiktiMapping')->count();
+        $jadwalConflict = JadwalKelasKuliah::query()
+            ->whereNotNull('ruangan_id')
+            ->select('ruangan_id', 'hari')
+            ->selectRaw('COUNT(*) as jumlah')
+            ->groupBy('ruangan_id', 'hari')
+            ->havingRaw('COUNT(*) > 1')
+            ->get()
+            ->count();
+
         // Get active periode KRS
         $periodeAktif = PeriodeKrs::aktif()
             ->with(['tahunAjaran', 'semester'])
             ->first();
-        
+
         // KRS Statistics for active period
         $krsStatistics = null;
         if ($periodeAktif) {
@@ -78,7 +97,7 @@ class DashboardController extends Controller
         } else {
             $pmbStatistics['periode_aktif'] = null;
         }
-        
+
         // Get mahasiswa by prodi
         $mahasiswaByProdi = Prodi::withCount('mahasiswas')
             ->orderBy('mahasiswas_count', 'desc')
@@ -87,10 +106,10 @@ class DashboardController extends Controller
             ->map(function ($prodi) {
                 return [
                     'nama' => $prodi->nama_prodi,
-                    'jumlah' => $prodi->mahasiswas_count
+                    'jumlah' => $prodi->mahasiswas_count,
                 ];
             });
-        
+
         // Get mahasiswa by angkatan
         $mahasiswaByAngkatan = Mahasiswa::select('angkatan', DB::raw('count(*) as total'))
             ->groupBy('angkatan')
@@ -100,10 +119,10 @@ class DashboardController extends Controller
             ->map(function ($item) {
                 return [
                     'angkatan' => $item->angkatan,
-                    'jumlah' => $item->total
+                    'jumlah' => $item->total,
                 ];
             });
-        
+
         // Get recent KRS activities
         $recentKrs = Krs::with(['mahasiswa', 'jadwalKuliah.mataKuliah', 'approvedBy'])
             ->whereIn('status', ['disetujui', 'ditolak'])
@@ -119,10 +138,10 @@ class DashboardController extends Controller
                     'mata_kuliah' => $krs->jadwalKuliah->mataKuliah->nama_mata_kuliah,
                     'status' => $krs->status,
                     'tanggal' => $krs->tanggal_approval->format('d/m/Y H:i'),
-                    'approved_by' => $krs->approvedBy ? $krs->approvedBy->name : null
+                    'approved_by' => $krs->approvedBy ? $krs->approvedBy->name : null,
                 ];
             });
-        
+
         // Get jadwal kuliah today
         $hariIni = Str::ucfirst(now()->locale('id')->dayName);
         $jadwalHariIni = JadwalKuliah::with(['mataKuliah', 'dosen', 'semester'])
@@ -134,12 +153,12 @@ class DashboardController extends Controller
                 return [
                     'mata_kuliah' => $jadwal->mataKuliah->nama_mata_kuliah,
                     'dosen' => $jadwal->dosen->nama_lengkap,
-                    'waktu' => ($jadwal->jam_mulai?->format('H:i') ?? '-') . ' - ' . ($jadwal->jam_selesai?->format('H:i') ?? '-'),
+                    'waktu' => ($jadwal->jam_mulai?->format('H:i') ?? '-').' - '.($jadwal->jam_selesai?->format('H:i') ?? '-'),
                     'ruangan' => $jadwal->ruangan,
-                    'semester' => $jadwal->semester->nama_semester
+                    'semester' => $jadwal->semester->nama_semester,
                 ];
             });
-        
+
         $userByRole = [
             'admin' => User::where('role', 'admin')->count(),
             'dosen' => User::where('role', 'dosen')->count(),
@@ -282,7 +301,7 @@ class DashboardController extends Controller
                     'total' => $totalMahasiswa,
                     'aktif' => $mahasiswaAktif,
                     'lulus' => $mahasiswaLulus,
-                    'nonaktif' => $mahasiswaNonaktif
+                    'nonaktif' => $mahasiswaNonaktif,
                 ],
                 'dosen' => $totalDosen,
                 'prodi' => $totalProdi,
@@ -296,7 +315,7 @@ class DashboardController extends Controller
                 'tahun_ajaran' => $periodeAktif->tahunAjaran->tahun,
                 'semester' => $periodeAktif->semester->nama_semester,
                 'tanggal_mulai' => $periodeAktif->tanggal_mulai->format('d/m/Y'),
-                'tanggal_selesai' => $periodeAktif->tanggal_selesai->format('d/m/Y')
+                'tanggal_selesai' => $periodeAktif->tanggal_selesai->format('d/m/Y'),
             ] : null,
             'krsStatistics' => $krsStatistics,
             'mahasiswaByProdi' => $mahasiswaByProdi,
@@ -334,6 +353,16 @@ class DashboardController extends Controller
                 'total_sks' => $totalSksDiambil,
             ],
             'mahasiswaByGender' => $mahasiswaByGender,
+            'akademikStatistics' => [
+                'total_mata_kuliah' => $totalMataKuliah,
+                'total_kurikulum' => $totalKurikulum,
+                'kurikulum_aktif' => $kurikulumAktif,
+                'total_kelas' => $totalKelasKuliah,
+                'total_jadwal' => $totalJadwalAkademik,
+                'jadwal_conflict' => $jadwalConflict,
+                'mata_kuliah_belum_pddikti' => $mataKuliahBelumPddikti,
+                'kurikulum_belum_pddikti' => $kurikulumBelumPddikti,
+            ],
         ]);
     }
 }
