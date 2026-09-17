@@ -88,6 +88,8 @@ function StaffSidebar({ isOpen, isCollapsed, toggleSidebar, toggleCollapse }) {
                 { name: 'Kelas Kuliah', href: '/admin/kelas-kuliah' },
                 { name: 'Jadwal Akademik', href: '/admin/jadwal-akademik' },
                 { name: 'Periode KRS', href: '/admin/periode-krs' },
+                { name: 'KRS / Enrollment', href: route('admin.krs-enrollment.index') },
+                { name: 'Dosen Pembimbing Akademik', href: route('admin.student-advisor.index') },
                 { name: 'Manajemen KRS', href: '/admin/krs' },
                 { name: 'KHS', href: '/admin/khs' },
             ]
@@ -141,6 +143,7 @@ function StaffSidebar({ isOpen, isCollapsed, toggleSidebar, toggleCollapse }) {
             ),
             items: [
                 { name: 'KRS', href: '/mahasiswa/krs' },
+                { name: 'KRS Enrollment', href: route('mahasiswa.krs-enrollment.index') },
                 { name: 'KHS', href: '/mahasiswa/khs' },
                 { name: 'Kehadiran', href: '/mahasiswa/absensi' },
                 { name: 'Surat Aktif', href: '/mahasiswa/surat-aktif' },
@@ -171,6 +174,7 @@ function StaffSidebar({ isOpen, isCollapsed, toggleSidebar, toggleCollapse }) {
                 { name: 'Jadwal Mengajar', href: '/dosen/jadwal' },
                 { name: 'Penilaian', href: '/dosen/jadwal' },
                 { name: 'Absensi', href: '/dosen/jadwal' },
+                { name: 'Review KRS (PA)', href: route('dosen.krs-advisor.index') },
             ]
         },
         {
@@ -623,6 +627,7 @@ function MahasiswaSidebar({ isOpen, isCollapsed, toggleSidebar, toggleCollapse }
             label: 'Akademik',
             items: [
                 { name: 'KRS', href: '/mahasiswa/krs', icon: MhsIcons.krs },
+                { name: 'KRS Enrollment', href: route('mahasiswa.krs-enrollment.index'), icon: MhsIcons.krs },
                 { name: 'KHS', href: '/mahasiswa/khs', icon: MhsIcons.khs },
                 { name: 'Kehadiran', href: '/mahasiswa/absensi', icon: MhsIcons.kehadiran },
                 { name: 'Surat Aktif', href: '/mahasiswa/surat-aktif', icon: MhsIcons.surat },

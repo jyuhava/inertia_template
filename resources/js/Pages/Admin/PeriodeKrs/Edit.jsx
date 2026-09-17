@@ -96,6 +96,11 @@ export default function Edit({ periodeKrs, tahunAjarans, semesters }) {
         tanggal_mulai: periodeKrs.tanggal_mulai || '',
         tanggal_selesai: periodeKrs.tanggal_selesai || '',
         status: periodeKrs.status || 'tidak_aktif',
+        revisi_mulai: periodeKrs.revisi_mulai || '',
+        revisi_selesai: periodeKrs.revisi_selesai || '',
+        wajib_persetujuan_pa: periodeKrs.wajib_persetujuan_pa || false,
+        maksimal_sks: periodeKrs.maksimal_sks || '',
+        minimal_sks: periodeKrs.minimal_sks || '',
         keterangan: periodeKrs.keterangan || ''
     });
 
@@ -230,6 +235,33 @@ export default function Edit({ periodeKrs, tahunAjarans, semesters }) {
                                 error={errors.keterangan}
                             />
                             <InputError message={errors.keterangan} />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-neutral-200">
+                            <div>
+                                <InputLabel htmlFor="revisi_mulai">Revisi Mulai (Opsional)</InputLabel>
+                                <TextInput id="revisi_mulai" type="date" value={data.revisi_mulai} onChange={(e) => setData('revisi_mulai', e.target.value)} error={errors.revisi_mulai} />
+                                <InputError message={errors.revisi_mulai} />
+                            </div>
+                            <div>
+                                <InputLabel htmlFor="revisi_selesai">Revisi Selesai (Opsional)</InputLabel>
+                                <TextInput id="revisi_selesai" type="date" value={data.revisi_selesai} onChange={(e) => setData('revisi_selesai', e.target.value)} error={errors.revisi_selesai} />
+                                <InputError message={errors.revisi_selesai} />
+                            </div>
+                            <div>
+                                <InputLabel htmlFor="maksimal_sks">Maksimal SKS (Opsional)</InputLabel>
+                                <TextInput id="maksimal_sks" type="number" value={data.maksimal_sks} onChange={(e) => setData('maksimal_sks', e.target.value)} error={errors.maksimal_sks} />
+                                <InputError message={errors.maksimal_sks} />
+                            </div>
+                            <div>
+                                <InputLabel htmlFor="minimal_sks">Minimal SKS (Opsional)</InputLabel>
+                                <TextInput id="minimal_sks" type="number" value={data.minimal_sks} onChange={(e) => setData('minimal_sks', e.target.value)} error={errors.minimal_sks} />
+                                <InputError message={errors.minimal_sks} />
+                            </div>
+                            <div className="md:col-span-2 flex items-center gap-2">
+                                <input type="checkbox" id="wajib_persetujuan_pa" checked={data.wajib_persetujuan_pa} onChange={(e) => setData('wajib_persetujuan_pa', e.target.checked)} />
+                                <InputLabel htmlFor="wajib_persetujuan_pa">Wajib persetujuan Dosen PA sebelum admin final approve</InputLabel>
+                            </div>
                         </div>
 
                         <div className="flex items-center justify-end gap-3 pt-4 border-t border-neutral-200">

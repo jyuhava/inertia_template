@@ -71,7 +71,7 @@ class Mahasiswa extends Model
      */
     public function getStatusDisplayAttribute()
     {
-        return match($this->status) {
+        return match ($this->status) {
             'aktif' => 'Aktif',
             'nonaktif' => 'Nonaktif',
             'lulus' => 'Lulus',
@@ -84,7 +84,7 @@ class Mahasiswa extends Model
      */
     public function getStatusBadgeColorAttribute()
     {
-        return match($this->status) {
+        return match ($this->status) {
             'aktif' => 'green',
             'nonaktif' => 'red',
             'lulus' => 'blue',
@@ -130,14 +130,14 @@ class Mahasiswa extends Model
     public function getPersentaseKehadiran($periodeKrsId, $jadwalKuliahId = null)
     {
         $query = $this->absensis()->where('periode_krs_id', $periodeKrsId);
-        
+
         if ($jadwalKuliahId) {
             $query->where('jadwal_kuliah_id', $jadwalKuliahId);
         }
-        
+
         $totalAbsensi = $query->count();
         $hadirCount = $query->where('status', 'hadir')->count();
-        
+
         return $totalAbsensi > 0 ? round(($hadirCount / $totalAbsensi) * 100, 1) : 0;
     }
 
@@ -146,7 +146,7 @@ class Mahasiswa extends Model
      */
     public function hasUploadedKomitmen()
     {
-        return !empty($this->surat_komitmen) && !empty($this->komitmen_uploaded_at);
+        return ! empty($this->surat_komitmen) && ! empty($this->komitmen_uploaded_at);
     }
 
     /**
@@ -154,7 +154,7 @@ class Mahasiswa extends Model
      */
     public function getKomitmenFilePath()
     {
-        return $this->surat_komitmen ? public_path('uploads/komitmen/' . $this->surat_komitmen) : null;
+        return $this->surat_komitmen ? public_path('uploads/komitmen/'.$this->surat_komitmen) : null;
     }
 
     /**
@@ -162,7 +162,7 @@ class Mahasiswa extends Model
      */
     public function getKomitmenUrl()
     {
-        return $this->surat_komitmen ? asset('uploads/komitmen/' . $this->surat_komitmen) : null;
+        return $this->surat_komitmen ? asset('uploads/komitmen/'.$this->surat_komitmen) : null;
     }
 
     /**
@@ -289,5 +289,24 @@ class Mahasiswa extends Model
     public function pddiktiSyncLogs()
     {
         return $this->hasMany(PddiktiSyncLog::class)->orderByDesc('created_at');
+    }
+
+    /**
+     * Enrollment (KRS baru) — dibangun di atas Kelas Kuliah, terpisah dari
+     * modul `krs`/`jadwal_kuliahs` lama yang masih dipakai Penilaian/Absensi.
+     */
+    public function studentCourseRegistrations()
+    {
+        return $this->hasMany(StudentCourseRegistration::class);
+    }
+
+    public function advisors()
+    {
+        return $this->hasMany(StudentAdvisor::class);
+    }
+
+    public function advisorAktif()
+    {
+        return $this->hasOne(StudentAdvisor::class)->where('status', 'aktif')->latestOfMany('tanggal_mulai');
     }
 }

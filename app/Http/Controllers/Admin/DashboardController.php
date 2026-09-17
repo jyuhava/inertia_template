@@ -18,6 +18,7 @@ use App\Models\Penilaian;
 use App\Models\PeriodeKrs;
 use App\Models\PeriodePmb;
 use App\Models\Prodi;
+use App\Models\StudentCourseRegistration;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -56,6 +57,16 @@ class DashboardController extends Controller
             ->havingRaw('COUNT(*) > 1')
             ->get()
             ->count();
+
+        $krsEnrollmentStatistics = [
+            'total' => StudentCourseRegistration::count(),
+            'draft' => StudentCourseRegistration::where('status', 'draft')->count(),
+            'submitted' => StudentCourseRegistration::where('status', 'submitted')->count(),
+            'revision' => StudentCourseRegistration::where('status', 'revision')->count(),
+            'approved' => StudentCourseRegistration::where('status', 'approved')->count(),
+            'rejected' => StudentCourseRegistration::where('status', 'rejected')->count(),
+            'locked' => StudentCourseRegistration::where('status', 'locked')->count(),
+        ];
 
         // Get active periode KRS
         $periodeAktif = PeriodeKrs::aktif()
@@ -363,6 +374,7 @@ class DashboardController extends Controller
                 'mata_kuliah_belum_pddikti' => $mataKuliahBelumPddikti,
                 'kurikulum_belum_pddikti' => $kurikulumBelumPddikti,
             ],
+            'krsEnrollmentStatistics' => $krsEnrollmentStatistics,
         ]);
     }
 }
