@@ -89,6 +89,16 @@ class MataKuliah extends Model
         return $this->hasMany(KelasKuliah::class);
     }
 
+    public function obeCpmks()
+    {
+        return $this->hasMany(ObeCpmk::class);
+    }
+
+    public function obeAssessments()
+    {
+        return $this->hasMany(ObeAssessment::class);
+    }
+
     public function ekuivalensiSebagaiLama()
     {
         return $this->hasMany(MataKuliahEkuivalensi::class, 'mata_kuliah_lama_id');

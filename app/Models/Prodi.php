@@ -40,6 +40,11 @@ class Prodi extends Model
         return $this->hasMany(Kurikulum::class);
     }
 
+    public function obeCpls()
+    {
+        return $this->hasMany(ObeCpl::class);
+    }
+
     public function thesisSetting()
     {
         return $this->hasOne(ThesisSetting::class);

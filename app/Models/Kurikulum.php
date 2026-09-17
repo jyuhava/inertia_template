@@ -52,6 +52,16 @@ class Kurikulum extends Model
         return $this->hasMany(KelasKuliah::class);
     }
 
+    public function obeCpls()
+    {
+        return $this->hasMany(ObeCpl::class);
+    }
+
+    public function obeCpmks()
+    {
+        return $this->hasMany(ObeCpmk::class);
+    }
+
     public function ekuivalensis()
     {
         return $this->hasMany(MataKuliahEkuivalensi::class);

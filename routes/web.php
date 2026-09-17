@@ -269,6 +269,43 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
         Route::post('recognitions/{recognition}/approve', [\App\Http\Controllers\Admin\MbkmController::class, 'approveRecognition'])->name('recognitions.approve');
     });
 
+    // Outcome-Based Education (OBE)
+    Route::prefix('obe')->name('obe.')->group(function () {
+        Route::get('taxonomy-levels', [\App\Http\Controllers\Admin\Obe\TaxonomyController::class, 'index'])->name('taxonomy-levels.index');
+        Route::post('taxonomy-levels', [\App\Http\Controllers\Admin\Obe\TaxonomyController::class, 'store'])->name('taxonomy-levels.store');
+        Route::put('taxonomy-levels/{taxonomyLevel}', [\App\Http\Controllers\Admin\Obe\TaxonomyController::class, 'update'])->name('taxonomy-levels.update');
+        Route::delete('taxonomy-levels/{taxonomyLevel}', [\App\Http\Controllers\Admin\Obe\TaxonomyController::class, 'destroy'])->name('taxonomy-levels.destroy');
+
+        Route::get('cpl', [\App\Http\Controllers\Admin\Obe\CplController::class, 'index'])->name('cpl.index');
+        Route::post('cpl', [\App\Http\Controllers\Admin\Obe\CplController::class, 'store'])->name('cpl.store');
+        Route::put('cpl/{cpl}', [\App\Http\Controllers\Admin\Obe\CplController::class, 'update'])->name('cpl.update');
+        Route::delete('cpl/{cpl}', [\App\Http\Controllers\Admin\Obe\CplController::class, 'destroy'])->name('cpl.destroy');
+
+        Route::get('cpmk', [\App\Http\Controllers\Admin\Obe\CpmkController::class, 'index'])->name('cpmk.index');
+        Route::post('cpmk', [\App\Http\Controllers\Admin\Obe\CpmkController::class, 'store'])->name('cpmk.store');
+        Route::put('cpmk/{cpmk}', [\App\Http\Controllers\Admin\Obe\CpmkController::class, 'update'])->name('cpmk.update');
+        Route::delete('cpmk/{cpmk}', [\App\Http\Controllers\Admin\Obe\CpmkController::class, 'destroy'])->name('cpmk.destroy');
+        Route::post('cpmk/{cpmk}/sub-cpmk', [\App\Http\Controllers\Admin\Obe\CpmkController::class, 'storeSubCpmk'])->name('sub-cpmk.store');
+        Route::put('cpmk/{cpmk}/sub-cpmk/{subCpmk}', [\App\Http\Controllers\Admin\Obe\CpmkController::class, 'updateSubCpmk'])->name('sub-cpmk.update');
+        Route::delete('cpmk/{cpmk}/sub-cpmk/{subCpmk}', [\App\Http\Controllers\Admin\Obe\CpmkController::class, 'destroySubCpmk'])->name('sub-cpmk.destroy');
+
+        Route::post('mappings/cpl-course', [\App\Http\Controllers\Admin\Obe\MappingController::class, 'storeCplCourse'])->name('mappings.cpl-course.store');
+        Route::delete('mappings/cpl-course/{mapping}', [\App\Http\Controllers\Admin\Obe\MappingController::class, 'destroyCplCourse'])->name('mappings.cpl-course.destroy');
+        Route::post('mappings/cpmk-cpl', [\App\Http\Controllers\Admin\Obe\MappingController::class, 'storeCpmkCpl'])->name('mappings.cpmk-cpl.store');
+        Route::delete('mappings/cpmk-cpl/{mapping}', [\App\Http\Controllers\Admin\Obe\MappingController::class, 'destroyCpmkCpl'])->name('mappings.cpmk-cpl.destroy');
+
+        Route::get('assessments', [\App\Http\Controllers\Admin\Obe\AssessmentController::class, 'index'])->name('assessments.index');
+        Route::post('assessments', [\App\Http\Controllers\Admin\Obe\AssessmentController::class, 'store'])->name('assessments.store');
+        Route::put('assessments/{assessment}', [\App\Http\Controllers\Admin\Obe\AssessmentController::class, 'update'])->name('assessments.update');
+        Route::delete('assessments/{assessment}', [\App\Http\Controllers\Admin\Obe\AssessmentController::class, 'destroy'])->name('assessments.destroy');
+        Route::post('assessment-mappings', [\App\Http\Controllers\Admin\Obe\AssessmentController::class, 'storeMapping'])->name('assessment-mappings.store');
+        Route::delete('assessment-mappings/{mapping}', [\App\Http\Controllers\Admin\Obe\AssessmentController::class, 'destroyMapping'])->name('assessment-mappings.destroy');
+        Route::post('assessments/{assessment}/scores', [\App\Http\Controllers\Admin\Obe\AssessmentController::class, 'storeScore'])->name('assessments.scores.store');
+
+        Route::get('kurikulum/{kurikulum}/matrix', [\App\Http\Controllers\Admin\Obe\ReportController::class, 'matrix'])->name('matrix');
+        Route::get('kurikulum/{kurikulum}/mahasiswa/{mahasiswa}/gap-report', [\App\Http\Controllers\Admin\Obe\ReportController::class, 'gap'])->name('gap-report');
+    });
+
     Route::prefix('tugas-akhir')->name('tugas-akhir.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\ThesisController::class, 'index'])->name('index');
         Route::post('/types', [\App\Http\Controllers\Admin\ThesisController::class, 'storeType'])->name('types.store');
@@ -366,6 +403,7 @@ Route::middleware(['auth', 'verified', 'role:mahasiswa'])->prefix('mahasiswa')->
 
 // Dosen routes
 Route::middleware(['auth', 'verified', 'role:dosen'])->prefix('dosen')->name('dosen.')->group(function () {
+    Route::get('obe/kelas/{kelasKuliah}', [\App\Http\Controllers\Dosen\ObeController::class, 'class'])->name('obe.kelas.show');
     Route::get('/dashboard', [\App\Http\Controllers\Dosen\DosenController::class, 'dashboard'])->name('dashboard');
     Route::get('/jadwal', [\App\Http\Controllers\Dosen\DosenController::class, 'jadwal'])->name('jadwal');
     Route::get('/mahasiswa/{jadwalKuliah}', [\App\Http\Controllers\Dosen\DosenController::class, 'mahasiswa'])->name('mahasiswa');
