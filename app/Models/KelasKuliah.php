@@ -70,6 +70,11 @@ class KelasKuliah extends Model
         return $this->hasMany(CourseMeeting::class, 'kelas_kuliah_id');
     }
 
+    public function obeAssessments()
+    {
+        return $this->hasMany(ObeAssessment::class);
+    }
+
     /**
      * Jumlah mahasiswa terdaftar aktif — dihitung dari KRS/enrollment,
      * bukan dari field statis, per aturan modul KRS.
