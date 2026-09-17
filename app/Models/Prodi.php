@@ -30,6 +30,11 @@ class Prodi extends Model
         return $this->hasMany(MataKuliah::class);
     }
 
+    public function dosenHomebaseHistories()
+    {
+        return $this->hasMany(DosenHomebaseHistory::class);
+    }
+
     /**
      * Get the display name for status
      */
