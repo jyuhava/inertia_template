@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('nama_dokumen');
             $table->string('kode_dokumen')->unique();
             $table->text('deskripsi')->nullable();
-            $table->enum('jenis_file', ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'])->default('pdf')->change();
+            $table->enum('jenis_file', ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'])->default('pdf');
             $table->integer('max_size_kb')->default(2048); // 2MB default
             $table->boolean('wajib')->default(true);
             $table->boolean('aktif')->default(true);
