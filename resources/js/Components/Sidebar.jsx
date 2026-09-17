@@ -120,6 +120,21 @@ function StaffSidebar({ isOpen, isCollapsed, toggleSidebar, toggleCollapse }) {
             ]
         },
         {
+            category: 'Outcome-Based Education',
+            icon: (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            ),
+            items: [
+                { name: 'CPL', href: '/admin/obe/cpl' },
+                { name: 'CPMK & Sub-CPMK', href: '/admin/obe/cpmk' },
+                { name: 'Pemetaan OBE', href: '/admin/obe/mapping' },
+                { name: 'Assessment OBE', href: '/admin/obe/assessments' },
+                { name: 'Laporan OBE', href: '/admin/obe/report' },
+            ]
+        },
+        {
             category: 'LPM',
             icon: (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -176,6 +191,7 @@ function StaffSidebar({ isOpen, isCollapsed, toggleSidebar, toggleCollapse }) {
                 { name: 'Jadwal Mengajar', href: '/dosen/jadwal' },
                 { name: 'Penilaian', href: '/dosen/jadwal' },
                 { name: 'Absensi', href: '/dosen/jadwal' },
+                { name: 'Capaian OBE', href: '/dosen/obe' },
                 { name: 'Review KRS (PA)', href: route('dosen.krs-advisor.index') },
                 { name: 'Bimbingan Tugas Akhir', href: '/dosen/tugas-akhir' },
             ]
