@@ -197,4 +197,14 @@ class Dosen extends Model
             default => 'gray'
         };
     }
+
+    public function mbkmSupervisions()
+    {
+        return $this->hasMany(MbkmSupervisor::class);
+    }
+
+    public function mbkmAssessments()
+    {
+        return $this->hasMany(MbkmAssessment::class);
+    }
 }

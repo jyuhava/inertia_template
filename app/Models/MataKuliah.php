@@ -152,4 +152,9 @@ class MataKuliah extends Model
     {
         return $query->where('prodi_id', $prodiId);
     }
+
+    public function mbkmRecognitions()
+    {
+        return $this->hasMany(MbkmRecognition::class);
+    }
 }

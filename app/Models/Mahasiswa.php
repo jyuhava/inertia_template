@@ -319,4 +319,14 @@ class Mahasiswa extends Model
     {
         return $this->hasMany(SurveyResponse::class);
     }
+
+    public function mbkmApplications()
+    {
+        return $this->hasMany(MbkmApplication::class);
+    }
+
+    public function mbkmParticipants()
+    {
+        return $this->hasMany(MbkmParticipant::class);
+    }
 }
