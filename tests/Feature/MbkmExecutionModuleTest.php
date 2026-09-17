@@ -57,9 +57,9 @@ class MbkmExecutionModuleTest extends TestCase
         $placement = MbkmPlacement::create(['mbkm_participant_id' => $participant->id, 'title' => 'Engineer', 'status' => 'active']);
         $placement->supervisors()->create(['dosen_id' => $lecturer->id, 'role' => 'academic']);
         $this->actingAs($studentUser)->get(route('mahasiswa.mbkm.index'))->assertOk();
-        $this->actingAs($studentUser)->post(route('mahasiswa.mbkm.activities.store', $placement), ['activity_date' => today()->toDateString(), 'title' => 'Coding', 'hours' => 8])->assertCreated();
+        $this->actingAs($studentUser)->post(route('mahasiswa.mbkm.activities.store', $placement), ['activity_date' => today()->toDateString(), 'title' => 'Coding', 'hours' => 8])->assertRedirect();
         $activity = $placement->activities()->first();
         $this->actingAs($lecturerUser)->post(route('dosen.mbkm.activities.approve', $activity))->assertRedirect();
-        $this->assertSame('approved',$activity->fresh()->status);
+        $this->assertSame('approved', $activity->fresh()->status);
     }
 }
