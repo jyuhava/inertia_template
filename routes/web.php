@@ -169,6 +169,14 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
 
     // KHS Student List (for Sidebar)
     Route::get('/khs', [\App\Http\Controllers\Admin\KhsController::class, 'studentList'])->name('khs.student-list');
+    Route::get('/study-results', [\App\Http\Controllers\Admin\StudyResultController::class, 'index'])->name('study-results.index');
+    Route::post('/study-results/publish', [\App\Http\Controllers\Admin\StudyResultController::class, 'publish'])->name('study-results.publish');
+    Route::post('/study-results/{studyResult}/lock', [\App\Http\Controllers\Admin\StudyResultController::class, 'lock'])->name('study-results.lock');
+    Route::get('/surveys', [\App\Http\Controllers\Admin\SurveyController::class, 'index'])->name('surveys.index');
+    Route::post('/surveys', [\App\Http\Controllers\Admin\SurveyController::class, 'store'])->name('surveys.store');
+    Route::post('/surveys/{survey}/publish', [\App\Http\Controllers\Admin\SurveyController::class, 'publish'])->name('surveys.publish');
+    Route::post('/surveys/{survey}/questions', [\App\Http\Controllers\Admin\SurveyController::class, 'question'])->name('surveys.questions.store');
+    Route::post('/surveys/{survey}/targets', [\App\Http\Controllers\Admin\SurveyController::class, 'target'])->name('surveys.targets.store');
 
     // KHS Admin Routes
     Route::prefix('mahasiswa/{mahasiswa}/khs')->name('mahasiswa.khs.')->group(function () {
@@ -284,6 +292,8 @@ Route::middleware(['auth', 'verified', 'role:mahasiswa'])->prefix('mahasiswa')->
         Route::get('/khs', [\App\Http\Controllers\Mahasiswa\KhsController::class, 'index'])->name('khs.index');
         Route::get('/khs/{periodeKrs}', [\App\Http\Controllers\Mahasiswa\KhsController::class, 'show'])->name('khs.show');
         Route::get('/khs/{periodeKrs}/cetak', [\App\Http\Controllers\Mahasiswa\KhsController::class, 'cetakKhs'])->name('khs.cetak');
+        Route::get('/surveys', [\App\Http\Controllers\Mahasiswa\SurveyController::class, 'index'])->name('surveys.index');
+        Route::post('/surveys/{survey}/submit', [\App\Http\Controllers\Mahasiswa\SurveyController::class, 'submit'])->name('surveys.submit');
 
         // Absensi routes
         Route::get('/absensi', [\App\Http\Controllers\Mahasiswa\AbsensiController::class, 'index'])->name('absensi.index');
