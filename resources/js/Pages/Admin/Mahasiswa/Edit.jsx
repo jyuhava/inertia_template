@@ -104,10 +104,15 @@ function InputError({ message }) {
 export default function Edit({ mahasiswa, prodis }) {
     const { data, setData, put, processing, errors } = useForm({
         nim: mahasiswa.nim,
+        no_ktp: mahasiswa.no_ktp || '',
+        nisn: mahasiswa.nisn || '',
+        npwp: mahasiswa.npwp || '',
         nama_lengkap: mahasiswa.nama_lengkap,
         jenis_kelamin: mahasiswa.jenis_kelamin,
         tempat_lahir: mahasiswa.tempat_lahir,
         tanggal_lahir: mahasiswa.tanggal_lahir ? new Date(mahasiswa.tanggal_lahir).toISOString().split('T')[0] : '',
+        agama: mahasiswa.agama || '',
+        kewarganegaraan: mahasiswa.kewarganegaraan || 'WNI',
         alamat: mahasiswa.alamat,
         no_hp: mahasiswa.no_hp,
         prodi_id: mahasiswa.prodi_id || '',
@@ -211,6 +216,66 @@ export default function Edit({ mahasiswa, prodis }) {
                             </div>
 
                             <div>
+                                <InputLabel htmlFor="no_ktp">NIK</InputLabel>
+                                <TextInput
+                                    id="no_ktp"
+                                    type="text"
+                                    value={data.no_ktp}
+                                    onChange={(e) => setData('no_ktp', e.target.value)}
+                                    error={errors.no_ktp}
+                                />
+                                <InputError message={errors.no_ktp} />
+                            </div>
+
+                            <div>
+                                <InputLabel htmlFor="nisn">NISN</InputLabel>
+                                <TextInput
+                                    id="nisn"
+                                    type="text"
+                                    value={data.nisn}
+                                    onChange={(e) => setData('nisn', e.target.value)}
+                                    error={errors.nisn}
+                                />
+                                <InputError message={errors.nisn} />
+                            </div>
+
+                            <div>
+                                <InputLabel htmlFor="npwp">NPWP (opsional)</InputLabel>
+                                <TextInput
+                                    id="npwp"
+                                    type="text"
+                                    value={data.npwp}
+                                    onChange={(e) => setData('npwp', e.target.value)}
+                                    error={errors.npwp}
+                                />
+                                <InputError message={errors.npwp} />
+                            </div>
+
+                            <div>
+                                <InputLabel htmlFor="agama">Agama</InputLabel>
+                                <TextInput
+                                    id="agama"
+                                    type="text"
+                                    value={data.agama}
+                                    onChange={(e) => setData('agama', e.target.value)}
+                                    error={errors.agama}
+                                />
+                                <InputError message={errors.agama} />
+                            </div>
+
+                            <div>
+                                <InputLabel htmlFor="kewarganegaraan">Kewarganegaraan</InputLabel>
+                                <TextInput
+                                    id="kewarganegaraan"
+                                    type="text"
+                                    value={data.kewarganegaraan}
+                                    onChange={(e) => setData('kewarganegaraan', e.target.value)}
+                                    error={errors.kewarganegaraan}
+                                />
+                                <InputError message={errors.kewarganegaraan} />
+                            </div>
+
+                            <div>
                                 <InputLabel htmlFor="no_hp">No. HP</InputLabel>
                                 <TextInput
                                     id="no_hp"
@@ -271,8 +336,13 @@ export default function Edit({ mahasiswa, prodis }) {
                                 >
                                     <option value="">Pilih Status</option>
                                     <option value="aktif">Aktif</option>
+                                    <option value="cuti">Cuti</option>
                                     <option value="nonaktif">Nonaktif</option>
                                     <option value="lulus">Lulus</option>
+                                    <option value="dropout">Dropout</option>
+                                    <option value="mengundurkan_diri">Mengundurkan Diri</option>
+                                    <option value="pindah">Pindah/Transfer</option>
+                                    <option value="dikeluarkan">Dikeluarkan</option>
                                 </SelectInput>
                                 <InputError message={errors.status} />
                             </div>

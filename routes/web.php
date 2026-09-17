@@ -30,6 +30,38 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
     Route::resource('mahasiswa', \App\Http\Controllers\Admin\MahasiswaController::class);
     Route::get('mahasiswa-export', [\App\Http\Controllers\Admin\MahasiswaController::class, 'export'])->name('mahasiswa.export');
     Route::put('mahasiswa/{mahasiswa}/reset-password', [\App\Http\Controllers\Admin\MahasiswaController::class, 'resetPassword'])->name('mahasiswa.reset-password');
+    Route::post('mahasiswa/{id}/restore', [\App\Http\Controllers\Admin\MahasiswaController::class, 'restore'])->name('mahasiswa.restore');
+
+    // Modul Mahasiswa — sub-resource routes (biodata sudah tercakup di CRUD utama)
+    Route::prefix('mahasiswa/{mahasiswa}')->name('mahasiswa.')->group(function () {
+        Route::post('alamat', [\App\Http\Controllers\Admin\Mahasiswa\AlamatController::class, 'store'])->name('alamat.store');
+        Route::delete('alamat/{alamat}', [\App\Http\Controllers\Admin\Mahasiswa\AlamatController::class, 'destroy'])->name('alamat.destroy');
+
+        Route::post('kontak', [\App\Http\Controllers\Admin\Mahasiswa\KontakController::class, 'store'])->name('kontak.store');
+        Route::delete('kontak/{kontak}', [\App\Http\Controllers\Admin\Mahasiswa\KontakController::class, 'destroy'])->name('kontak.destroy');
+
+        Route::post('orang-tua', [\App\Http\Controllers\Admin\Mahasiswa\OrangTuaController::class, 'store'])->name('orang-tua.store');
+
+        Route::post('riwayat-pendidikan', [\App\Http\Controllers\Admin\Mahasiswa\RiwayatPendidikanController::class, 'store'])->name('riwayat-pendidikan.store');
+        Route::delete('riwayat-pendidikan/{riwayatPendidikan}', [\App\Http\Controllers\Admin\Mahasiswa\RiwayatPendidikanController::class, 'destroy'])->name('riwayat-pendidikan.destroy');
+
+        Route::post('status-history', [\App\Http\Controllers\Admin\Mahasiswa\StatusHistoryController::class, 'store'])->name('status-history.store');
+
+        Route::post('kebutuhan-khusus', [\App\Http\Controllers\Admin\Mahasiswa\KebutuhanKhususController::class, 'store'])->name('kebutuhan-khusus.store');
+        Route::delete('kebutuhan-khusus/{kebutuhanKhusus}', [\App\Http\Controllers\Admin\Mahasiswa\KebutuhanKhususController::class, 'destroy'])->name('kebutuhan-khusus.destroy');
+
+        Route::post('beasiswa', [\App\Http\Controllers\Admin\Mahasiswa\BeasiswaController::class, 'store'])->name('beasiswa.store');
+        Route::put('beasiswa/{beasiswa}', [\App\Http\Controllers\Admin\Mahasiswa\BeasiswaController::class, 'update'])->name('beasiswa.update');
+        Route::delete('beasiswa/{beasiswa}', [\App\Http\Controllers\Admin\Mahasiswa\BeasiswaController::class, 'destroy'])->name('beasiswa.destroy');
+
+        Route::post('dokumen', [\App\Http\Controllers\Admin\Mahasiswa\DokumenController::class, 'store'])->name('dokumen.store');
+        Route::patch('dokumen/{dokumen}/verify', [\App\Http\Controllers\Admin\Mahasiswa\DokumenController::class, 'verify'])->name('dokumen.verify');
+        Route::get('dokumen/{dokumen}/download', [\App\Http\Controllers\Admin\Mahasiswa\DokumenController::class, 'download'])->name('dokumen.download');
+        Route::delete('dokumen/{dokumen}', [\App\Http\Controllers\Admin\Mahasiswa\DokumenController::class, 'destroy'])->name('dokumen.destroy');
+
+        Route::put('pddikti/mapping', [\App\Http\Controllers\Admin\Mahasiswa\PddiktiController::class, 'updateMapping'])->name('pddikti.mapping.update');
+        Route::post('pddikti/sync', [\App\Http\Controllers\Admin\Mahasiswa\PddiktiController::class, 'sync'])->name('pddikti.sync');
+    });
     
     // Bulk Import Mahasiswa routes
     Route::prefix('bulk-mahasiswa')->name('bulk-mahasiswa.')->group(function () {
