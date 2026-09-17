@@ -258,6 +258,12 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
         Route::post('/bulk-update-status', [\App\Http\Controllers\Admin\CalonMahasiswaController::class, 'bulkUpdateStatus'])->name('bulk-update-status');
         Route::get('/export/csv', [\App\Http\Controllers\Admin\CalonMahasiswaController::class, 'export'])->name('export');
     });
+    Route::prefix('mbkm')->name('mbkm.')->group(function () {
+        Route::get('applications', [\App\Http\Controllers\Admin\MbkmController::class, 'applications'])->name('applications.index');
+        Route::post('applications/{application}/accept', [\App\Http\Controllers\Admin\MbkmController::class, 'accept'])->name('applications.accept');
+        Route::post('recognitions/{recognition}/approve', [\App\Http\Controllers\Admin\MbkmController::class, 'approveRecognition'])->name('recognitions.approve');
+    });
+
 });
 
 // Mahasiswa routes
@@ -305,6 +311,13 @@ Route::middleware(['auth', 'verified', 'role:mahasiswa'])->prefix('mahasiswa')->
         Route::get('/surat-aktif', [\App\Http\Controllers\Mahasiswa\SuratAktifController::class, 'index'])->name('surat-aktif.index');
         Route::get('/surat-aktif/cetak', [\App\Http\Controllers\Mahasiswa\SuratAktifController::class, 'cetak'])->name('surat-aktif.cetak');
 
+        Route::prefix('mbkm')->name('mbkm.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Mahasiswa\MbkmController::class, 'index'])->name('index');
+            Route::post('programs/{program}', [\App\Http\Controllers\Mahasiswa\MbkmController::class, 'store'])->name('applications.store');
+            Route::post('applications/{application}/submit', [\App\Http\Controllers\Mahasiswa\MbkmController::class, 'submit'])->name('applications.submit');
+            Route::post('placements/{placement}/activities', [\App\Http\Controllers\Mahasiswa\MbkmController::class, 'storeActivity'])->name('activities.store');
+        });
+
         // LMS Routes
         Route::prefix('lms')->name('lms.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Mahasiswa\LmsStudentController::class, 'index'])->name('index');
@@ -341,6 +354,11 @@ Route::middleware(['auth', 'verified', 'role:dosen'])->prefix('dosen')->name('do
     Route::get('/kelas-kuliah/{class}/absensi/{meeting}', [\App\Http\Controllers\Dosen\CourseAttendanceController::class, 'show'])->name('kelas-absensi.show');
     Route::put('/kelas-kuliah/{class}/absensi/{meeting}', [\App\Http\Controllers\Dosen\CourseAttendanceController::class, 'record'])->name('kelas-absensi.record');
     Route::post('/kelas-kuliah/{class}/absensi/{meeting}/complete', [\App\Http\Controllers\Dosen\CourseAttendanceController::class, 'complete'])->name('kelas-absensi.complete');
+
+    Route::prefix('mbkm')->name('mbkm.')->group(function () {
+        Route::get('activities', [\App\Http\Controllers\Dosen\MbkmController::class, 'activities'])->name('activities.index');
+        Route::post('activities/{activity}/approve', [\App\Http\Controllers\Dosen\MbkmController::class, 'approveActivity'])->name('activities.approve');
+    });
 
     // LMS Login route for dosen
     Route::get('/lms-login', [\App\Http\Controllers\LmsLoginController::class, 'redirectToLms'])->name('lms.login');
