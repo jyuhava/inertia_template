@@ -269,6 +269,20 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
         Route::post('recognitions/{recognition}/approve', [\App\Http\Controllers\Admin\MbkmController::class, 'approveRecognition'])->name('recognitions.approve');
     });
 
+    Route::prefix('tugas-akhir')->name('tugas-akhir.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\ThesisController::class, 'index'])->name('index');
+        Route::post('/types', [\App\Http\Controllers\Admin\ThesisController::class, 'storeType'])->name('types.store');
+        Route::put('/settings/{prodi}', [\App\Http\Controllers\Admin\ThesisController::class, 'saveSetting'])->name('settings.save');
+        Route::get('/{thesis}', [\App\Http\Controllers\Admin\ThesisController::class, 'show'])->name('show');
+        Route::patch('/{thesis}/title-review', [\App\Http\Controllers\Admin\ThesisController::class, 'reviewLatestTitle'])->name('title-review');
+        Route::post('/title-submissions/{submission}/review', [\App\Http\Controllers\Admin\ThesisController::class, 'reviewTitle'])->name('title-submissions.review');
+        Route::post('/{thesis}/supervisors', [\App\Http\Controllers\Admin\ThesisController::class, 'assignSupervisor'])->name('supervisors.assign');
+        Route::post('/{thesis}/supervisors/bulk', [\App\Http\Controllers\Admin\ThesisController::class, 'assignSupervisors'])->name('supervisors.assign-bulk');
+        Route::post('/{thesis}/events', [\App\Http\Controllers\Admin\ThesisController::class, 'scheduleEvent'])->name('events.schedule');
+        Route::post('/revisions/{revision}/review', [\App\Http\Controllers\Admin\ThesisController::class, 'reviewRevision'])->name('revisions.review');
+        Route::post('/{thesis}/finalize', [\App\Http\Controllers\Admin\ThesisController::class, 'finalize'])->name('finalize');
+    });
+
 });
 
 // Mahasiswa routes
@@ -326,6 +340,15 @@ Route::middleware(['auth', 'verified', 'role:mahasiswa'])->prefix('mahasiswa')->
             Route::post('placements/{placement}/activities', [\App\Http\Controllers\Mahasiswa\MbkmController::class, 'storeActivity'])->name('activities.store');
         });
 
+        Route::prefix('tugas-akhir')->name('tugas-akhir.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Mahasiswa\ThesisController::class, 'index'])->name('index');
+            Route::post('/', [\App\Http\Controllers\Mahasiswa\ThesisController::class, 'submitTitle'])->name('store');
+            Route::post('/title-submissions', [\App\Http\Controllers\Mahasiswa\ThesisController::class, 'submitTitle'])->name('title-submissions.store');
+            Route::get('/sessions', [\App\Http\Controllers\Mahasiswa\ThesisController::class, 'sessions'])->name('sessions.index');
+            Route::post('/{thesis}/sessions', [\App\Http\Controllers\Mahasiswa\ThesisController::class, 'storeSession'])->name('sessions.store');
+            Route::post('/{thesis}/documents', [\App\Http\Controllers\Mahasiswa\ThesisController::class, 'uploadDocument'])->name('documents.store');
+        });
+
         // LMS Routes
         Route::prefix('lms')->name('lms.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Mahasiswa\LmsStudentController::class, 'index'])->name('index');
@@ -366,6 +389,14 @@ Route::middleware(['auth', 'verified', 'role:dosen'])->prefix('dosen')->name('do
     Route::prefix('mbkm')->name('mbkm.')->group(function () {
         Route::get('activities', [\App\Http\Controllers\Dosen\MbkmController::class, 'activities'])->name('activities.index');
         Route::post('activities/{activity}/approve', [\App\Http\Controllers\Dosen\MbkmController::class, 'approveActivity'])->name('activities.approve');
+    });
+
+    Route::prefix('tugas-akhir')->name('tugas-akhir.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Dosen\ThesisController::class, 'index'])->name('index');
+        Route::post('/sessions/{session}/review', [\App\Http\Controllers\Dosen\ThesisController::class, 'reviewSession'])->name('sessions.review');
+        Route::patch('/sessions/{session}/review', [\App\Http\Controllers\Dosen\ThesisController::class, 'reviewSession'])->name('sessions.review.patch');
+        Route::post('/supervisors/{supervisor}/approve', [\App\Http\Controllers\Dosen\ThesisController::class, 'approveSupervisor'])->name('supervisors.approve');
+        Route::post('/{thesis}/proposal/review', [\App\Http\Controllers\Dosen\ThesisController::class, 'reviewProposal'])->name('proposal.review');
     });
 
     // LMS Login route for dosen

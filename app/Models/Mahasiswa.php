@@ -329,4 +329,9 @@ class Mahasiswa extends Model
     {
         return $this->hasMany(MbkmParticipant::class);
     }
+
+    public function theses()
+    {
+        return $this->hasMany(Thesis::class);
+    }
 }

@@ -10,6 +10,11 @@ class StudentStudyResultItem extends Model
 
     protected $casts = ['credits' => 'decimal:2', 'grade_numeric' => 'decimal:2', 'grade_point' => 'decimal:2'];
 
+    public function studyResult()
+    {
+        return $this->belongsTo(StudentStudyResult::class, 'study_result_id');
+    }
+
     public function mataKuliah()
     {
         return $this->belongsTo(MataKuliah::class);

@@ -40,6 +40,16 @@ class Prodi extends Model
         return $this->hasMany(Kurikulum::class);
     }
 
+    public function thesisSetting()
+    {
+        return $this->hasOne(ThesisSetting::class);
+    }
+
+    public function theses()
+    {
+        return $this->hasMany(Thesis::class);
+    }
+
     /**
      * Get the display name for status
      */
