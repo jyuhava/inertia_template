@@ -92,6 +92,7 @@ function StaffSidebar({ isOpen, isCollapsed, toggleSidebar, toggleCollapse }) {
                 { name: 'Dosen Pembimbing Akademik', href: route('admin.student-advisor.index') },
                 { name: 'Manajemen KRS', href: '/admin/krs' },
                 { name: 'KHS', href: '/admin/khs' },
+                { name: 'Tugas Akhir', href: '/admin/tugas-akhir' },
             ]
         },
         {
@@ -146,6 +147,7 @@ function StaffSidebar({ isOpen, isCollapsed, toggleSidebar, toggleCollapse }) {
                 { name: 'KRS Enrollment', href: route('mahasiswa.krs-enrollment.index') },
                 { name: 'KHS', href: '/mahasiswa/khs' },
                 { name: 'Kehadiran', href: '/mahasiswa/absensi' },
+                { name: 'Tugas Akhir', href: '/mahasiswa/tugas-akhir' },
                 { name: 'Surat Aktif', href: '/mahasiswa/surat-aktif' },
             ]
         },
@@ -175,6 +177,7 @@ function StaffSidebar({ isOpen, isCollapsed, toggleSidebar, toggleCollapse }) {
                 { name: 'Penilaian', href: '/dosen/jadwal' },
                 { name: 'Absensi', href: '/dosen/jadwal' },
                 { name: 'Review KRS (PA)', href: route('dosen.krs-advisor.index') },
+                { name: 'Bimbingan Tugas Akhir', href: '/dosen/tugas-akhir' },
             ]
         },
         {
