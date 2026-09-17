@@ -106,6 +106,9 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
 
     // Jadwal (calendar/table view across all classes)
     Route::get('jadwal-akademik', [\App\Http\Controllers\Admin\JadwalAkademikController::class, 'index'])->name('jadwal-akademik.index');
+    Route::post('jadwal-akademik', [\App\Http\Controllers\Admin\JadwalAkademikController::class, 'store'])->name('jadwal-akademik.store');
+    Route::put('jadwal-akademik/{jadwalAkademik}', [\App\Http\Controllers\Admin\JadwalAkademikController::class, 'update'])->name('jadwal-akademik.update');
+    Route::delete('jadwal-akademik/{jadwalAkademik}', [\App\Http\Controllers\Admin\JadwalAkademikController::class, 'destroy'])->name('jadwal-akademik.destroy');
 
     // Prodi CRUD routes
     Route::resource('prodi', \App\Http\Controllers\Admin\ProdiController::class);

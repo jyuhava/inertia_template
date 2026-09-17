@@ -1,15 +1,86 @@
-import { Head, router } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
 
 const HARI = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+const TIPE = { tatap_muka: 'Tatap Muka', daring: 'Daring', hybrid: 'Hybrid' };
 
-function TableView({ jadwals }) {
+function JadwalForm({ jadwal, kelasKuliahs, ruangans, onClose }) {
+    const isEdit = !!jadwal?.id;
+    const { data, setData, post, put, processing, errors } = useForm({
+        kelas_kuliah_id: jadwal?.kelas_kuliah_id || '',
+        hari: jadwal?.hari || 'Senin',
+        jam_mulai: jadwal?.jam_mulai || '',
+        jam_selesai: jadwal?.jam_selesai || '',
+        ruangan_id: jadwal?.ruangan_id || '',
+        tipe_pertemuan: jadwal?.tipe_pertemuan || 'tatap_muka',
+    });
+    const submit = (e) => {
+        e.preventDefault();
+        const options = { onSuccess: onClose, preserveScroll: true };
+        isEdit ? put(route('admin.jadwal-akademik.update', jadwal.id), options) : post(route('admin.jadwal-akademik.store'), options);
+    };
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+            <form onSubmit={submit} className="w-full max-w-lg space-y-4 bg-white p-6 shadow-xl">
+                <h2 className="text-lg font-bold">{isEdit ? 'Edit Jadwal' : 'Tambah Jadwal'}</h2>
+                <div>
+                    <label className="mb-1 block text-xs font-bold uppercase">Kelas Kuliah</label>
+                    <select required value={data.kelas_kuliah_id} onChange={e => setData('kelas_kuliah_id', e.target.value)} className="w-full border-neutral-300 text-sm">
+                        <option value="">Pilih kelas</option>
+                        {kelasKuliahs.map(k => <option key={k.id} value={k.id}>{k.mata_kuliah?.kode_mata_kuliah} — {k.mata_kuliah?.nama_mata_kuliah} ({k.kode_kelas})</option>)}
+                    </select>
+                    {errors.kelas_kuliah_id && <p className="mt-1 text-xs text-red-600">{errors.kelas_kuliah_id}</p>}
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                    <div>
+                        <label className="mb-1 block text-xs font-bold uppercase">Hari</label>
+                        <select value={data.hari} onChange={e => setData('hari', e.target.value)} className="w-full border-neutral-300 text-sm">
+                            {HARI.map(h => <option key={h} value={h}>{h}</option>)}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="mb-1 block text-xs font-bold uppercase">Jam Mulai</label>
+                        <input required type="time" value={data.jam_mulai} onChange={e => setData('jam_mulai', e.target.value)} className="w-full border-neutral-300 text-sm" />
+                        {errors.jam_mulai && <p className="mt-1 text-xs text-red-600">{errors.jam_mulai}</p>}
+                    </div>
+                    <div>
+                        <label className="mb-1 block text-xs font-bold uppercase">Jam Selesai</label>
+                        <input required type="time" value={data.jam_selesai} onChange={e => setData('jam_selesai', e.target.value)} className="w-full border-neutral-300 text-sm" />
+                        {errors.jam_selesai && <p className="mt-1 text-xs text-red-600">{errors.jam_selesai}</p>}
+                    </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                    <div>
+                        <label className="mb-1 block text-xs font-bold uppercase">Ruangan</label>
+                        <select value={data.ruangan_id} onChange={e => setData('ruangan_id', e.target.value)} className="w-full border-neutral-300 text-sm">
+                            <option value="">Tanpa ruangan</option>
+                            {ruangans.map(r => <option key={r.id} value={r.id}>{r.kode} — {r.nama}</option>)}
+                        </select>
+                        {errors.ruangan_id && <p className="mt-1 text-xs text-red-600">{errors.ruangan_id}</p>}
+                    </div>
+                    <div>
+                        <label className="mb-1 block text-xs font-bold uppercase">Tipe Pertemuan</label>
+                        <select value={data.tipe_pertemuan} onChange={e => setData('tipe_pertemuan', e.target.value)} className="w-full border-neutral-300 text-sm">
+                            {Object.entries(TIPE).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                        </select>
+                    </div>
+                </div>
+                <div className="flex justify-end gap-2">
+                    <button type="button" onClick={onClose} className="border px-4 py-2 text-xs font-bold">Batal</button>
+                    <button disabled={processing} className="bg-black px-4 py-2 text-xs font-bold text-white disabled:opacity-50">Simpan</button>
+                </div>
+            </form>
+        </div>
+    );
+}
+
+function TableView({ jadwals, onEdit, onDelete }) {
     return (
         <div className="bg-white border overflow-x-auto">
             <table className="min-w-full text-sm">
                 <thead className="bg-neutral-50 text-left text-xs uppercase text-neutral-500">
-                    <tr><th className="px-4 py-3">Hari</th><th className="px-4 py-3">Jam</th><th className="px-4 py-3">Kode</th><th className="px-4 py-3">Mata Kuliah</th><th className="px-4 py-3">Kelas</th><th className="px-4 py-3">Ruang</th><th className="px-4 py-3">Dosen</th></tr>
+                    <tr><th className="px-4 py-3">Hari</th><th className="px-4 py-3">Jam</th><th className="px-4 py-3">Kode</th><th className="px-4 py-3">Mata Kuliah</th><th className="px-4 py-3">Kelas</th><th className="px-4 py-3">Ruang</th><th className="px-4 py-3">Dosen</th><th className="px-4 py-3">Aksi</th></tr>
                 </thead>
                 <tbody className="divide-y divide-neutral-100">
                     {jadwals.map(j => (
@@ -21,9 +92,13 @@ function TableView({ jadwals }) {
                             <td className="px-4 py-3">{j.kelas_kuliah?.kode_kelas}</td>
                             <td className="px-4 py-3">{j.ruangan?.nama || '-'}</td>
                             <td className="px-4 py-3">{j.kelas_kuliah?.pengajars?.map(p => p.dosen?.nama_lengkap).join(', ') || '-'}</td>
+                            <td className="px-4 py-3 space-x-2 whitespace-nowrap">
+                                <button onClick={() => onEdit(j)} className="text-xs font-bold underline">Edit</button>
+                                <button onClick={() => onDelete(j)} className="text-xs font-bold text-red-600 underline">Hapus</button>
+                            </td>
                         </tr>
                     ))}
-                    {jadwals.length === 0 && <tr><td colSpan="7" className="px-4 py-8 text-center text-neutral-500">Tidak ada jadwal untuk filter ini.</td></tr>}
+                    {jadwals.length === 0 && <tr><td colSpan="8" className="px-4 py-8 text-center text-neutral-500">Tidak ada jadwal untuk filter ini.</td></tr>}
                 </tbody>
             </table>
         </div>
@@ -52,11 +127,16 @@ function CalendarView({ jadwals }) {
     );
 }
 
-export default function Index({ jadwals, filters, semesters, prodis, ruangans, hariOptions }) {
+export default function Index({ jadwals, filters, semesters, prodis, ruangans, kelasKuliahs = [], hariOptions }) {
     const [mode, setMode] = useState('table');
     const [form, setForm] = useState(filters);
+    const [editing, setEditing] = useState(null); // null = closed, {} = create, jadwal = edit
+    const [showForm, setShowForm] = useState(false);
 
     const applyFilters = () => router.get(route('admin.jadwal-akademik.index'), form, { preserveState: true });
+    const openCreate = () => { setEditing({}); setShowForm(true); };
+    const openEdit = (j) => { setEditing(j); setShowForm(true); };
+    const remove = (j) => confirm(`Hapus jadwal ${j.hari} ${j.jam_mulai}-${j.jam_selesai}?`) && router.delete(route('admin.jadwal-akademik.destroy', j.id), { preserveScroll: true });
 
     return (
         <AdminLayout title="Jadwal Akademik">
@@ -68,6 +148,7 @@ export default function Index({ jadwals, filters, semesters, prodis, ruangans, h
                         <h1 className="text-2xl font-bold">JADWAL AKADEMIK</h1>
                     </div>
                     <div className="space-x-2">
+                        <button onClick={openCreate} className="bg-white px-3 py-2 text-xs font-bold text-black">+ Tambah Jadwal</button>
                         <button onClick={() => setMode('table')} className={`px-3 py-2 text-xs font-bold ${mode === 'table' ? 'bg-white text-black' : 'bg-white/20'}`}>Tabel</button>
                         <button onClick={() => setMode('calendar')} className={`px-3 py-2 text-xs font-bold ${mode === 'calendar' ? 'bg-white text-black' : 'bg-white/20'}`}>Kalender Mingguan</button>
                     </div>
@@ -91,7 +172,8 @@ export default function Index({ jadwals, filters, semesters, prodis, ruangans, h
                     </select>
                     <button onClick={applyFilters} className="bg-black text-white px-4 py-2 text-xs font-bold">Terapkan Filter</button>
                 </div>
-                {mode === 'table' ? <TableView jadwals={jadwals} /> : <CalendarView jadwals={jadwals} />}
+                {mode === 'table' ? <TableView jadwals={jadwals} onEdit={openEdit} onDelete={remove} /> : <CalendarView jadwals={jadwals} />}
+                {showForm && <JadwalForm jadwal={editing} kelasKuliahs={kelasKuliahs} ruangans={ruangans} onClose={() => setShowForm(false)} />}
             </div>
         </AdminLayout>
     );
