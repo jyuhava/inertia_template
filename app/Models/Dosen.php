@@ -207,4 +207,9 @@ class Dosen extends Model
     {
         return $this->hasMany(MbkmAssessment::class);
     }
+
+    public function thesisSupervisors()
+    {
+        return $this->hasMany(ThesisSupervisor::class);
+    }
 }
