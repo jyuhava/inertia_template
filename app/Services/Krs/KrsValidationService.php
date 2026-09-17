@@ -31,6 +31,10 @@ class KrsValidationService
             $problems[] = 'Mahasiswa berstatus '.$mahasiswa->status.' tidak dapat mengambil KRS.';
         }
 
+        if ($kelasKuliah->mataKuliah?->prodi_id !== $mahasiswa->prodi_id) {
+            $problems[] = 'Mata kuliah tidak tersedia untuk Program Studi Anda.';
+        }
+
         if ($kelasKuliah->status !== 'dibuka') {
             $problems[] = 'Kelas kuliah belum dibuka untuk pendaftaran.';
         }
@@ -154,6 +158,16 @@ class KrsValidationService
         }
 
         foreach ($registration->activeItems as $item) {
+            $kelas = $item->kelasKuliah()->with(['mataKuliah.prasyarats', 'jadwals'])->first();
+            if (! $kelas) {
+                $problems[] = 'Kelas kuliah pada KRS tidak lagi tersedia.';
+
+                continue;
+            }
+            if ($kelas->mataKuliah?->prodi_id !== $registration->mahasiswa->prodi_id) {
+                $problems[] = 'Mata kuliah tidak tersedia untuk Program Studi mahasiswa.';
+            }
+            $problems = array_merge($problems, $this->validatePrerequisites($registration->mahasiswa, $kelas));
             if ($item->kelasKuliah->jumlah_terdaftar > $item->kelasKuliah->kapasitas) {
                 $problems[] = "Kelas {$item->kelasKuliah->nama_lengkap} sudah melebihi kapasitas.";
             }
