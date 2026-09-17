@@ -336,6 +336,11 @@ Route::middleware(['auth', 'verified', 'role:dosen'])->prefix('dosen')->name('do
     Route::put('/absensi/{jadwalKuliah}/update', [\App\Http\Controllers\Dosen\AbsensiController::class, 'updateAbsensi'])->name('absensi.update');
     Route::delete('/absensi/{jadwalKuliah}/pertemuan', [\App\Http\Controllers\Dosen\AbsensiController::class, 'deletePertemuan'])->name('absensi.pertemuan.delete');
     Route::get('/absensi/{jadwalKuliah}/rekap', [\App\Http\Controllers\Dosen\AbsensiController::class, 'rekap'])->name('absensi.rekap');
+    Route::get('/kelas-kuliah/{class}/absensi', [\App\Http\Controllers\Dosen\CourseAttendanceController::class, 'index'])->name('kelas-absensi.index');
+    Route::post('/kelas-kuliah/{class}/absensi', [\App\Http\Controllers\Dosen\CourseAttendanceController::class, 'open'])->name('kelas-absensi.open');
+    Route::get('/kelas-kuliah/{class}/absensi/{meeting}', [\App\Http\Controllers\Dosen\CourseAttendanceController::class, 'show'])->name('kelas-absensi.show');
+    Route::put('/kelas-kuliah/{class}/absensi/{meeting}', [\App\Http\Controllers\Dosen\CourseAttendanceController::class, 'record'])->name('kelas-absensi.record');
+    Route::post('/kelas-kuliah/{class}/absensi/{meeting}/complete', [\App\Http\Controllers\Dosen\CourseAttendanceController::class, 'complete'])->name('kelas-absensi.complete');
 
     // LMS Login route for dosen
     Route::get('/lms-login', [\App\Http\Controllers\LmsLoginController::class, 'redirectToLms'])->name('lms.login');

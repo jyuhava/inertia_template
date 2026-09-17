@@ -71,7 +71,13 @@ class KrsEnrollmentModuleTest extends TestCase
 
     private function mataKuliah(Prodi $prodi, string $kode = 'IF101', int $sks = 3): MataKuliah
     {
-        return MataKuliah::create(['kode_mata_kuliah' => $kode, 'nama_mata_kuliah' => 'Algoritma', 'sks' => $sks, 'semester' => 1, 'prodi_id' => $prodi->id, 'jenis' => 'Wajib', 'status' => 'aktif']);
+        $mataKuliah = MataKuliah::create(['kode_mata_kuliah' => $kode, 'nama_mata_kuliah' => 'Algoritma', 'sks' => $sks, 'semester' => 1, 'prodi_id' => $prodi->id, 'jenis' => 'Wajib', 'status' => 'aktif']);
+        $kurikulum = Kurikulum::where('prodi_id', $prodi->id)->where('status', 'aktif')->first();
+        if ($kurikulum) {
+            \App\Models\KurikulumMataKuliah::create(['kurikulum_id' => $kurikulum->id, 'mata_kuliah_id' => $mataKuliah->id, 'semester' => 1, 'is_wajib' => true, 'sort_order' => 1]);
+        }
+
+        return $mataKuliah;
     }
 
     private function kelasKuliah(MataKuliah $mk, Semester $semester, string $kode = 'A', int $kapasitas = 40): KelasKuliah

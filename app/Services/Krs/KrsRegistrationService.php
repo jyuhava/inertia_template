@@ -148,6 +148,10 @@ class KrsRegistrationService
             if (! in_array($registration->status, ['submitted'], true)) {
                 throw ValidationException::withMessages(['registration' => 'Hanya KRS berstatus diajukan yang dapat disetujui.']);
             }
+            $problems = $this->validator->validateForSubmit($registration->load('items.kelasKuliah.mataKuliah', 'mahasiswa', 'periodeKrs'));
+            if (! empty($problems)) {
+                throw ValidationException::withMessages(['approval' => $problems]);
+            }
 
             $before = ['status' => $registration->status];
             $registration->update(['status' => 'approved', 'approved_at' => now(), 'approved_by' => $approver->id]);
