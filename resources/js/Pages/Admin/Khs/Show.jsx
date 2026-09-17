@@ -143,7 +143,7 @@ export default function Show({ mahasiswa, periodeKrs, krs, ips, ipk, totalSks, t
                                 ))}
                             </tbody>
                             <tfoot className="bg-neutral-50 border-t border-neutral-200">
-                                <tr className="table-cards-empty">className="table-cards-empty">
+                                <tr className="table-cards-empty">
                                     <td colSpan="3" className="px-6 py-4 text-right text-sm font-bold text-neutral-900">Total</td>
                                     <td data-label="Kode" className="px-6 py-4 text-center text-sm font-bold text-neutral-900">{totalSks}</td>
                                     <td colSpan="2"></td>

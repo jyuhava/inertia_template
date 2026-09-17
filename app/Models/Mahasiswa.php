@@ -309,4 +309,14 @@ class Mahasiswa extends Model
     {
         return $this->hasOne(StudentAdvisor::class)->where('status', 'aktif')->latestOfMany('tanggal_mulai');
     }
+
+    public function studyResults()
+    {
+        return $this->hasMany(StudentStudyResult::class);
+    }
+
+    public function surveyResponses()
+    {
+        return $this->hasMany(SurveyResponse::class);
+    }
 }
