@@ -8,6 +8,118 @@ import { initInstallPrompt, registerServiceWorker } from './pwa';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
+// URI templates generated from `php artisan route:list` for route names
+// not covered by the explicit map above. Placeholders are filled from
+// the params argument (scalar, array, or object).
+const routeTemplates = {
+        'admin.dosen.detail.destroy': '/admin/dosen/{dosen}/detail/{type}/{id}',
+        'admin.dosen.dokumen.download': '/admin/dosen/{dosen}/dokumen/{dokumen}/download',
+        'admin.dosen.dokumen.store': '/admin/dosen/{dosen}/dokumen',
+        'admin.dosen.pddikti.mapping.update': '/admin/dosen/{dosen}/pddikti/mapping',
+        'admin.dosen.pddikti.sync': '/admin/dosen/{dosen}/pddikti/sync',
+        'admin.jadwal-akademik.index': '/admin/jadwal-akademik',
+        'admin.kelas-kuliah.create': '/admin/kelas-kuliah/create',
+        'admin.kelas-kuliah.edit': '/admin/kelas-kuliah/{kelas_kuliah}/edit',
+        'admin.kelas-kuliah.index': '/admin/kelas-kuliah',
+        'admin.kelas-kuliah.jadwal.destroy': '/admin/kelas-kuliah/{kelasKuliah}/jadwal/{jadwal}',
+        'admin.kelas-kuliah.jadwal.store': '/admin/kelas-kuliah/{kelasKuliah}/jadwal',
+        'admin.kelas-kuliah.pddikti.sync': '/admin/kelas-kuliah/{kelasKuliah}/pddikti/sync',
+        'admin.kelas-kuliah.pengajar.destroy': '/admin/kelas-kuliah/{kelasKuliah}/pengajar/{pengajar}',
+        'admin.kelas-kuliah.pengajar.store': '/admin/kelas-kuliah/{kelasKuliah}/pengajar',
+        'admin.kelas-kuliah.show': '/admin/kelas-kuliah/{kelas_kuliah}',
+        'admin.kelas-kuliah.store': '/admin/kelas-kuliah',
+        'admin.kelas-kuliah.update': '/admin/kelas-kuliah/{kelas_kuliah}',
+        'admin.khs.student-list': '/admin/khs',
+        'admin.krs-enrollment.approve': '/admin/krs-enrollment/{registration}/approve',
+        'admin.krs-enrollment.index': '/admin/krs-enrollment',
+        'admin.krs-enrollment.lock': '/admin/krs-enrollment/{registration}/lock',
+        'admin.krs-enrollment.pddikti.sync': '/admin/krs-enrollment/{registration}/pddikti/sync',
+        'admin.krs-enrollment.show': '/admin/krs-enrollment/{registration}',
+        'admin.krs.index': '/admin/krs',
+        'admin.kurikulum.activate': '/admin/kurikulum/{kurikulum}/activate',
+        'admin.kurikulum.archive': '/admin/kurikulum/{kurikulum}/archive',
+        'admin.kurikulum.create': '/admin/kurikulum/create',
+        'admin.kurikulum.edit': '/admin/kurikulum/{kurikulum}/edit',
+        'admin.kurikulum.index': '/admin/kurikulum',
+        'admin.kurikulum.mata-kuliah.destroy': '/admin/kurikulum/{kurikulum}/mata-kuliah/{item}',
+        'admin.kurikulum.mata-kuliah.store': '/admin/kurikulum/{kurikulum}/mata-kuliah',
+        'admin.kurikulum.pddikti.sync': '/admin/kurikulum/{kurikulum}/pddikti/sync',
+        'admin.kurikulum.show': '/admin/kurikulum/{kurikulum}',
+        'admin.kurikulum.store': '/admin/kurikulum',
+        'admin.kurikulum.update': '/admin/kurikulum/{kurikulum}',
+        'admin.mahasiswa.alamat.store': '/admin/mahasiswa/{mahasiswa}/alamat',
+        'admin.mahasiswa.beasiswa.destroy': '/admin/mahasiswa/{mahasiswa}/beasiswa/{beasiswa}',
+        'admin.mahasiswa.beasiswa.store': '/admin/mahasiswa/{mahasiswa}/beasiswa',
+        'admin.mahasiswa.dokumen.destroy': '/admin/mahasiswa/{mahasiswa}/dokumen/{dokumen}',
+        'admin.mahasiswa.dokumen.download': '/admin/mahasiswa/{mahasiswa}/dokumen/{dokumen}/download',
+        'admin.mahasiswa.dokumen.store': '/admin/mahasiswa/{mahasiswa}/dokumen',
+        'admin.mahasiswa.dokumen.verify': '/admin/mahasiswa/{mahasiswa}/dokumen/{dokumen}/verify',
+        'admin.mahasiswa.kebutuhan-khusus.destroy': '/admin/mahasiswa/{mahasiswa}/kebutuhan-khusus/{kebutuhanKhusus}',
+        'admin.mahasiswa.kebutuhan-khusus.store': '/admin/mahasiswa/{mahasiswa}/kebutuhan-khusus',
+        'admin.mahasiswa.kontak.destroy': '/admin/mahasiswa/{mahasiswa}/kontak/{kontak}',
+        'admin.mahasiswa.kontak.store': '/admin/mahasiswa/{mahasiswa}/kontak',
+        'admin.mahasiswa.orang-tua.store': '/admin/mahasiswa/{mahasiswa}/orang-tua',
+        'admin.mahasiswa.pddikti.mapping.update': '/admin/mahasiswa/{mahasiswa}/pddikti/mapping',
+        'admin.mahasiswa.pddikti.sync': '/admin/mahasiswa/{mahasiswa}/pddikti/sync',
+        'admin.mahasiswa.riwayat-pendidikan.destroy': '/admin/mahasiswa/{mahasiswa}/riwayat-pendidikan/{riwayatPendidikan}',
+        'admin.mahasiswa.riwayat-pendidikan.store': '/admin/mahasiswa/{mahasiswa}/riwayat-pendidikan',
+        'admin.mahasiswa.status-history.store': '/admin/mahasiswa/{mahasiswa}/status-history',
+        'admin.periode-krs.close-krs': '/admin/periode-krs/{periodeKrs}/close-krs',
+        'admin.periode-krs.open-krs': '/admin/periode-krs/{periodeKrs}/open-krs',
+        'admin.student-advisor.destroy': '/admin/student-advisor/{student_advisor}',
+        'admin.student-advisor.index': '/admin/student-advisor',
+        'admin.student-advisor.store': '/admin/student-advisor',
+        'admin.study-results.lock': '/admin/study-results/{studyResult}/lock',
+        'admin.study-results.publish': '/admin/study-results/publish',
+        'admin.surveys.publish': '/admin/surveys/{survey}/publish',
+        'admin.surveys.store': '/admin/surveys',
+        'dosen.krs-advisor.approve': '/dosen/krs-advisor/{registration}/approve',
+        'dosen.krs-advisor.index': '/dosen/krs-advisor',
+        'dosen.krs-advisor.show': '/dosen/krs-advisor/{registration}',
+        'mahasiswa.absensi.index': '/mahasiswa/absensi',
+        'mahasiswa.khs.index': '/mahasiswa/khs',
+        'mahasiswa.krs-enrollment.add-class': '/mahasiswa/krs-enrollment/add-class',
+        'mahasiswa.krs-enrollment.index': '/mahasiswa/krs-enrollment',
+        'mahasiswa.krs-enrollment.remove-class': '/mahasiswa/krs-enrollment/{registration}/item/{item}',
+        'mahasiswa.krs-enrollment.submit': '/mahasiswa/krs-enrollment/{registration}/submit',
+        'mahasiswa.surat-aktif.index': '/mahasiswa/surat-aktif',
+        'mahasiswa.surveys.submit': '/mahasiswa/surveys/{survey}/submit',
+        'password.confirm': '/confirm-password',
+        'password.email': '/forgot-password',
+        'password.request': '/forgot-password',
+        'password.store': '/reset-password',
+        'verification.send': '/email/verification-notification',
+};
+
+const fillTemplate = (tpl, params) => {
+    if (params === undefined || params === null || params === '') return tpl;
+    if (Array.isArray(params)) {
+        let i = 0;
+        return tpl.replace(/\{[^}]+\}/g, () => (params[i++] ?? ''));
+    }
+    if (typeof params === 'object') {
+        const keys = [...tpl.matchAll(/\{([^}]+)\}/g)].map((m) => m[1]);
+        const rest = { ...params };
+        // Model object passed directly, e.g. route('x.show', item)
+        if (!keys.some((k) => k in rest) && 'id' in rest) {
+            return tpl.replace(/\{[^}]+\}/, rest.id ?? '');
+        }
+        const filled = tpl.replace(/\{([^}]+)\}/g, (_, key) => {
+            let v = rest[key];
+            delete rest[key];
+            if (typeof v === 'object' && v !== null) v = v.id ?? '';
+            return v ?? '';
+        });
+        const qs = new URLSearchParams();
+        Object.entries(rest).forEach(([k, v]) => {
+            if (v !== undefined && v !== null && v !== '') qs.append(k, v);
+        });
+        const s = qs.toString();
+        return s ? `${filled}?${s}` : filled;
+    }
+    return tpl.replace(/\{[^}]+\}/, params);
+};
+
 // Simple route helper to avoid Ziggy issues
 window.route = (name, params = {}) => {
     const routes = {
@@ -85,6 +197,14 @@ window.route = (name, params = {}) => {
         'admin.mata-kuliah.edit': (id) => `/admin/mata-kuliah/${id}/edit`,
         'admin.mata-kuliah.update': (id) => `/admin/mata-kuliah/${id}`,
         'admin.mata-kuliah.destroy': (id) => `/admin/mata-kuliah/${id}`,
+        // Ruangan routes
+        'admin.ruangan.index': '/admin/ruangan',
+        'admin.ruangan.create': '/admin/ruangan/create',
+        'admin.ruangan.store': '/admin/ruangan',
+        'admin.ruangan.show': (id) => `/admin/ruangan/${id}`,
+        'admin.ruangan.edit': (id) => `/admin/ruangan/${id}/edit`,
+        'admin.ruangan.update': (id) => `/admin/ruangan/${id}`,
+        'admin.ruangan.destroy': (id) => `/admin/ruangan/${id}`,
         // Jadwal Kuliah routes
         'admin.jadwal-kuliah.index': '/admin/jadwal-kuliah',
         'admin.jadwal-kuliah.create': '/admin/jadwal-kuliah/create',
@@ -370,6 +490,9 @@ window.route = (name, params = {}) => {
             return qs ? `${route}?${qs}` : route;
         }
         return route;
+    }
+    if (routeTemplates[name]) {
+        return fillTemplate(routeTemplates[name], params);
     }
     if (name) {
         console.warn(`[Route Helper] Route "${name}" not found.`);
