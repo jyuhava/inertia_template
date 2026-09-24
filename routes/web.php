@@ -63,6 +63,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
         Route::post('pddikti/sync', [\App\Http\Controllers\Admin\Mahasiswa\PddiktiController::class, 'sync'])->name('pddikti.sync');
 
         Route::post('krs/{periodeKrs}/cancel', [\App\Http\Controllers\Admin\MahasiswaController::class, 'cancelKrs'])->name('krs.cancel');
+        Route::post('krs/bulk-cancel', [\App\Http\Controllers\Admin\MahasiswaController::class, 'bulkCancelKrs'])->name('krs.bulk-cancel');
     });
 
     // Bulk Import Mahasiswa routes

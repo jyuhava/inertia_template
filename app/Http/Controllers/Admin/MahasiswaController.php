@@ -327,6 +327,43 @@ class MahasiswaController extends Controller
     }
 
     /**
+     * Batalkan beberapa mata kuliah KRS pilihan admin.
+     * Hanya baris milik mahasiswa ini, berstatus disetujui/menunggu,
+     * dan periodenya bertahun ajaran aktif yang diproses.
+     */
+    public function bulkCancelKrs(Request $request, Mahasiswa $mahasiswa)
+    {
+        $data = $request->validate([
+            'krs_ids' => 'required|array|min:1',
+            'krs_ids.*' => 'integer',
+        ]);
+
+        $rows = Krs::with('periodeKrs.tahunAjaran')
+            ->where('mahasiswa_id', $mahasiswa->id)
+            ->whereIn('id', $data['krs_ids'])
+            ->whereIn('status', ['disetujui', 'menunggu_persetujuan'])
+            ->get()
+            ->filter(fn ($krs) => $krs->periodeKrs?->tahunAjaran?->status === 'aktif');
+
+        if ($rows->isEmpty()) {
+            return back()->with('error', 'Tidak ada mata kuliah terpilih yang dapat dibatalkan (hanya tahun ajaran aktif).');
+        }
+
+        DB::transaction(function () use ($rows) {
+            foreach ($rows as $krs) {
+                $krs->update([
+                    'status' => 'dibatalkan',
+                    'catatan_admin' => 'Dibatalkan oleh admin ('.auth()->user()->name.')',
+                    'tanggal_approval' => now(),
+                    'approved_by' => auth()->id(),
+                ]);
+            }
+        });
+
+        return back()->with('success', $rows->count().' mata kuliah berhasil dibatalkan.');
+    }
+
+    /**
      * Show the form for editing the specified resource (biodata only).
      */
     public function edit(Mahasiswa $mahasiswa)
