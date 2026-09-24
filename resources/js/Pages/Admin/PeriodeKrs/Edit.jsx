@@ -156,7 +156,7 @@ export default function Edit({ periodeKrs, tahunAjarans, semesters }) {
                                     <option value="">Pilih Tahun Ajaran</option>
                                     {tahunAjarans.map((tahun) => (
                                         <option key={tahun.id} value={tahun.id}>
-                                            {tahun.tahun_mulai} - {tahun.tahun_selesai}
+                                            {tahun.nama_tahun_ajaran}
                                         </option>
                                     ))}
                                 </SelectInput>
