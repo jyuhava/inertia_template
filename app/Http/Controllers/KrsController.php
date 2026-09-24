@@ -165,7 +165,12 @@ class KrsController extends Controller
 
         foreach ($krsExisting as $krs) {
             $jadwalExisting = $krs->jadwalKuliah;
-            
+
+            // Lewati baris KRS yang jadwalnya sudah tidak ada (data yatim)
+            if (! $jadwalExisting) {
+                continue;
+            }
+
             // Check apakah hari sama
             if ($jadwalExisting->hari === $jadwalBaru->hari) {
                 // Check apakah waktu bertabrakan
