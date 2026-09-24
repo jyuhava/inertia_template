@@ -58,6 +58,7 @@ const routeTemplates = {
         'admin.mahasiswa.kebutuhan-khusus.store': '/admin/mahasiswa/{mahasiswa}/kebutuhan-khusus',
         'admin.mahasiswa.kontak.destroy': '/admin/mahasiswa/{mahasiswa}/kontak/{kontak}',
         'admin.mahasiswa.kontak.store': '/admin/mahasiswa/{mahasiswa}/kontak',
+        'admin.mahasiswa.krs.cancel': '/admin/mahasiswa/{mahasiswa}/krs/{periodeKrs}/cancel',
         'admin.mahasiswa.orang-tua.store': '/admin/mahasiswa/{mahasiswa}/orang-tua',
         'admin.mahasiswa.pddikti.mapping.update': '/admin/mahasiswa/{mahasiswa}/pddikti/mapping',
         'admin.mahasiswa.pddikti.sync': '/admin/mahasiswa/{mahasiswa}/pddikti/sync',
