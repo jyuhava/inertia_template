@@ -127,6 +127,13 @@ export default function Edit({ periodeKrs, tahunAjarans, semesters }) {
                 </Box>
 
                 <Box>
+                    <SectionTitle>Debug Sementara - JSON Mentah</SectionTitle>
+                    <pre className="text-[11px] overflow-auto max-h-96 bg-neutral-900 text-green-300 p-4 whitespace-pre-wrap">
+                        {JSON.stringify({ periodeKrs, tahunAjarans, semesters }, null, 2)}
+                    </pre>
+                </Box>
+
+                <Box>
                     <SectionTitle>Informasi Periode</SectionTitle>
 
                     <form onSubmit={handleSubmit} className="space-y-6">

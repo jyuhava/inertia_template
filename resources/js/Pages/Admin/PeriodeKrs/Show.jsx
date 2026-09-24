@@ -110,6 +110,13 @@ export default function Show({ periodeKrs }) {
                     </div>
                 </Box>
 
+                <Box>
+                    <SectionTitle>Debug Sementara - JSON Mentah</SectionTitle>
+                    <pre className="text-[11px] overflow-auto max-h-96 bg-neutral-900 text-green-300 p-4 whitespace-pre-wrap">
+                        {JSON.stringify({ periodeKrs }, null, 2)}
+                    </pre>
+                </Box>
+
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <Box>
                         <SectionTitle>Informasi Periode KRS</SectionTitle>
