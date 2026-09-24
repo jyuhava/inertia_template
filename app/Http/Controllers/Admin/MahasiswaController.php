@@ -282,6 +282,7 @@ class MahasiswaController extends Controller
                         'kode' => $krs->jadwalKuliah?->mataKuliah?->kode_mata_kuliah ?? '-',
                         'nama' => $krs->jadwalKuliah?->mataKuliah?->nama_mata_kuliah ?? '-',
                         'sks' => $krs->jadwalKuliah?->mataKuliah?->sks ?? 0,
+                        'kelas' => $krs->jadwalKuliah?->ruangan ?? '-',
                         'status' => $krs->status,
                     ])->values(),
                 ];

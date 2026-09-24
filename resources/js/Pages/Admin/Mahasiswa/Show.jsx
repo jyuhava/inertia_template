@@ -937,6 +937,7 @@ function RiwayatKrsTab({ mahasiswa, riwayatKrs }) {
                                 )}
                                 <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-neutral-500">Kode</th>
                                 <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-neutral-500">Mata Kuliah</th>
+                                <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-neutral-500">Kelas</th>
                                 <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-neutral-500">SKS</th>
                                 <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-neutral-500">Status</th>
                             </tr>
@@ -953,6 +954,7 @@ function RiwayatKrsTab({ mahasiswa, riwayatKrs }) {
                                     )}
                                     <td className="px-4 py-3 text-sm font-bold">{item.kode}</td>
                                     <td className="px-4 py-3 text-sm">{item.nama}</td>
+                                    <td className="px-4 py-3 text-sm">{item.kelas}</td>
                                     <td className="px-4 py-3 text-sm">{item.sks}</td>
                                     <td className="px-4 py-3 text-sm capitalize">{item.status?.replace(/_/g, ' ')}</td>
                                 </tr>
