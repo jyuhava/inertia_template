@@ -104,48 +104,29 @@ function EmptyMini({ text }) {
 /* ------------------------------------------------------------------ */
 
 function MaterialRow({ material, done }) {
-    return (
-        <ActivityRow
-            kind="material"
-            title={material.title}
-            meta={material.type || 'Materi'}
-            done={done}
-            href={route('mahasiswa.lms.materials.show', material.id)}
-        />
-    );
-}
-
-/**
- * Satu baris aktivitas seragam untuk materi (dipakai juga oleh daftar topik).
- * Ikon kiri menandai jenis konten, ikon kanan menandai status, sehingga
- * makna warna selalu sama di seluruh halaman.
- */
-function ActivityRow({ kind = 'material', title, meta, done = false, href }) {
     const t = done ? TONES.emerald : TONES.indigo;
-    const Icon = kind === 'material' ? DocumentTextIcon : Squares2X2Icon;
-
     return (
         <Link
-            href={href}
-            className="group flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2.5 transition hover:border-brand-300 hover:shadow-sm"
+            href={route('mahasiswa.lms.materials.show', material.id)}
+            className="group flex items-center gap-2.5 rounded-lg border border-neutral-200 bg-white px-2.5 py-2 transition hover:border-neutral-300 hover:bg-neutral-50"
         >
-            <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${t.icon}`}>
-                <Icon className="h-4 w-4" />
+            <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${t.icon}`}>
+                {done ? <CheckCircleIcon className="h-4 w-4" /> : <DocumentTextIcon className="h-4 w-4" />}
             </span>
             <div className="min-w-0 flex-1">
-                <p className="truncate text-xs font-semibold text-slate-900">{title}</p>
-                <p className="truncate text-[10px] uppercase tracking-wider text-slate-400">{meta}</p>
+                <p className="truncate text-xs font-semibold text-neutral-900">{material.title}</p>
+                <p className="truncate text-[10px] uppercase tracking-wider text-neutral-400">
+                    {material.type || 'Materi'}
+                </p>
             </div>
-            {done ? (
-                <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 ring-1 ring-emerald-200">
-                    Selesai
-                </span>
-            ) : (
-                <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-500 ring-1 ring-slate-200">
-                    Belum
-                </span>
-            )}
-            <ChevronRightIcon className="h-3.5 w-3.5 shrink-0 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-slate-500" />
+            <span
+                className={`shrink-0 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
+                    done ? 'bg-emerald-50 text-emerald-700' : 'bg-neutral-100 text-neutral-500'
+                }`}
+            >
+                {done ? 'Selesai' : 'Belum'}
+            </span>
+            <ChevronRightIcon className="h-3.5 w-3.5 shrink-0 text-neutral-300 transition group-hover:translate-x-0.5 group-hover:text-neutral-500" />
         </Link>
     );
 }
@@ -213,8 +194,8 @@ export default function Show({ course, progress, submissions }) {
 
     const chapters = course?.chapters || [];
 
-    // Topik pertama yang punya materi dibuka secara default, supaya mahasiswa
-    // langsung melihat konten tanpa perlu klik dulu.
+    // Topik pertama yang punya materi dibuka otomatis supaya mahasiswa langsung
+    // melihat konten tanpa perlu klik dulu.
     useEffect(() => {
         setOpenChapters((current) => {
             if (current.length > 0) return current;
@@ -225,7 +206,7 @@ export default function Show({ course, progress, submissions }) {
 
     const toggleChapter = (id) => {
         setOpenChapters((current) =>
-            current.includes(id) ? current.filter((x) => x !== id) : [...current, id]
+            current.includes(id) ? current.filter((x) => x !== id) : [...current, id],
         );
     };
     const mataKuliah = course?.jadwal_kuliah?.mata_kuliah;
@@ -346,20 +327,19 @@ export default function Show({ course, progress, submissions }) {
                     />
                 </section>
 
-                {/* Topik / bab — pola Moodle & edX: daftar topik yang bisa  */}
-                {/* diketik/dibuka, isinya satu daftar aktivitas yang seragam.    */}
+                {/* Chapters */}
                 {chapters.length === 0 ? (
-                    <div className="rounded-xl border border-dashed border-slate-300 bg-white p-10 text-center">
-                        <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-slate-400">
+                    <div className="rounded-xl border border-dashed border-neutral-300 bg-white p-8 text-center">
+                        <span className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-100 text-neutral-400">
                             <BookOpenIcon className="h-5 w-5" />
                         </span>
-                        <p className="mt-3 text-sm font-bold text-slate-900">Belum ada konten</p>
-                        <p className="mx-auto mt-1 max-w-sm text-xs text-slate-500">
-                            Dosen belum menambahkan topik, materi, atau tugas pada kelas ini.
+                        <p className="mt-3 text-sm font-bold text-neutral-900">Belum ada konten</p>
+                        <p className="mx-auto mt-1 max-w-sm text-[11px] text-neutral-500">
+                            Dosen belum menambahkan bab, materi, atau tugas pada kelas ini.
                         </p>
                     </div>
                 ) : (
-                    <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+                    <section className="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-neutral-200">
                         {chapters.map((chapter, idx) => {
                             const chapterMaterials = chapter.materials || [];
                             const chapterAssignments = chapter.assignments || [];
@@ -368,50 +348,54 @@ export default function Show({ course, progress, submissions }) {
                             const total = chapterMaterials.length;
                             const pct = total > 0 ? Math.round((done / total) * 100) : 0;
                             const isComplete = total > 0 && done === total;
+                            const isEmpty =
+                                chapterMaterials.length === 0 &&
+                                chapterAssignments.length === 0 &&
+                                chapterForums.length === 0;
                             const open = openChapters.includes(chapter.id);
 
                             return (
                                 <article
                                     key={chapter.id}
-                                    className={idx > 0 ? 'border-t border-slate-200' : ''}
+                                    className={idx > 0 ? 'border-t border-neutral-200' : ''}
                                 >
-                                    {/* Header topik */}
+                                    {/* Header topik — diklik untuk buka/tutup */}
                                     <button
                                         type="button"
                                         onClick={() => toggleChapter(chapter.id)}
                                         aria-expanded={open}
-                                        className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-slate-50"
+                                        className="flex w-full items-center gap-3 px-3.5 py-3 text-left transition hover:bg-neutral-50"
                                     >
                                         <span
-                                            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold ${
-                                                isComplete
-                                                    ? 'bg-emerald-50 text-emerald-700'
-                                                    : 'bg-brand-50 text-brand-700'
+                                            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[11px] font-black ${
+                                                isComplete ? 'bg-emerald-50 text-emerald-700' : 'bg-brand-50 text-brand-700'
                                             }`}
                                         >
-                                            {isComplete ? <CheckCircleIcon className="h-4 w-4" /> : idx + 1}
+                                            {isComplete ? <CheckCircleIcon className="h-4 w-4" /> : String(idx + 1).padStart(2, '0')}
                                         </span>
 
                                         <span className="min-w-0 flex-1">
-                                            <span className="block truncate text-sm font-bold text-slate-900">
+                                            <span className="block truncate text-[13px] font-bold text-neutral-900">
                                                 {chapter.title}
                                             </span>
-                                            <span className="mt-0.5 block text-[11px] text-slate-500">
-                                                {total > 0
-                                                    ? `${done}/${total} materi selesai`
-                                                    : 'Belum ada materi'}
-                                                {chapterAssignments.length > 0
-                                                    ? ` · ${chapterAssignments.length} tugas`
-                                                    : ''}
-                                                {chapterForums.length > 0
-                                                    ? ` · ${chapterForums.length} forum`
-                                                    : ''}
+                                            <span className="mt-0.5 block text-[10px] text-neutral-500">
+                                                {isEmpty
+                                                    ? 'Belum ada materi, tugas, atau forum'
+                                                    : [
+                                                          total > 0 ? `${done}/${total} materi selesai` : null,
+                                                          chapterAssignments.length > 0
+                                                              ? `${chapterAssignments.length} tugas`
+                                                              : null,
+                                                          chapterForums.length > 0 ? `${chapterForums.length} forum` : null,
+                                                      ]
+                                                          .filter(Boolean)
+                                                          .join(' · ')}
                                             </span>
                                         </span>
 
                                         {total > 0 ? (
-                                            <span className="hidden w-32 shrink-0 sm:block">
-                                                <span className="block h-1.5 overflow-hidden rounded-full bg-slate-200">
+                                            <span className="hidden w-28 shrink-0 sm:block">
+                                                <span className="block h-1.5 overflow-hidden rounded-full bg-neutral-200">
                                                     <span
                                                         className={`block h-full rounded-full transition-all duration-500 ${
                                                             isComplete ? 'bg-emerald-500' : 'bg-brand-600'
@@ -422,18 +406,20 @@ export default function Show({ course, progress, submissions }) {
                                             </span>
                                         ) : null}
 
-                                        <span
-                                            className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold tabular-nums ring-1 ${
-                                                isComplete
-                                                    ? 'bg-emerald-50 text-emerald-700 ring-emerald-200'
-                                                    : 'bg-slate-100 text-slate-600 ring-slate-200'
-                                            }`}
-                                        >
-                                            {pct}%
-                                        </span>
+                                        {total > 0 ? (
+                                            <span
+                                                className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold tabular-nums ${
+                                                    isComplete
+                                                        ? 'bg-emerald-50 text-emerald-700'
+                                                        : 'bg-neutral-100 text-neutral-600'
+                                                }`}
+                                            >
+                                                {pct}%
+                                            </span>
+                                        ) : null}
 
                                         <ChevronDownIcon
-                                            className={`h-4 w-4 shrink-0 text-slate-400 transition-transform duration-200 ${
+                                            className={`h-4 w-4 shrink-0 text-neutral-400 transition-transform duration-200 ${
                                                 open ? 'rotate-180' : ''
                                             }`}
                                         />
@@ -441,21 +427,18 @@ export default function Show({ course, progress, submissions }) {
 
                                     {/* Isi topik: satu daftar aktivitas seragam */}
                                     {open ? (
-                                        <div className="border-t border-slate-100 bg-slate-50/60 px-4 py-3">
-                                            {total === 0 && chapterAssignments.length === 0 && chapterForums.length === 0 ? (
-                                                <p className="py-2 text-center text-xs text-slate-400">
+                                        <div className="border-t border-neutral-100 bg-neutral-50/60 px-3.5 py-2.5">
+                                            {isEmpty ? (
+                                                <p className="py-2 text-center text-[11px] text-neutral-400">
                                                     Topik ini belum memiliki materi, tugas, atau forum.
                                                 </p>
                                             ) : (
                                                 <ul className="space-y-1.5">
                                                     {chapterMaterials.map((material) => (
                                                         <li key={`m-${material.id}`}>
-                                                            <ActivityRow
-                                                                kind="material"
-                                                                title={material.title}
-                                                                meta={material.type || 'Materi'}
+                                                            <MaterialRow
+                                                                material={material}
                                                                 done={!!progress?.[material.id]}
-                                                                href={route('mahasiswa.lms.materials.show', material.id)}
                                                             />
                                                         </li>
                                                     ))}
