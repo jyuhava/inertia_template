@@ -31,6 +31,18 @@ class HandleInertiaRequests extends Middleware
     {
         $user = $request->user();
         $authData = null;
+        $impersonating = null;
+
+        // State impersonasi: dipakai untuk banner "kembali ke akun admin"
+        if ($user && $request->session()->has(\App\Http\Controllers\Admin\ImpersonateController::SESSION_KEY)) {
+            $impersonator = $request->session()->get(\App\Http\Controllers\Admin\ImpersonateController::SESSION_KEY);
+            $impersonating = [
+                'admin_name' => $impersonator['name'] ?? 'Admin',
+                'admin_email' => $impersonator['email'] ?? null,
+                'as_name' => $user->name,
+                'as_role' => $user->role,
+            ];
+        }
 
         if ($user) {
             $authData = [
@@ -55,6 +67,7 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'auth' => [
                 'user' => $authData,
+                'impersonating' => $impersonating,
             ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),

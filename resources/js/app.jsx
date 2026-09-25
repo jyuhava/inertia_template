@@ -129,6 +129,8 @@ window.route = (name, params = {}) => {
         'admin.dashboard': '/admin/dashboard',
         'mahasiswa.dashboard': '/mahasiswa/dashboard',
         'dosen.dashboard': '/dosen/dashboard',
+        'admin.impersonate.store': '/admin/impersonate/{type}/{id}',
+        'admin.impersonate.stop': '/admin/impersonate/stop',
         'admin.mahasiswa.index': '/admin/mahasiswa',
         'admin.mahasiswa.create': '/admin/mahasiswa/create',
         'admin.mahasiswa.store': '/admin/mahasiswa',

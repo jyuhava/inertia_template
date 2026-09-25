@@ -22,9 +22,19 @@ Route::get('/', function () {
     ]);
 });
 
+// Berhenti impersonasi — SENGAJA di luar group role:admin, karena saat
+// impersonasi akun admin sudah tidak berperan sebagai admin, namun tetap
+// harus bisa kembali ke akun aslinya.
+Route::middleware(['auth', 'verified'])
+    ->post('admin/impersonate/stop', [\App\Http\Controllers\Admin\ImpersonateController::class, 'destroy'])
+    ->name('admin.impersonate.stop');
+
 // Admin routes
 Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
+
+    // Impersonasi akun (login-as) — mulai, hanya admin
+    Route::post('impersonate/{type}/{id}', [\App\Http\Controllers\Admin\ImpersonateController::class, 'store'])->name('impersonate.store');
 
     // Mahasiswa CRUD routes
     Route::resource('mahasiswa', \App\Http\Controllers\Admin\MahasiswaController::class);
