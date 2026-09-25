@@ -292,37 +292,26 @@ function StaffSidebar({ isOpen, isCollapsed, toggleSidebar, toggleCollapse }) {
         }
     ];
 
-    // Tema sidebar: mahasiswa = hitam dominan, role lain = putih bersih.
-    const dark = user.role === 'mahasiswa';
+    // Tema sidebar: hitam dominan — sama persis dengan sidebar mahasiswa,
+    // supaya navigasi admin dan dosen terasa satu sistem dengan mahasiswa.
+    const panelBg = 'bg-neutral-950';
+    const panelText = 'text-neutral-100';
+    const lineBorder = 'border-neutral-800';
+    const lineBg = 'bg-neutral-800';
+    const titleCls = 'text-white';
+    const mutedCls = 'text-neutral-500';
+    const iconBoxCls = 'border-neutral-800 bg-neutral-900';
+    const iconTextCls = 'text-brand-400';
+    const dotCls = 'bg-brand-400';
+    const ghostBtnCls = 'text-neutral-400 hover:border-neutral-800 hover:bg-white/5 hover:text-white';
+    const closeBtnCls = 'border-neutral-800 text-neutral-400 hover:border-neutral-600 hover:text-white';
 
-    const panelBg = dark ? 'bg-neutral-950' : 'bg-white';
-    const panelText = dark ? 'text-neutral-100' : 'text-neutral-900';
-    const lineBorder = dark ? 'border-neutral-800' : 'border-neutral-200';
-    const lineBg = dark ? 'bg-neutral-800' : 'bg-neutral-200';
-    const titleCls = dark ? 'text-white' : 'text-neutral-900';
-    const mutedCls = dark ? 'text-neutral-500' : 'text-neutral-500';
-    const iconBoxCls = dark ? 'border-neutral-800 bg-neutral-900' : 'border-brand-200 bg-brand-50';
-    const iconTextCls = dark ? 'text-brand-400' : 'text-brand-700';
-    const dotCls = dark ? 'bg-brand-400' : 'bg-brand-500';
-    const ghostBtnCls = dark
-        ? 'text-neutral-400 hover:border-neutral-800 hover:bg-white/5 hover:text-white'
-        : 'text-neutral-600 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-800';
-    const closeBtnCls = dark
-        ? 'border-neutral-800 text-neutral-400 hover:border-neutral-600 hover:text-white'
-        : 'border-neutral-200 text-neutral-500 hover:border-neutral-300 hover:text-neutral-900';
+    const activeCls = 'rounded-lg bg-brand-500/15 text-brand-300';
+    const inactiveCls = 'rounded-lg text-neutral-400 hover:text-white hover:bg-white/5';
+    const subInactiveCls = 'rounded-md text-neutral-500 hover:text-white hover:bg-white/5';
 
-    const activeCls = dark
-        ? 'rounded-lg bg-brand-500/15 text-brand-300'
-        : 'rounded-lg bg-brand-50 text-brand-800';
-    const inactiveCls = dark
-        ? 'rounded-lg text-neutral-400 hover:text-white hover:bg-white/5'
-        : 'rounded-lg text-neutral-600 hover:text-brand-800 hover:bg-brand-50';
-    const subInactiveCls = dark
-        ? 'rounded-md text-neutral-500 hover:text-white hover:bg-white/5'
-        : 'rounded-md text-neutral-500 hover:text-brand-800 hover:bg-brand-50';
-
-    const cardCls = dark ? 'border border-white/10 bg-white/5' : 'border border-neutral-200 bg-neutral-50';
-    const groupLabelCls = dark ? 'text-neutral-600' : 'text-neutral-400';
+    const cardCls = 'border border-white/10 bg-white/5';
+    const groupLabelCls = 'text-neutral-600';
 
     const navItemClass = (active) => `
         flex items-center text-xs font-bold uppercase tracking-widest transition-colors duration-200 relative group
