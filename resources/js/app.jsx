@@ -483,6 +483,12 @@ window.route = (name, params = {}) => {
         return route(params);
     }
     if (typeof route === 'string') {
+        // Template ber-placeholder HARUS selalu diisi, apa pun bentuk params
+        // (skalar, array, atau objek). Tanpa ini, URL placeholder mentah
+        // ikut terkirim ke server, mis. /admin/impersonate/{type}/{id}.
+        if (/\{[^}]+\}/.test(route)) {
+            return fillTemplate(route, params);
+        }
         if (params && typeof params === 'object' && !Array.isArray(params) && Object.keys(params).length > 0) {
             const queryParams = new URLSearchParams();
             Object.entries(params).forEach(([key, val]) => {
