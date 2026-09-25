@@ -364,7 +364,7 @@ export default function Show({ course, progress, submissions }) {
                                         type="button"
                                         onClick={() => toggleChapter(chapter.id)}
                                         aria-expanded={open}
-                                        className="flex w-full items-center gap-3 px-3.5 py-3 text-left transition hover:bg-neutral-50"
+                                        className="flex w-full items-center gap-3.5 px-4 py-3.5 text-left transition hover:bg-neutral-50 sm:px-5"
                                     >
                                         <span
                                             className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[11px] font-black ${
@@ -379,17 +379,21 @@ export default function Show({ course, progress, submissions }) {
                                                 {chapter.title}
                                             </span>
                                             <span className="mt-0.5 block text-[10px] text-neutral-500">
-                                                {isEmpty
-                                                    ? 'Belum ada materi, tugas, atau forum'
-                                                    : [
-                                                          total > 0 ? `${done}/${total} materi selesai` : null,
-                                                          chapterAssignments.length > 0
-                                                              ? `${chapterAssignments.length} tugas`
-                                                              : null,
-                                                          chapterForums.length > 0 ? `${chapterForums.length} forum` : null,
-                                                      ]
-                                                          .filter(Boolean)
-                                                          .join(' · ')}
+                                                {(() => {
+                                                    if (isEmpty) return 'Belum ada materi, tugas, atau forum';
+
+                                                    return [
+                                                        total > 0 ? `${done}/${total} materi selesai` : null,
+                                                        chapterAssignments.length > 0
+                                                            ? `${chapterAssignments.length} tugas`
+                                                            : null,
+                                                        chapterForums.length > 0
+                                                            ? `${chapterForums.length} forum`
+                                                            : null,
+                                                    ]
+                                                        .filter(Boolean)
+                                                        .join(' · ');
+                                                })()}
                                             </span>
                                         </span>
 
@@ -425,15 +429,16 @@ export default function Show({ course, progress, submissions }) {
                                         />
                                     </button>
 
-                                    {/* Isi topik: satu daftar aktivitas seragam */}
+                                    {/* Isi topik: satu daftar aktivitas seragam, diindentasi
+                                        agar jelas merupakan isi dari topik di atasnya. */}
                                     {open ? (
-                                        <div className="border-t border-neutral-100 bg-neutral-50/60 px-3.5 py-2.5">
+                                        <div className="border-t border-neutral-100 bg-neutral-50/70 px-4 py-3 sm:px-5 sm:py-4">
                                             {isEmpty ? (
-                                                <p className="py-2 text-center text-[11px] text-neutral-400">
+                                                <p className="py-3 text-center text-[11px] text-neutral-400">
                                                     Topik ini belum memiliki materi, tugas, atau forum.
                                                 </p>
                                             ) : (
-                                                <ul className="space-y-1.5">
+                                                <ul className="ml-9 space-y-2 border-l-2 border-neutral-200 pl-3 sm:ml-10 sm:pl-4">
                                                     {chapterMaterials.map((material) => (
                                                         <li key={`m-${material.id}`}>
                                                             <MaterialRow
