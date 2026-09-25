@@ -35,8 +35,21 @@ return [
         ],
     ],
 
-    'openrouter' => [
-        'api_key' => env('OPENROUTER_API_KEY'),
+    /*
+    |--------------------------------------------------------------------------
+    | Atria AI
+    |--------------------------------------------------------------------------
+    |
+    | Provider LLM untuk fitur AI (tanya materi & generate draft materi).
+    | Format API mengikuti standar OpenAI (chat/completions).
+    |
+    */
+
+    'atria' => [
+        'api_key' => env('ATRIA_API_KEY'),
+        'base_url' => env('ATRIA_BASE_URL', 'https://api.atria-asi.ai/v1'),
+        'model' => env('ATRIA_MODEL', 'Atria-Dawn-Preview'),
+        'timeout' => env('ATRIA_TIMEOUT', 120),
     ],
 
 ];

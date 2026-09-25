@@ -3,17 +3,14 @@
 namespace App\Services;
 
 use App\Models\LmsMaterial;
-use Illuminate\Support\Facades\Http;
+use App\Services\Ai\ChatClient;
 
 class LmsMaterialAssistantService
 {
+    public function __construct(private readonly ChatClient $ai) {}
+
     public function answer(LmsMaterial $material, string $question, array $history = []): string
     {
-        $apiKey = config('services.openrouter.api_key');
-        if (! $apiKey) {
-            throw new \RuntimeException('OPENROUTER_API_KEY belum diatur.');
-        }
-
         $context = $this->buildMaterialContext($material);
 
         $messages = [
@@ -49,39 +46,7 @@ class LmsMaterialAssistantService
             'content' => trim($question),
         ];
 
-        $response = Http::timeout(120)
-            ->withHeaders([
-                'Authorization' => 'Bearer '.$apiKey,
-                'Content-Type' => 'application/json',
-                'HTTP-Referer' => config('app.url'),
-                'X-Title' => config('app.name'),
-            ])
-            ->post('https://openrouter.ai/api/v1/chat/completions', [
-                'model' => 'openai/gpt-oss-120b:free',
-                'messages' => $messages,
-                'reasoning' => [
-                    'enabled' => true,
-                ],
-            ]);
-
-        if (! $response->successful()) {
-            $error = data_get($response->json(), 'error.message') ?: 'Gagal memproses chat AI.';
-            throw new \RuntimeException($error);
-        }
-
-        $content = data_get($response->json(), 'choices.0.message.content', '');
-
-        if (is_array($content)) {
-            $content = collect($content)->pluck('text')->filter()->implode("\n");
-        }
-
-        $content = trim((string) $content);
-
-        if ($content === '') {
-            throw new \RuntimeException('Model tidak mengembalikan jawaban.');
-        }
-
-        return $content;
+        return $this->ai->chat($messages);
     }
 
     private function buildMaterialContext(LmsMaterial $material): string

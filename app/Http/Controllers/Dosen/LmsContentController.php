@@ -12,10 +12,10 @@ use App\Models\LmsForum;
 use App\Models\LmsForumThread;
 use App\Models\LmsForumReply;
 use App\Models\Penilaian;
+use App\Services\Ai\ChatClient;
 use App\Services\LmsMaterialAssistantService;
 use App\Services\LmsPenilaianSyncService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
@@ -23,7 +23,8 @@ class LmsContentController extends Controller
 {
     public function __construct(
         private LmsPenilaianSyncService $penilaianSyncService,
-        private LmsMaterialAssistantService $materialAssistantService
+        private LmsMaterialAssistantService $materialAssistantService,
+        private ChatClient $ai
     )
     {
     }
@@ -344,10 +345,9 @@ class LmsContentController extends Controller
             'prompt' => 'required|string|max:3000',
         ]);
 
-        $apiKey = config('services.openrouter.api_key');
-        if (!$apiKey) {
+        if (! config('services.atria.api_key')) {
             return response()->json([
-                'message' => 'OPENROUTER_API_KEY belum diatur di environment.',
+                'message' => 'ATRIA_API_KEY belum diatur di environment.',
             ], 422);
         }
 
@@ -364,46 +364,18 @@ class LmsContentController extends Controller
             ."Buat: judul materi singkat + isi materi lengkap.";
 
         try {
-            $response = Http::timeout(120)
-                ->withHeaders([
-                    'Authorization' => 'Bearer '.$apiKey,
-                    'Content-Type' => 'application/json',
-                    'HTTP-Referer' => config('app.url'),
-                    'X-Title' => config('app.name'),
-                ])
-                ->post('https://openrouter.ai/api/v1/chat/completions', [
-                    'model' => 'openai/gpt-oss-120b:free',
-                    'messages' => [
-                        ['role' => 'system', 'content' => $systemPrompt],
-                        ['role' => 'user', 'content' => $userPrompt],
-                    ],
-                    'reasoning' => [
-                        'enabled' => true,
-                    ],
-                ]);
+            $content = $this->ai->chat([
+                ['role' => 'system', 'content' => $systemPrompt],
+                ['role' => 'user', 'content' => $userPrompt],
+            ]);
+        } catch (\RuntimeException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 422);
         } catch (\Throwable $e) {
             return response()->json([
-                'message' => 'Gagal terhubung ke OpenRouter: '.$e->getMessage(),
+                'message' => 'Gagal terhubung ke layanan AI: '.$e->getMessage(),
             ], 500);
-        }
-
-        if (!$response->successful()) {
-            return response()->json([
-                'message' => 'OpenRouter error.',
-                'detail' => $response->json(),
-            ], 502);
-        }
-
-        $content = data_get($response->json(), 'choices.0.message.content', '');
-        if (is_array($content)) {
-            $content = collect($content)->pluck('text')->filter()->implode("\n");
-        }
-
-        $content = trim((string) $content);
-        if ($content === '') {
-            return response()->json([
-                'message' => 'Model tidak mengembalikan konten.',
-            ], 422);
         }
 
         return response()->json([
