@@ -7,6 +7,7 @@ import {
     ChatBubbleLeftRightIcon,
     CheckBadgeIcon,
     ClipboardDocumentListIcon,
+    ClockIcon,
     ExclamationTriangleIcon,
     Squares2X2Icon,
 } from '@heroicons/react/24/outline';
@@ -224,6 +225,8 @@ function CourseCard({ course, index }) {
 export default function Index({ courses = [], summary = {}, periodeAktif = null }) {
     const totalCourses = courses.length;
     const activeCourses = summary.active_courses ?? courses.filter((course) => course.is_active_period).length;
+    const activeNow = courses.filter((course) => course.is_active_period);
+    const pastCourses = courses.filter((course) => !course.is_active_period);
     const totalMaterials = summary.materials ?? 0;
     const completedMaterials = summary.completed_materials ?? 0;
     const overallProgress = totalMaterials > 0 ? Math.round((completedMaterials / totalMaterials) * 100) : 0;
@@ -311,11 +314,55 @@ export default function Index({ courses = [], summary = {}, periodeAktif = null 
                         </p>
                     </div>
                 ) : (
-                    <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-                        {courses.map((course, index) => (
-                            <CourseCard key={course.lms_course_id ?? `krs-${course.krs_id}`} course={course} index={index} />
-                        ))}
-                    </section>
+                    <div className="space-y-8">
+                        {/* Mata Kuliah Aktif Saat Ini */}
+                        <section>
+                            <div className="mb-3 flex items-center gap-2">
+                                <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
+                                    <BookOpenIcon className="h-3.5 w-3.5" />
+                                </span>
+                                <h2 className="text-[11px] font-bold uppercase tracking-[0.15em] text-neutral-900">
+                                    Mata Kuliah Aktif Saat Ini
+                                </h2>
+                                <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                                    {activeNow.length}
+                                </span>
+                            </div>
+                            {activeNow.length === 0 ? (
+                                <p className="rounded-xl border border-dashed border-neutral-300 bg-white p-5 text-center text-[11px] text-neutral-500">
+                                    Tidak ada mata kuliah pada periode KRS aktif.
+                                </p>
+                            ) : (
+                                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+                                    {activeNow.map((course, index) => (
+                                        <CourseCard key={course.lms_course_id ?? `krs-${course.krs_id}`} course={course} index={index} />
+                                    ))}
+                                </div>
+                            )}
+                        </section>
+
+                        {/* Mata Kuliah Lampau */}
+                        {pastCourses.length > 0 && (
+                            <section>
+                                <div className="mb-3 flex items-center gap-2">
+                                    <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-neutral-200 text-neutral-600">
+                                        <ClockIcon className="h-3.5 w-3.5" />
+                                    </span>
+                                    <h2 className="text-[11px] font-bold uppercase tracking-[0.15em] text-neutral-900">
+                                        Mata Kuliah Lampau
+                                    </h2>
+                                    <span className="rounded-full bg-neutral-200 px-2 py-0.5 text-[10px] font-bold text-neutral-600">
+                                        {pastCourses.length}
+                                    </span>
+                                </div>
+                                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+                                    {pastCourses.map((course, index) => (
+                                        <CourseCard key={course.lms_course_id ?? `krs-${course.krs_id}`} course={course} index={index} />
+                                    ))}
+                                </div>
+                            </section>
+                        )}
+                    </div>
                 )}
             </div>
         </AdminLayout>
