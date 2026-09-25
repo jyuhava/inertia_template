@@ -9,212 +9,239 @@ import {
     ClipboardDocumentListIcon,
     ClockIcon,
     ExclamationTriangleIcon,
-    Squares2X2Icon,
 } from '@heroicons/react/24/outline';
 
 /* ------------------------------------------------------------------ */
 /* Design tokens                                                       */
+/*                                                                    */
+/* Satu warna brand (gold) + warna status semantik. Tidak memakai      */
+/* warna acak per kartu supaya makna warna selalu konsisten:           */
+/* brand = identitas, emerald = selesai/aktif, amber = perlu          */
+/* tindakan, slate = belum mulai.                                      */
 /* ------------------------------------------------------------------ */
 
-const ACCENTS = {
-    indigo: {
-        grad: 'from-brand-800 via-brand-700 to-brand-600',
-        chip: 'bg-brand-50 text-brand-700',
-        icon: 'bg-brand-50 text-brand-600',
+const TONE = {
+    brand: {
+        icon: 'bg-brand-50 text-brand-700',
         bar: 'bg-brand-600',
-        hover: 'hover:ring-brand-300',
+        text: 'text-brand-700',
+        chip: 'bg-brand-50 text-brand-700 ring-brand-200',
     },
-    emerald: {
-        grad: 'from-brand-700 via-brand-600 to-brand-500',
-        chip: 'bg-brand-50 text-brand-700',
-        icon: 'bg-brand-50 text-brand-600',
+    done: {
+        icon: 'bg-emerald-50 text-emerald-600',
+        bar: 'bg-emerald-500',
+        text: 'text-emerald-700',
+        chip: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
+    },
+    todo: {
+        icon: 'bg-brand-50 text-brand-700',
         bar: 'bg-brand-500',
-        hover: 'hover:ring-brand-300',
+        text: 'text-brand-700',
+        chip: 'bg-brand-50 text-brand-700 ring-brand-200',
     },
-    violet: {
-        grad: 'from-brand-900 via-brand-800 to-brand-700',
-        chip: 'bg-brand-100 text-brand-800',
-        icon: 'bg-brand-100 text-brand-700',
-        bar: 'bg-brand-700',
-        hover: 'hover:ring-brand-300',
+    warn: {
+        icon: 'bg-amber-50 text-amber-600',
+        bar: 'bg-amber-500',
+        text: 'text-amber-700',
+        chip: 'bg-amber-50 text-amber-700 ring-amber-200',
     },
-    amber: {
-        grad: 'from-brand-600 via-brand-500 to-brand-400',
-        chip: 'bg-brand-50 text-brand-700',
-        icon: 'bg-brand-50 text-brand-600',
-        bar: 'bg-brand-500',
-        hover: 'hover:ring-brand-300',
-    },
-    sky: {
-        grad: 'from-brand-800 via-brand-600 to-brand-500',
-        chip: 'bg-brand-100 text-brand-800',
-        icon: 'bg-brand-100 text-brand-700',
-        bar: 'bg-brand-600',
-        hover: 'hover:ring-brand-300',
-    },
-    rose: {
-        grad: 'from-brand-900 via-brand-700 to-brand-500',
-        chip: 'bg-brand-50 text-brand-700',
-        icon: 'bg-brand-50 text-brand-600',
-        bar: 'bg-brand-700',
-        hover: 'hover:ring-brand-300',
+    idle: {
+        icon: 'bg-slate-100 text-slate-500',
+        bar: 'bg-slate-300',
+        text: 'text-slate-600',
+        chip: 'bg-slate-100 text-slate-600 ring-slate-200',
     },
 };
-
-const ACCENT_ORDER = ['indigo', 'emerald', 'violet', 'amber', 'sky', 'rose'];
 
 /* ------------------------------------------------------------------ */
 /* Primitives                                                          */
 /* ------------------------------------------------------------------ */
 
-function ProgressBar({ value = 0, accent = 'indigo', className = '' }) {
+function ProgressBar({ value = 0, tone = 'todo' }) {
     const pct = Math.max(0, Math.min(100, value));
     return (
-        <div className={`h-1 w-full overflow-hidden rounded-full bg-neutral-200 ${className}`}>
+        <div
+            className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200"
+            role="progressbar"
+            aria-valuenow={pct}
+            aria-valuemin={0}
+            aria-valuemax={100}
+        >
             <div
-                className={`h-full rounded-full transition-all duration-500 ${ACCENTS[accent]?.bar || 'bg-neutral-900'}`}
+                className={`h-full rounded-full transition-all duration-500 ${TONE[tone]?.bar || TONE.todo.bar}`}
                 style={{ width: `${pct}%` }}
             />
         </div>
     );
 }
 
-function StatCell({ icon: Icon, label, value, suffix, accent = 'indigo', progress }) {
-    const a = ACCENTS[accent];
+function Stat({ icon: Icon, label, value, suffix }) {
     return (
-        <div className="flex items-center gap-2.5 bg-white p-3">
-            <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${a.icon}`}>
-                <Icon className="h-4 w-4" />
-            </span>
-            <div className="min-w-0 flex-1">
-                <p className="flex items-baseline gap-1 leading-none">
-                    <span className="text-lg font-bold text-neutral-900">{value}</span>
-                    {suffix ? <span className="text-[11px] font-semibold text-neutral-400">{suffix}</span> : null}
-                </p>
-                <p className="mt-1 truncate text-[10px] font-bold uppercase tracking-wider text-neutral-500">{label}</p>
-                {typeof progress === 'number' ? <ProgressBar value={progress} accent={accent} className="mt-1.5" /> : null}
+        <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-1.5 text-slate-400">
+                <Icon className="h-3.5 w-3.5" />
+                <span className="text-[10px] font-semibold uppercase tracking-wider">{label}</span>
             </div>
+            <p className="text-lg font-bold leading-none text-slate-900">
+                {value}
+                {suffix ? <span className="ml-0.5 text-xs font-semibold text-slate-400">{suffix}</span> : null}
+            </p>
         </div>
     );
 }
 
 /* ------------------------------------------------------------------ */
 /* Course card                                                         */
+/*                                                                    */
+/* Tata letak mengikuti marketplace (Coursera/edX): identitas mata     */
+/* kuliah di kiri, angka，遇 progress di kanan dalam satu baris       */
+/* horizontal yang mudah dipindai mata.                                 */
 /* ------------------------------------------------------------------ */
 
-function CourseCard({ course, index }) {
-    const accent = ACCENT_ORDER[index % ACCENT_ORDER.length];
-    const a = ACCENTS[accent];
+function CourseCard({ course, muted = false }) {
     const progress = course.progress_percent ?? 0;
     const pending = Math.max(0, (course.assignments_count ?? 0) - (course.submitted_assignments ?? 0));
     const clickable = Boolean(course.has_lms && course.can_access);
+
+    const tone = progress >= 100 ? 'done' : progress > 0 ? 'todo' : 'idle';
     const Wrapper = clickable ? Link : 'div';
-    const wrapperProps = clickable
-        ? { href: route('mahasiswa.lms.show', course.lms_course_id) }
-        : {};
-    const schedule = [course.hari, course.jam_mulai].filter(Boolean).join(', ');
-    const periodLabel = [course.periode?.tahun_ajaran, course.periode?.semester]
+    const wrapperProps = clickable ? { href: route('mahasiswa.lms.show', course.lms_course_id) } : {};
+
+    const periodLabel = [course.periode?.tahun_ajaran, course.periode?.semester].filter(Boolean).join(' · ');
+    const schedule = [course.hari, course.jam_mulai && `${course.jam_mulai}–${course.jam_selesai}`]
         .filter(Boolean)
         .join(' · ');
+
+    const statusLabel = !course.has_lms
+        ? 'LMS belum tersedia'
+        : !course.can_access
+            ? 'Menunggu persetujuan'
+            : progress >= 100
+                ? 'Selesai'
+                : progress > 0
+                    ? 'Sedang berjalan'
+                    : 'Belum dimulai';
+
+    const metrics = [
+        { icon: BookOpenIcon, label: 'Bab', value: course.chapters_count ?? 0 },
+        { icon: DocumentIcon, label: 'Materi', value: course.materials_count ?? 0 },
+        { icon: ClipboardDocumentListIcon, label: 'Tugas', value: course.assignments_count ?? 0 },
+        { icon: ChatBubbleLeftRightIcon, label: 'Forum', value: course.forums_count ?? 0 },
+    ];
 
     return (
         <Wrapper
             {...wrapperProps}
-            className={`group flex flex-col overflow-hidden rounded-xl bg-white ring-1 ring-neutral-200 transition duration-200 ${clickable ? `hover:-translate-y-0.5 hover:shadow-md ${a.hover}` : 'opacity-95'}`}
+            aria-label={course.mata_kuliah}
+            className={`group flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-4 transition sm:flex-row sm:items-center sm:gap-5 ${
+                clickable
+                    ? 'cursor-pointer hover:border-brand-300 hover:shadow-md hover:shadow-slate-200/60'
+                    : 'opacity-90'
+            } ${muted ? 'bg-slate-50/70' : ''}`}
         >
-            {/* Cover */}
-            <div className={`relative h-14 shrink-0 overflow-hidden bg-gradient-to-br ${a.grad}`}>
-                {course.thumbnail ? (
-                    <>
-                        <img
-                            src={course.thumbnail}
-                            alt={course.mata_kuliah}
-                            className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-r from-black/55 to-transparent" />
-                    </>
-                ) : (
-                    <>
-                        <div className="absolute -right-4 -top-6 h-16 w-16 rounded-full bg-white/10" />
-                        <div className="absolute -bottom-8 left-10 h-14 w-14 rounded-full bg-white/10" />
-                    </>
-                )}
-
-                <div className="absolute inset-x-2.5 top-2.5 flex items-start justify-between gap-2">
-                    <span className="rounded-md bg-white/95 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-neutral-900 shadow-sm">
-                        {course.kode}
-                    </span>
-                    {course.sks ? (
-                        <span className="rounded-md bg-brand-900/50 px-1.5 py-0.5 text-[10px] font-bold text-white backdrop-blur">
-                            {course.sks} SKS
+            {/* Identitas */}
+            <div className="flex min-w-0 flex-1 items-start gap-3.5">
+                <span
+                    className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg ring-1 ${TONE[tone].icon} ring-inset ${muted ? 'opacity-70' : ''}`}
+                >
+                    <BookOpenIcon className="h-5 w-5" />
+                </span>
+                <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                        <span className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[10px] font-bold tracking-wider text-slate-600">
+                            {course.kode}
                         </span>
-                    ) : null}
+                        {course.sks ? (
+                            <span className="text-[10px] font-semibold text-slate-400">{course.sks} SKS</span>
+                        ) : null}
+                    </div>
+                    <h3 className="mt-1 text-sm font-bold leading-snug text-slate-900">{course.mata_kuliah}</h3>
+                    <p className="mt-0.5 truncate text-xs text-slate-600">{course.dosen}</p>
+                    {schedule ? <p className="mt-1 text-[11px] text-slate-400">{schedule}</p> : null}
+                    {periodLabel ? <p className="mt-0.5 text-[11px] text-slate-400">{periodLabel}</p> : null}
                 </div>
             </div>
 
-            {/* Body */}
-            <div className="flex flex-1 flex-col p-3">
-                <div className="flex items-start justify-between gap-2">
-                    <h3 className="line-clamp-1 text-[13px] font-bold leading-snug text-neutral-900" title={course.mata_kuliah}>
-                        {course.mata_kuliah}
-                    </h3>
-                    {course.is_active_period ? (
-                        <span className="shrink-0 rounded-md bg-emerald-50 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-700">
-                            Aktif
-                        </span>
-                    ) : null}
+            {/* Angka & progress */}
+            <div className="w-full shrink-0 sm:w-64">
+                <div className="mb-3 grid grid-cols-4 gap-2">
+                    {metrics.map(({ icon: Icon, label, value }) => (
+                        <div key={label} className="text-center">
+                            <Icon className="mx-auto h-3.5 w-3.5 text-slate-300" />
+                            <p className="mt-1 text-sm font-bold leading-none text-slate-800">{value}</p>
+                            <p className="mt-0.5 text-[9px] font-semibold uppercase tracking-wider text-slate-400">
+                                {label}
+                            </p>
+                        </div>
+                    ))}
                 </div>
-                <p className="mt-0.5 truncate text-[11px] text-neutral-500">{course.dosen}</p>
-                {periodLabel ? <p className="mt-0.5 truncate text-[10px] text-neutral-400">{periodLabel}</p> : null}
 
-                {/* Meta line */}
-                <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[10px] font-medium text-neutral-500">
-                    {schedule ? <span className="truncate">{schedule}</span> : null}
-                    {course.chapters_count ? (
-                        <span className="inline-flex items-center gap-1">
-                            <Squares2X2Icon className="h-3 w-3 text-neutral-400" />
-                            {course.chapters_count} bab
-                        </span>
-                    ) : null}
-                    <span className="inline-flex items-center gap-1">
-                        <BookOpenIcon className="h-3 w-3 text-neutral-400" />
-                        {course.materials_count ?? 0} materi
+                <div className="flex items-center gap-2">
+                    <ProgressBar value={progress} tone={tone} />
+                    <span className="w-9 shrink-0 text-right text-xs font-bold tabular-nums text-slate-700">
+                        {progress}%
                     </span>
                 </div>
 
-                {/* Progress */}
-                <div className="mt-2 flex items-center gap-2">
-                    <ProgressBar value={progress} accent={accent} className="flex-1" />
-                    <span className="w-8 shrink-0 text-right text-[10px] font-bold text-neutral-700">{progress}%</span>
-                </div>
-
-                {/* Footer */}
-                <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-neutral-100 pt-2">
+                <div className="mt-2.5 flex items-center justify-between gap-2">
+                    <span
+                        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ring-1 ${TONE[tone].chip}`}
+                    >
+                        {progress >= 100 ? <CheckBadgeIcon className="h-3 w-3" /> : null}
+                        {statusLabel}
+                    </span>
                     {pending > 0 ? (
-                        <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700">
                             <ExclamationTriangleIcon className="h-3 w-3" />
-                            {pending} tugas
+                            {pending} tugas menunggu
                         </span>
-                    ) : (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-neutral-500">
-                            <ClipboardDocumentListIcon className="h-3 w-3 text-neutral-400" />
-                            {course.submitted_assignments ?? 0}/{course.assignments_count ?? 0} tugas
-                        </span>
-                    )}
-
-                    {clickable ? (
+                    ) : clickable ? (
                         <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-brand-700">
                             Masuk
                             <ArrowRightIcon className="h-3 w-3 transition group-hover:translate-x-0.5" />
                         </span>
-                    ) : (
-                        <span className="text-right text-[10px] font-semibold text-neutral-400">
-                            {course.has_lms ? 'Menunggu persetujuan' : 'LMS belum tersedia'}
-                        </span>
-                    )}
+                    ) : null}
                 </div>
             </div>
         </Wrapper>
+    );
+}
+
+function DocumentIcon(props) {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true" {...props}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h9l5 5v11a2 2 0 01-2 2z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M14 3v5h5M8 13h8M8 17h5" />
+        </svg>
+    );
+}
+
+/* ------------------------------------------------------------------ */
+/* Section wrapper                                                     */
+/* ------------------------------------------------------------------ */
+
+function CourseSection({ title, count, icon: Icon, tone, children, emptyText }) {
+    return (
+        <section>
+            <div className="mb-3 flex items-center gap-2 border-b border-slate-200 pb-2">
+                <Icon className={`h-4 w-4 ${tone === 'past' ? 'text-slate-400' : 'text-brand-600'}`} />
+                <h2 className="text-xs font-bold uppercase tracking-widest text-slate-800">{title}</h2>
+                <span
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                        tone === 'past' ? 'bg-slate-200 text-slate-600' : 'bg-brand-50 text-brand-700'
+                    }`}
+                >
+                    {count}
+                </span>
+            </div>
+            {count === 0 ? (
+                <p className="rounded-xl border border-dashed border-slate-300 bg-white p-6 text-center text-xs text-slate-500">
+                    {emptyText}
+                </p>
+            ) : (
+                <div className="space-y-3">{children}</div>
+            )}
+        </section>
     );
 }
 
@@ -223,147 +250,115 @@ function CourseCard({ course, index }) {
 /* ------------------------------------------------------------------ */
 
 export default function Index({ courses = [], summary = {}, periodeAktif = null }) {
-    const totalCourses = courses.length;
-    const activeCourses = summary.active_courses ?? courses.filter((course) => course.is_active_period).length;
     const activeNow = courses.filter((course) => course.is_active_period);
     const pastCourses = courses.filter((course) => !course.is_active_period);
+
     const totalMaterials = summary.materials ?? 0;
     const completedMaterials = summary.completed_materials ?? 0;
-    const overallProgress = totalMaterials > 0 ? Math.round((completedMaterials / totalMaterials) * 100) : 0;
     const totalAssignments = summary.assignments ?? 0;
     const submittedAssignments = summary.submitted_assignments ?? 0;
+    const overallProgress = totalMaterials > 0 ? Math.round((completedMaterials / totalMaterials) * 100) : 0;
     const pendingAssignments = summary.pending_assignments ?? 0;
 
     return (
         <AdminLayout title="LMS Mahasiswa">
             <Head title="LMS - Dashboard" />
 
-            <div className="space-y-3">
-                {/* Hero */}
-                <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-brand-900 via-brand-800 to-brand-700 px-4 py-3.5 shadow-md shadow-brand-900/25">
-                    <div className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full bg-white/10" />
-                    <div className="pointer-events-none absolute -bottom-12 -left-6 h-28 w-28 rounded-full bg-white/10" />
-
-                    <div className="relative flex flex-wrap items-center justify-between gap-2">
-                        <div className="min-w-0">
-                            <h1 className="flex items-center gap-2 text-base font-bold text-white md:text-lg">
-                                <AcademicCapIcon className="h-5 w-5 shrink-0 text-white/80" />
-                                Kursus dari KRS Saya
-                            </h1>
-                            <p className="mt-0.5 text-[11px] text-white/80">
-                                Course yang terdaftar pada KRS, dengan periode aktif di paling atas.
+            <div className="space-y-6">
+                {/* Page header */}
+                <header className="flex flex-col gap-3 border-b border-slate-200 pb-4 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-600">
+                            Learning Management System
+                        </p>
+                        <h1 className="mt-1 flex items-center gap-2 text-xl font-bold text-slate-900">
+                            <AcademicCapIcon className="h-6 w-6 text-slate-400" />
+                            Kursus Saya
+                        </h1>
+                        <p className="mt-1 text-xs text-slate-500">
+                            Materi, tugas, dan forum dari mata kuliah yang Anda ambil.
+                        </p>
+                    </div>
+                    {periodeAktif ? (
+                        <div className="shrink-0 rounded-lg border border-slate-200 bg-white px-3.5 py-2">
+                            <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                                Periode KRS aktif
+                            </p>
+                            <p className="mt-0.5 text-xs font-bold text-slate-800">{periodeAktif.nama}</p>
+                            <p className="text-[11px] text-slate-500">
+                                {periodeAktif.tahun_ajaran} · {periodeAktif.semester}
                             </p>
                         </div>
+                    ) : null}
+                </header>
 
-                        <span className="inline-flex items-center gap-1.5 rounded-lg bg-white/15 px-2.5 py-1 text-[11px] font-bold text-white ring-1 ring-white/20">
-                            <BookOpenIcon className="h-3.5 w-3.5" />
-                            {totalCourses} Course
-                        </span>
-                    </div>
-                </div>
-
-                {periodeAktif ? (
-                    <div className="flex items-center justify-between gap-3 rounded-lg border border-brand-100 bg-brand-50 px-3 py-2 text-[11px] text-brand-800">
-                        <span className="font-semibold">Periode KRS aktif</span>
-                        <span className="truncate font-bold">{periodeAktif.nama} · {periodeAktif.tahun_ajaran} · {periodeAktif.semester}</span>
-                    </div>
-                ) : null}
-
-                {/* Compact stat strip */}
-                <section className="grid grid-cols-2 gap-px overflow-hidden rounded-xl bg-neutral-200 shadow-sm ring-1 ring-neutral-200 sm:grid-cols-4">
-                    <StatCell icon={BookOpenIcon} label="Course Aktif" value={activeCourses} accent="indigo" />
-                    <StatCell
+                {/* Ringkasan belajar */}
+                <section className="grid grid-cols-2 gap-4 rounded-xl border border-slate-200 bg-white p-4 sm:grid-cols-4">
+                    <Stat icon={BookOpenIcon} label="Course aktif" value={activeNow.length} />
+                    <Stat
                         icon={CheckBadgeIcon}
-                        label="Materi Selesai"
+                        label="Materi selesai"
                         value={completedMaterials}
                         suffix={`/${totalMaterials}`}
-                        accent="emerald"
-                        progress={overallProgress}
                     />
-                    <StatCell
+                    <Stat
                         icon={ClipboardDocumentListIcon}
-                        label="Tugas Terkumpul"
+                        label="Tugas terkumpul"
                         value={submittedAssignments}
                         suffix={`/${totalAssignments}`}
-                        accent="violet"
-                        progress={totalAssignments > 0 ? Math.round((submittedAssignments / totalAssignments) * 100) : 0}
                     />
-                    <StatCell icon={ChatBubbleLeftRightIcon} label="Forum Diskusi" value={summary.forums ?? 0} accent="amber" />
+                    <Stat icon={ChatBubbleLeftRightIcon} label="Forum diskusi" value={summary.forums ?? 0} />
+                    <div className="col-span-2 flex items-center gap-3 border-t border-slate-100 pt-3 sm:col-span-4 sm:pt-3">
+                        <span className="w-32 shrink-0 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                            Progres belajar
+                        </span>
+                        <ProgressBar value={overallProgress} tone={overallProgress >= 100 ? 'done' : 'todo'} />
+                        <span className="w-10 shrink-0 text-right text-xs font-bold tabular-nums text-slate-700">
+                            {overallProgress}%
+                        </span>
+                    </div>
                 </section>
 
-                {/* Pending alert */}
                 {pendingAssignments > 0 ? (
-                    <div className="flex items-center gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2">
-                        <ExclamationTriangleIcon className="h-4 w-4 shrink-0 text-amber-600" />
-                        <p className="min-w-0 text-[11px] text-amber-800">
-                            <span className="font-bold text-amber-900">{pendingAssignments} tugas belum dikumpulkan.</span>{' '}
-                            <span className="hidden sm:inline">Buka kelas di bawah untuk mengumpulkannya.</span>
+                    <div className="flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-2.5">
+                        <ExclamationTriangleIcon className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+                        <p className="text-xs text-amber-900">
+                            <span className="font-bold">{pendingAssignments} tugas belum dikumpulkan.</span>{' '}
+                            Buka course terkait untuk mengirim sebelum batas waktu.
                         </p>
                     </div>
                 ) : null}
 
-                {/* Course list */}
-                {courses.length === 0 ? (
-                    <div className="rounded-xl border border-dashed border-neutral-300 bg-white p-8 text-center">
-                        <span className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-100 text-neutral-400">
-                            <BookOpenIcon className="h-5 w-5" />
-                        </span>
-                        <p className="mt-3 text-sm font-bold text-neutral-900">Belum ada course KRS</p>
-                        <p className="mx-auto mt-1 max-w-sm text-[11px] text-neutral-500">
-                            Course yang terdaftar pada KRS aktif akan tetap tampil di sini. Materi LMS dapat ditambahkan oleh dosen.
-                        </p>
-                    </div>
-                ) : (
-                    <div className="space-y-8">
-                        {/* Mata Kuliah Aktif Saat Ini */}
-                        <section>
-                            <div className="mb-3 flex items-center gap-2">
-                                <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
-                                    <BookOpenIcon className="h-3.5 w-3.5" />
-                                </span>
-                                <h2 className="text-[11px] font-bold uppercase tracking-[0.15em] text-neutral-900">
-                                    Mata Kuliah Aktif Saat Ini
-                                </h2>
-                                <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
-                                    {activeNow.length}
-                                </span>
-                            </div>
-                            {activeNow.length === 0 ? (
-                                <p className="rounded-xl border border-dashed border-neutral-300 bg-white p-5 text-center text-[11px] text-neutral-500">
-                                    Tidak ada mata kuliah pada periode KRS aktif.
-                                </p>
-                            ) : (
-                                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-                                    {activeNow.map((course, index) => (
-                                        <CourseCard key={course.lms_course_id ?? `krs-${course.krs_id}`} course={course} index={index} />
-                                    ))}
-                                </div>
-                            )}
-                        </section>
+                {/* Mata kuliah aktif */}
+                <CourseSection
+                    title="Mata Kuliah Aktif Saat Ini"
+                    count={activeNow.length}
+                    icon={BookOpenIcon}
+                    tone="active"
+                    emptyText="Tidak ada mata kuliah pada periode KRS aktif."
+                >
+                    {activeNow.map((course) => (
+                        <CourseCard key={course.lms_course_id ?? `krs-${course.krs_id}`} course={course} />
+                    ))}
+                </CourseSection>
 
-                        {/* Mata Kuliah Lampau */}
-                        {pastCourses.length > 0 && (
-                            <section>
-                                <div className="mb-3 flex items-center gap-2">
-                                    <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-neutral-200 text-neutral-600">
-                                        <ClockIcon className="h-3.5 w-3.5" />
-                                    </span>
-                                    <h2 className="text-[11px] font-bold uppercase tracking-[0.15em] text-neutral-900">
-                                        Mata Kuliah Lampau
-                                    </h2>
-                                    <span className="rounded-full bg-neutral-200 px-2 py-0.5 text-[10px] font-bold text-neutral-600">
-                                        {pastCourses.length}
-                                    </span>
-                                </div>
-                                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-                                    {pastCourses.map((course, index) => (
-                                        <CourseCard key={course.lms_course_id ?? `krs-${course.krs_id}`} course={course} index={index} />
-                                    ))}
-                                </div>
-                            </section>
-                        )}
-                    </div>
-                )}
+                {/* Mata kuliah lampau */}
+                {pastCourses.length > 0 ? (
+                    <CourseSection
+                        title="Mata Kuliah Lampau"
+                        count={pastCourses.length}
+                        icon={ClockIcon}
+                        tone="past"
+                    >
+                        {pastCourses.map((course) => (
+                            <CourseCard
+                                key={course.lms_course_id ?? `krs-${course.krs_id}`}
+                                course={course}
+                                muted
+                            />
+                        ))}
+                    </CourseSection>
+                ) : null}
             </div>
         </AdminLayout>
     );
