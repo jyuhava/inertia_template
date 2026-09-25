@@ -354,79 +354,108 @@ export default function Show({ course, progress, submissions }) {
                                 chapterForums.length === 0;
                             const open = openChapters.includes(chapter.id);
 
+                            // Warna kepala topik mengikuti status: hijau = selesai,
+                            // emas = sedang berjalan, abu = belum ada materi.
+                            const head = isComplete
+                                ? 'bg-emerald-500'
+                                : total > 0
+                                    ? 'bg-brand-600'
+                                    : 'bg-neutral-300';
+                            const headSoft = isComplete
+                                ? 'bg-emerald-50 hover:bg-emerald-100'
+                                : total > 0
+                                    ? 'bg-brand-50 hover:bg-brand-100'
+                                    : 'bg-neutral-50 hover:bg-neutral-100';
+
                             return (
                                 <article
                                     key={chapter.id}
                                     className={idx > 0 ? 'border-t border-neutral-200' : ''}
                                 >
-                                    {/* Header topik — diklik untuk buka/tutup */}
+                                    {/* Kepala topik berwarna — diklik untuk buka/tutup */}
                                     <button
                                         type="button"
                                         onClick={() => toggleChapter(chapter.id)}
                                         aria-expanded={open}
-                                        className="flex w-full items-center gap-3.5 px-4 py-3.5 text-left transition hover:bg-neutral-50 sm:px-5"
+                                        className={`flex w-full items-stretch text-left transition ${headSoft}`}
                                     >
-                                        <span
-                                            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[11px] font-black ${
-                                                isComplete ? 'bg-emerald-50 text-emerald-700' : 'bg-brand-50 text-brand-700'
-                                            }`}
-                                        >
-                                            {isComplete ? <CheckCircleIcon className="h-4 w-4" /> : String(idx + 1).padStart(2, '0')}
-                                        </span>
+                                        <span className={`w-1.5 shrink-0 ${head}`} aria-hidden="true" />
 
-                                        <span className="min-w-0 flex-1">
-                                            <span className="block truncate text-[13px] font-bold text-neutral-900">
-                                                {chapter.title}
+                                        <span className="flex min-w-0 flex-1 items-center gap-3.5 px-4 py-3.5 sm:px-5">
+                                            <span
+                                                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[11px] font-black text-white ${head}`}
+                                            >
+                                                {isComplete ? (
+                                                    <CheckCircleIcon className="h-4 w-4" />
+                                                ) : (
+                                                    String(idx + 1).padStart(2, '0')
+                                                )}
                                             </span>
-                                            <span className="mt-0.5 block text-[10px] text-neutral-500">
-                                                {(() => {
-                                                    if (isEmpty) return 'Belum ada materi, tugas, atau forum';
 
-                                                    return [
-                                                        total > 0 ? `${done}/${total} materi selesai` : null,
-                                                        chapterAssignments.length > 0
-                                                            ? `${chapterAssignments.length} tugas`
-                                                            : null,
-                                                        chapterForums.length > 0
-                                                            ? `${chapterForums.length} forum`
-                                                            : null,
-                                                    ]
-                                                        .filter(Boolean)
-                                                        .join(' · ');
-                                                })()}
-                                            </span>
-                                        </span>
-
-                                        {total > 0 ? (
-                                            <span className="hidden w-28 shrink-0 sm:block">
-                                                <span className="block h-1.5 overflow-hidden rounded-full bg-neutral-200">
-                                                    <span
-                                                        className={`block h-full rounded-full transition-all duration-500 ${
-                                                            isComplete ? 'bg-emerald-500' : 'bg-brand-600'
-                                                        }`}
-                                                        style={{ width: `${pct}%` }}
-                                                    />
+                                            <span className="min-w-0 flex-1">
+                                                <span className="block text-[10px] font-bold uppercase tracking-wider text-neutral-500">
+                                                    Topik {idx + 1}
+                                                </span>
+                                                <span className="mt-0.5 block truncate text-[13px] font-bold text-neutral-900">
+                                                    {chapter.title}
                                                 </span>
                                             </span>
-                                        ) : null}
 
-                                        {total > 0 ? (
-                                            <span
-                                                className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold tabular-nums ${
-                                                    isComplete
-                                                        ? 'bg-emerald-50 text-emerald-700'
-                                                        : 'bg-neutral-100 text-neutral-600'
-                                                }`}
-                                            >
-                                                {pct}%
+                                            <span className="min-w-0 flex-1">
+                                                <span className="mt-0.5 block text-[10px] text-neutral-500">
+                                                    {(() => {
+                                                        if (isEmpty) {
+                                                            return 'Belum ada materi, tugas, atau forum';
+                                                        }
+
+                                                        return [
+                                                            total > 0
+                                                                ? `${done}/${total} materi selesai`
+                                                                : null,
+                                                            chapterAssignments.length > 0
+                                                                ? `${chapterAssignments.length} tugas`
+                                                                : null,
+                                                            chapterForums.length > 0
+                                                                ? `${chapterForums.length} forum`
+                                                                : null,
+                                                        ]
+                                                            .filter(Boolean)
+                                                            .join(' · ');
+                                                    })()}
+                                                </span>
                                             </span>
-                                        ) : null}
 
-                                        <ChevronDownIcon
-                                            className={`h-4 w-4 shrink-0 text-neutral-400 transition-transform duration-200 ${
-                                                open ? 'rotate-180' : ''
-                                            }`}
-                                        />
+                                            {total > 0 ? (
+                                                <span className="hidden w-28 shrink-0 sm:block">
+                                                    <span className="block h-1.5 overflow-hidden rounded-full bg-white/70">
+                                                        <span
+                                                            className={`block h-full rounded-full transition-all duration-500 ${
+                                                                isComplete ? 'bg-emerald-500' : 'bg-brand-600'
+                                                            }`}
+                                                            style={{ width: `${pct}%` }}
+                                                        />
+                                                    </span>
+                                                </span>
+                                            ) : null}
+
+                                            {total > 0 ? (
+                                                <span
+                                                    className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold tabular-nums ${
+                                                        isComplete
+                                                            ? 'bg-emerald-100 text-emerald-800'
+                                                            : 'bg-white/80 text-neutral-700'
+                                                    }`}
+                                                >
+                                                    {pct}%
+                                                </span>
+                                            ) : null}
+
+                                            <ChevronDownIcon
+                                                className={`h-4 w-4 shrink-0 text-neutral-500 transition-transform duration-200 ${
+                                                    open ? 'rotate-180' : ''
+                                                }`}
+                                            />
+                                        </span>
                                     </button>
 
                                     {/* Isi topik: satu daftar aktivitas seragam, diindentasi
