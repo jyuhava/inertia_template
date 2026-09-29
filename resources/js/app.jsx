@@ -328,6 +328,7 @@ window.route = (name, params = {}) => {
         'dosen.lms.materials.create': (id) => `/dosen/lms/chapters/${id}/materials/create`,
         'dosen.lms.materials.store': (id) => `/dosen/lms/chapters/${id}/materials`,
         'dosen.lms.materials.generate': (id) => `/dosen/lms/chapters/${id}/materials/generate`,
+        'dosen.lms.ai.jobs.status': (id) => `/dosen/lms/ai/jobs/${id}`,
         'dosen.lms.materials.show': (id) => `/dosen/lms/materials/${id}/view`,
         'dosen.lms.materials.edit': (id) => `/dosen/lms/materials/${id}/edit`,
         'dosen.lms.materials.update': (id) => `/dosen/lms/materials/${id}`,

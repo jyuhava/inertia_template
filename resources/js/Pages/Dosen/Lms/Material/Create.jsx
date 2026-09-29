@@ -2,6 +2,7 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import RichTextEditor from '@/Components/RichTextEditor';
+import { readJsonResponse, pollAiJob } from '@/utils/readJsonResponse';
 
 function Box({ children, className = '', padded = true, variant = 'white' }) {
     const variants = {
@@ -62,6 +63,7 @@ export default function Create({ chapter, course }) {
     const [aiPrompt, setAiPrompt] = useState('');
     const [aiLoading, setAiLoading] = useState(false);
     const [aiError, setAiError] = useState('');
+    const [aiHint, setAiHint] = useState('');
 
     const { data, setData, post, processing, errors } = useForm({
         title: '',
@@ -84,6 +86,7 @@ export default function Create({ chapter, course }) {
 
         setAiLoading(true);
         setAiError('');
+        setAiHint('Mengirim permintaan ke AI...');
 
         try {
             const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
@@ -99,20 +102,22 @@ export default function Create({ chapter, course }) {
                 }),
             });
 
-            const payload = await response.json();
-            if (!response.ok) {
+            const { ok, payload } = await readJsonResponse(response);
+            if (!ok) {
                 throw new Error(payload?.message || 'Gagal membuat materi dari AI.');
             }
 
-            if (payload?.content) {
-                setData('content', payload.content);
-                if (!data.title?.trim()) {
-                    setData('title', `Materi ${chapter.title}`);
-                }
-            } else {
-                throw new Error('Konten AI kosong.');
+            // Panggilan LLM bisa memakan 1-2 menit, jadi server tidak
+            // menunggu: ia mengantre pekerjaan lalu frontend melakukan polling.
+            const content = await pollAiJob(payload.job_id, setAiHint);
+
+            setData('content', content);
+            if (!data.title?.trim()) {
+                setData('title', `Materi ${chapter.title}`);
             }
+            setAiHint('');
         } catch (error) {
+            setAiHint('');
             setAiError(error.message || 'Terjadi kesalahan saat generate materi.');
         } finally {
             setAiLoading(false);
@@ -160,8 +165,18 @@ export default function Create({ chapter, course }) {
                             placeholder="Contoh: Buat materi Bab ini mencakup definisi, tujuan pembelajaran, contoh kasus, dan latihan diskusi."
                         />
                         {aiError ? <p className="mt-2 text-xs text-rose-600">{aiError}</p> : null}
+                        {aiHint ? (
+                            <p className="mt-2 flex items-center gap-2 text-xs font-medium text-brand-700">
+                                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-brand-600" aria-hidden="true" />
+                                {aiHint}
+                            </p>
+                        ) : null}
                         <div className="mt-3 flex items-center justify-between gap-3">
-                            <p className="text-[10px] uppercase tracking-widest text-neutral-500">Tips: semakin spesifik instruksi, semakin terstruktur hasil materi.</p>
+                            <p className="text-[10px] uppercase tracking-widest text-neutral-500">
+                                {aiLoading
+                                    ? 'AI sedang menulis, biasanya 1-2 menit. Anda boleh menutup halaman ini, hasilnya tetap tersimpan.'
+                                    : 'Tips: semakin spesifik instruksi, semakin terstruktur hasil materi.'}
+                            </p>
                             <button
                                 type="button"
                                 onClick={handleGenerateWithAI}

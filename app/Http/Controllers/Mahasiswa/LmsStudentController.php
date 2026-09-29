@@ -291,6 +291,9 @@ class LmsStudentController extends Controller
 
     public function askMaterialAssistant(Request $request, LmsMaterial $material, LmsMaterialAssistantService $assistantService)
     {
+        // Model AI butuh waktu berpikir panjang; samakan dengan timeout klien.
+        @set_time_limit((int) config('services.atria.timeout', 280));
+
         $request->validate([
             'question' => 'required|string|max:2000',
             'messages' => 'nullable|array|max:20',

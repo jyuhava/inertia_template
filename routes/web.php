@@ -487,6 +487,7 @@ Route::middleware(['auth', 'verified', 'role:dosen'])->prefix('dosen')->name('do
         Route::get('/chapters/{chapter}/materials/create', [\App\Http\Controllers\Dosen\LmsContentController::class, 'createMaterial'])->name('materials.create');
         Route::post('/chapters/{chapter}/materials', [\App\Http\Controllers\Dosen\LmsContentController::class, 'storeMaterial'])->name('materials.store');
         Route::post('/chapters/{chapter}/materials/generate', [\App\Http\Controllers\Dosen\LmsContentController::class, 'generateMaterialDraft'])->name('materials.generate');
+        Route::get('/ai/jobs/{aiJob}', [\App\Http\Controllers\Dosen\LmsContentController::class, 'aiJobStatus'])->name('ai.jobs.status');
         Route::get('/materials/{material}/view', [\App\Http\Controllers\Dosen\LmsContentController::class, 'showMaterial'])->name('materials.show');
         Route::get('/materials/{material}/edit', [\App\Http\Controllers\Dosen\LmsContentController::class, 'editMaterial'])->name('materials.edit');
         Route::put('/materials/{material}', [\App\Http\Controllers\Dosen\LmsContentController::class, 'updateMaterial'])->name('materials.update');

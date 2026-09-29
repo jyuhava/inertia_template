@@ -49,7 +49,9 @@ return [
         'api_key' => env('ATRIA_API_KEY'),
         'base_url' => env('ATRIA_BASE_URL', 'https://api.atria-asi.ai/v1'),
         'model' => env('ATRIA_MODEL', 'Atria-Dawn-Preview'),
-        'timeout' => env('ATRIA_TIMEOUT', 120),
+        // Model Atria-Dawn-Preview berpikir cukup lama (generate draft materi
+        // bisa 90-150 detik), jadi timeout harus jauh di atas angka itu.
+        'timeout' => env('ATRIA_TIMEOUT', 280),
     ],
 
 ];
