@@ -1,0 +1,193 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    html {
+        @apply text-[13.5px];
+    }
+
+    body {
+        @apply bg-neutral-100 text-neutral-900;
+    }
+
+    * {
+        scrollbar-width: thin;
+    }
+
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        @apply rounded-full bg-neutral-300;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        @apply bg-neutral-400;
+    }
+
+    ::-webkit-scrollbar-track {
+        @apply bg-neutral-100;
+    }
+}
+
+@layer components {
+    /* --- Surface ------------------------------------------------------- */
+    .panel {
+        @apply border border-neutral-200 bg-white;
+    }
+
+    .panel-header {
+        @apply flex flex-wrap items-center justify-between gap-3 border-b border-neutral-200 px-4 py-3;
+    }
+
+    .panel-title {
+        @apply text-[13px] font-semibold uppercase tracking-wider text-neutral-800;
+    }
+
+    .panel-hint {
+        @apply text-2xs text-neutral-600;
+    }
+
+    /* --- Form controls -------------------------------------------------- */
+    .input,
+    .select,
+    .textarea {
+        @apply block w-full rounded-none border border-neutral-300 bg-white px-2.5 py-1.5 text-[13px] text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-900 disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:text-neutral-500;
+    }
+
+    .select {
+        @apply appearance-none bg-[length:14px] bg-[right_0.5rem_center] bg-no-repeat pr-7;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23737373'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z' clip-rule='evenodd'/%3E%3C/svg%3E");
+    }
+
+    .label {
+        @apply mb-1 block text-2xs font-semibold uppercase tracking-wider text-neutral-500;
+    }
+
+    /* --- Buttons -------------------------------------------------------- */
+    .btn {
+        @apply inline-flex items-center justify-center gap-1.5 border px-2.5 py-1.5 text-[12.5px] font-semibold transition disabled:cursor-not-allowed disabled:opacity-50;
+    }
+
+    .btn-primary {
+        @apply border-neutral-900 bg-neutral-900 text-white hover:bg-neutral-800;
+    }
+
+    .btn-secondary {
+        @apply border-neutral-300 bg-white text-neutral-800 hover:border-neutral-500 hover:bg-neutral-50;
+    }
+
+    .btn-ghost {
+        @apply border-transparent bg-transparent text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900;
+    }
+
+    .btn-danger {
+        @apply border-red-300 bg-white text-red-700 hover:border-red-500 hover:bg-red-50;
+    }
+
+    .btn-brand {
+        @apply border-brand-600 bg-brand-500 text-neutral-900 hover:bg-brand-400;
+    }
+
+    .btn-xs {
+        @apply px-2 py-1 text-[11.5px];
+    }
+
+    /* --- Table ---------------------------------------------------------- */
+    .table-wrap {
+        @apply w-full overflow-x-auto;
+    }
+
+    .data-table {
+        @apply w-full min-w-full border-collapse text-left text-[12.5px];
+    }
+
+    .data-table thead th {
+        @apply sticky top-0 z-10 whitespace-nowrap border-b border-neutral-200 bg-neutral-50 px-3 py-2 text-2xs font-semibold uppercase tracking-wider text-neutral-500;
+    }
+
+    .data-table tbody td {
+        @apply border-b border-neutral-100 px-3 py-2 align-top text-neutral-800;
+    }
+
+    .data-table tbody tr:hover {
+        @apply bg-brand-50/60;
+    }
+
+    .data-table tbody tr.is-selected {
+        @apply bg-brand-50;
+    }
+
+    .data-table-cell-mono {
+        @apply whitespace-nowrap font-mono text-[11.5px] text-neutral-600;
+    }
+
+    .table-empty {
+        @apply px-4 py-10 text-center text-[12.5px] text-neutral-500;
+    }
+
+    /* --- Badge ---------------------------------------------------------- */
+    .badge {
+        @apply inline-flex items-center gap-1 border px-1.5 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide;
+    }
+
+    /* --- Layout --------------------------------------------------------- */
+    .nav-item {
+        @apply flex w-full items-center gap-2.5 border-l-2 border-transparent px-3 py-2 text-[13px] font-medium text-neutral-600 transition hover:bg-neutral-100 hover:text-neutral-900;
+    }
+
+    .nav-item-active {
+        @apply border-brand-500 bg-neutral-100 text-neutral-900;
+    }
+
+    .nav-section {
+        @apply px-3 pb-1 pt-4 text-[10px] font-semibold uppercase tracking-widest text-neutral-500;
+    }
+
+    /* --- Micro ---------------------------------------------------------- */
+    .kv-label {
+        @apply text-2xs font-semibold uppercase tracking-wider text-neutral-500;
+    }
+
+    .kv-value {
+        @apply text-[12.5px] text-neutral-800;
+    }
+
+    .code-block {
+        @apply max-h-[420px] overflow-auto border border-neutral-200 bg-neutral-950 p-3 font-mono text-[11.5px] leading-relaxed text-neutral-100;
+    }
+
+    .divider {
+        @apply border-t border-neutral-200;
+    }
+}
+
+@layer utilities {
+    .scrollbar-thin-x {
+        @apply overflow-x-auto;
+    }
+}
+
+/* Transisi ringan untuk drawer/modal */
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 0.15s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
+}
+
+.slide-enter-active,
+.slide-leave-active {
+    transition: transform 0.18s ease;
+}
+
+.slide-enter-from,
+.slide-leave-to {
+    transform: translateX(100%);
+}
