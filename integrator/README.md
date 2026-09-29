@@ -166,30 +166,41 @@ Modul ini mengasumsikan backend SIAKAD menyediakan endpoint berikut (prefix `VIT
 | GET | `/logs`, `/logs/{id}` | Audit trail |
 | GET | `/monitoring` | Ringkasan monitoring |
 | POST | `/import/preview` | Pratinjau import (tanpa sinkronisasi) |
-| POST | `/neofeeder/call` \| `/token` \| `/test` | Proxy Web Service (backend menambahkan token) |
+| POST/GET | `/neofeeder/call`, `/neofeeder/token`, `/neofeeder/test`, `/neofeeder/dictionary` | Proxy Web Service; backend yang menambahkan token |
 
 `{entity}`: `perguruan-tinggi`, `prodi`, `semester`, `dosen`, `mahasiswa`, `riwayat-pendidikan`, `kurikulum`, `mata-kuliah`, `mata-kuliah-kurikulum`, `kelas`, `dosen-pengajar`, `krs`, `nilai`, `aktivitas-mahasiswa`, `kelulusan`.
 
-### Backend minimal untuk mulai
+### Status backend Laravel
 
-Modul dapat berjalan bertahap. Urutan implementasi backend yang disarankan:
+Skeleton backend kontrak `/api/integrator/*` kini tersedia pada repository Laravel:
 
-1. `/session`, `/periods`, `/prodi-options` → agar konteks dan filter hidup.
-2. `/{entity}` untuk `prodi`, `semester`, `mahasiswa`, `mata-kuliah`, `kelas` → daftar data tampil.
-3. `/mapping*` → pemetaan tersimpan persisten.
-4. `/{entity}/preview` + `/sync/jobs*` → pengiriman nyata ke Neo Feeder.
-5. `/logs`, `/monitoring` → audit trail.
+- `routes/api.php` mendaftarkan seluruh endpoint `siakadApi` beserta transport `/neofeeder/*`.
+- Controller berada di `app/Http/Controllers/Integrator`; domain services berada di `app/Services/Integrator`.
+- API memakai sesi Sanctum (`auth:sanctum`) dan Gate `integrator-access` (default hanya role `admin`). Atur domain stateful Sanctum sesuai host deployment.
+- Migrasi menambah tabel job/item, setting, event audit, dan kolom metadata mapping secara aditif.
+- Jalankan `php artisan migrate`, kemudian `php artisan test tests/Feature/Integrator/IntegratorApiTest.php`.
+
+**Penulisan ke Feeder dinonaktifkan secara default** (`INTEGRATOR_ALLOW_WRITE=false`). DRY RUN hanya memvalidasi/meninjau lalu menandai item dilewati; tidak ada request tulis dan tidak ada hitungan sukses palsu. Bila opsi write diaktifkan, backend tetap mensyaratkan act dan field record terverifikasi pada dictionary Neo Feeder yang tersimpan, serta act harus masuk allowlist eksplisit `INTEGRATOR_VERIFIED_WRITE_ACTS`. Aktifkan hanya setelah uji sandbox dan verifikasi skema versi Feeder yang benar-benar dipakai.
+
+Password operator dikirim hanya melalui API backend terautentikasi dan disimpan terenkripsi dengan `APP_KEY`; password tidak dikembalikan ke browser. Token berada di cache backend terenkripsi. Payload/response yang dicatat disanitasi. Jangan pernah menambahkan rahasia dengan prefix `VITE_`.
+
+Konfigurasi backend tersedia pada root `.env.example` (`NEOFEEDER_*`, `INTEGRATOR_*`, dan `INSTITUSI_*`). Mode mock frontend tetap default; gunakan `VITE_MOCK_MODE=false` setelah host, sesi Sanctum, database, dan migrasi backend disiapkan.
+
+#### Batasan skeleton
+
+- `aktivitas-mahasiswa` dan `kelulusan` belum memiliki sumber model SIAKAD pada registry backend; endpoint mengembalikan daftar kosong dengan catatan bahwa sumber belum tersedia.
+- Referensi PDDikti hanya dibaca bila act terverifikasi pada dictionary. ID referensi yang belum dipetakan ditandai pada preview, bukan ditebak.
+- Comparison berstatus `UNVERIFIED` bila belum ada snapshot remote yang dapat dibandingkan. Mapping bukan bukti bahwa data lokal dan remote sudah sama.
+- Tidak ada route delete atau operasi hapus data PDDikti pada Integrator.
 
 ### Pemetaan ke struktur SIAKAD yang sudah ada
 
-Tabel pemetaan pada SIAKAD existing dapat langsung dipakai:
+Backend membaca model dan tabel akademik SIAKAD sebagai sumber data; ia tidak mengubah baris akademik:
 
-- `pddikti_mahasiswa_mappings` → `entity=mahasiswa` (`pddikti_id`, `status_mapping`)
-- `pddikti_dosen_mappings` → `entity=dosen` (`pddikti_id`, `id_registrasi_dosen`)
-- `pddikti_akademik_mappings` → `mata-kuliah`, `kurikulum`, `mata-kuliah-kurikulum`, `kelas`
-- `pddikti_sync_logs`, `pddikti_akademik_sync_logs`, `pddikti_dosen_sync_logs` → `/logs`
-
-Service `App\Services\Pddikti\*` pada SIAKAD saat ini masih berupa *boundary* (`isConfigured(): false`, tanpa klien WS). Implementasi klien Neo Feeder cukup diisi di service tersebut, dan endpoint `/api/integrator/*` menjadi jembatannya.
+- `mahasiswas`, `dosens`, `prodis`, `semesters`, `mata_kuliahs`, `kurikulums`, `kelas_kuliahs`, `student_course_registration_items`, dan `penilaians` menjadi sumber baca.
+- Mapping mahasiswa/dosen/akademik tetap memakai `pddikti_mahasiswa_mappings`, `pddikti_dosen_mappings`, dan `pddikti_akademik_mappings`.
+- `integrator_sync_jobs`, `integrator_sync_job_items`, dan `integrator_audit_events` menyimpan eksekusi job dan audit operator.
+- Service legacy `App\Services\Pddikti\*` tetap merupakan boundary terpisah; integrasi baru menggunakan adapter `NeoFeederClient` pada `app/Services/Integrator`.
 
 ---
 
