@@ -1,0 +1,89 @@
+# =====================================================================
+# Integrator PDDikti - Apache / LiteSpeed (Hostinger)
+# =====================================================================
+# Modul ini memakai Vue Router dengan createWebHistory, sehingga URL seperti
+# /dashboard, /mapping/mahasiswa, atau /validation/issues adalah rute di sisi
+# peramban dan tidak pernah benar-benar ada sebagai file. Tanpa aturan
+# rewrite di bawah, memuat ulang (F5) pada URL tersebut berakhir 404.
+#
+# Aturan ini meneruskan SEMUA permintaan yang bukan file/folder asli ke
+# index.html, sehingga peramban memuat ulang aplikasi dan Vue Router yang
+# menentukan halaman mana yang ditampilkan.
+# =====================================================================
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # ---------------------------------------------------------------------
+    # 1. Header Authorization & X-XSRF-TOKEN diteruskan ke PHP.
+    #    Penting untuk Sanctum: tanpa ini cookie sesi tidak terbaca.
+    # ---------------------------------------------------------------------
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    RewriteCond %{HTTP:X-XSRF-TOKEN} .
+    RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
+
+    # ---------------------------------------------------------------------
+    # 2. Hilangkan slash di akhir URL (kecuali untuk root).
+    # ---------------------------------------------------------------------
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} ^(.+)/$
+    RewriteRule ^ %1 [L,R=301]
+
+    # ---------------------------------------------------------------------
+    # 3. Aset yang hilang harus benar-benar 404.
+    #
+    #    Tanpa aturan ini, permintaan ke /assets/nama-yang-salah.js akan
+    #    jatuh ke aturan SPA di bawah dan dilayani index.html dengan status
+    #    200. Peramban lalu mencoba mem-parsing HTML sebagai JavaScript dan
+    #    gagal dengan pesan yang menyesatkan. Nama aset mengandung hash, jadi
+    #    file yang hilang hampir selalu berarti build yang berbeda atau
+    #    cache basi - 404 adalah jawaban yang benar.
+    # ---------------------------------------------------------------------
+    RewriteRule ^assets/ - [L]
+
+    # ---------------------------------------------------------------------
+    # 4. File atau folder asli (gambar, favicon, berkas lain) dilayani
+    #    apa adanya.
+    # ---------------------------------------------------------------------
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # ---------------------------------------------------------------------
+    # 5. Sisanya: rute SPA. Teruskan ke index.html tanpa mengubah URL di
+    #    address bar (bukan redirect, supaya router di peramban yang memutuskan).
+    # ---------------------------------------------------------------------
+    RewriteRule ^ index.html [L]
+</IfModule>
+
+# ---------------------------------------------------------------------
+# Kompresi. Hemat bandwidth; aset sudah ber-hash sehingga aman di-cache
+# oleh CDN/proxy.
+# ---------------------------------------------------------------------
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/css text/javascript
+    AddOutputFilterByType DEFLATE application/javascript application/json
+    AddOutputFilterByType DEFLATE image/svg+xml
+</IfModule>
+
+# ---------------------------------------------------------------------
+# Cache aset. Nama file berisi hash (index-BbQAoKvy.js), jadi aman untuk
+# di-cache lama. index.html TIDAK, supaya deploy baru langsung terlihat.
+# ---------------------------------------------------------------------
+<IfModule mod_expires.c>
+    ExpiresActive On
+    <FilesMatch "\.(css|js|woff2?|ttf|eot|svg|png|jpg|jpeg|gif|ico)$">
+        ExpiresDefault "access plus 1 year"
+    </FilesMatch>
+    <FilesMatch "\.html$">
+        ExpiresDefault "access plus 0 seconds"
+    </FilesMatch>
+</IfModule>
+
+# ---------------------------------------------------------------------
+# Cegah listing isi folder.
+# ---------------------------------------------------------------------
+Options -Indexes
