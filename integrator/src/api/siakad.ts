@@ -25,6 +25,8 @@ import { get, post, put } from './http';
  *
  * Endpoint (dipakai sama oleh mock dan backend nyata):
  *   GET  /session                        GET  /dashboard/summary
+ *   GET  /csrf                           POST /login
+ *   POST /logout
  *   GET  /connection                     PUT  /connection
  *   POST /connection/test                POST /connection/authenticate
  *   POST /connection/token/refresh       POST /connection/dictionary/sync
@@ -132,6 +134,19 @@ const toParams = (query: ListQuery = {}): Record<string, string | number> => {
 
 export const siakadApi = {
     session: () => get<OperatorSession>('/session'),
+
+    /**
+     * Login/logout operator integrator.
+     *
+     * Hanya dipakai mode nyata. Frontend yang berada pada subdomain terpisah
+     * tidak menerima cookie sesi SIAKAD secara otomatis, jadi operator login
+     * dari halaman integrator (lihat controller AuthController di backend).
+     */
+    auth: {
+        login: (email: string, password: string, remember = false) =>
+            post<OperatorSession>('/login', { email, password, remember }),
+        logout: () => post<{ message: string }>('/logout'),
+    },
 
     dashboard: () => get<DashboardSummary>('/dashboard/summary'),
 

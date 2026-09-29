@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Integrator\AuthController;
 use App\Http\Controllers\Integrator\ConnectionController;
 use App\Http\Controllers\Integrator\DashboardController;
 use App\Http\Controllers\Integrator\EntityController;
@@ -25,11 +26,28 @@ use Illuminate\Support\Facades\Route;
 | frontend integrator (branch pddikti). Semua response memakai kunci
 | camelCase sesuai tipe TypeScript di integrator/src/types/*.
 |
-| Auth: Sanctum SPA (session cookie). Frontend integrator dipasang pada
-| sub-path /integrator di domain yang sama dengan SIAKAD, sehingga cukup
-| SANCTUM_STATEFUL_DOMAINS berisi domain SIAKAD.
+| Auth: Sanctum SPA (session cookie). Frontend integrator dapat dipasang pada
+| sub-path /integrator di domain yang sama dengan SIAKAD, maupun pada subdomain
+| terpisah (mis. feeder.alwafi.ac.id). Untuk subdomain terpisah, operator login
+| lewat POST /api/integrator/login dan token CSRF diambil dari
+| GET /api/integrator/csrf; SANCTUM_STATEFUL_DOMAINS dan SIAKAD_CORS_ORIGINS
+| harus memuat kedua domain tersebut.
 |
 */
+
+/*
+| Endpoint login integrator. Sengaja berada DI LUAR middleware auth:sanctum
+| di bawah ini, karena justru dipakai untuk membangun sesi tersebut. Frontend
+| integrator dilayani pada subdomain sendiri, sehingga cookie sesi SIAKAD
+| tidak otomatis ikut dan operator perlu login dari halaman integrator.
+*/
+Route::prefix('integrator')
+    ->middleware(['throttle:10,1'])
+    ->group(function (): void {
+        Route::get('csrf', [AuthController::class, 'csrf'])->name('integrator.auth.csrf');
+        Route::post('login', [AuthController::class, 'login'])->name('integrator.auth.login');
+        Route::post('logout', [AuthController::class, 'logout'])->name('integrator.auth.logout');
+    });
 
 Route::prefix('integrator')
     ->middleware(['auth:sanctum', 'can:integrator-access'])

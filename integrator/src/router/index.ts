@@ -25,6 +25,12 @@ const entityRoutes: RouteRecordRaw[] = Object.values(entityDefinitions).flatMap(
 const routes: RouteRecordRaw[] = [
     { path: '/', redirect: '/dashboard' },
     {
+        path: '/login',
+        name: 'login',
+        component: () => import('@/views/LoginView.vue'),
+        meta: { title: 'Masuk', group: 'Ringkasan' },
+    },
+    {
         path: '/dashboard',
         name: 'dashboard',
         component: () => import('@/views/Dashboard.vue'),

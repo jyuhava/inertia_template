@@ -35,7 +35,11 @@ return new class extends Migration
             $table->string('period_label')->nullable();
             $table->unsignedBigInteger('prodi_id')->nullable();
             $table->string('prodi_label')->nullable();
-            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
+            // Tabel users dibuat lebih dulu dan memakai id int signed, jadi
+            // kolom ini harus int agar foreign key bisa dibuat (unsignedBigInteger
+            // akan ditolak MySQL dengan errno 150).
+            $table->integer('user_id')->nullable();
+            $table->foreign('user_id')->references('id')->on('users')->nullOnDelete();
             $table->string('created_by_name');
             $table->unsignedInteger('total')->default(0);
             $table->unsignedInteger('processed')->default(0);

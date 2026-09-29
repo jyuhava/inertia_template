@@ -4,6 +4,7 @@ import { useAuthStore } from '@/stores/auth';
 import { useUiStore } from '@/stores/ui';
 import { useConnectionStore } from '@/stores/connection';
 import { usePeriodStore } from '@/stores/period';
+import { useRouter } from 'vue-router';
 import AppIcon from '@/components/AppIcon.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
 import { formatDateTime, relativeTime } from '@/utils/format';
@@ -16,6 +17,12 @@ const ui = useUiStore();
 const auth = useAuthStore();
 const connection = useConnectionStore();
 const period = usePeriodStore();
+const router = useRouter();
+
+const signOut = async (): Promise<void> => {
+    await auth.logout();
+    await router.replace('/login');
+};
 
 const tokenExpiryLabel = computed(() => {
     const expires = connection.token.expiresAt;
@@ -77,6 +84,18 @@ const connectionTitle = computed(() => `Terakhir sukses: ${formatDateTime(lastRe
                     <p class="text-[10px] text-neutral-500">{{ auth.roleLabel }}</p>
                 </div>
             </div>
+
+            <button
+                v-if="!auth.isMockMode"
+                type="button"
+                class="btn btn-secondary"
+                :disabled="auth.loading"
+                title="Akhiri sesi integrator"
+                @click="signOut"
+            >
+                <AppIcon name="logout" :size="14" />
+                <span class="hidden lg:inline">Keluar</span>
+            </button>
         </div>
     </header>
 </template>

@@ -12,6 +12,10 @@ import type { RowMap } from '@/types/rows';
 export const SiakadService = {
     session: () => siakadApi.session(),
 
+    login: (email: string, password: string, remember = false) => siakadApi.auth.login(email, password, remember),
+
+    logout: () => siakadApi.auth.logout(),
+
     dashboard: () => siakadApi.dashboard(),
 
     periods: () => siakadApi.periods(),

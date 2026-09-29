@@ -3,7 +3,7 @@ import { computed, ref } from 'vue';
 import type { OperatorSession } from '@/types/common';
 import { SiakadService } from '@/services/SiakadService';
 import { appConfig } from '@/config/app.config';
-import { ApiError } from '@/api/http';
+import { ApiError, clearCsrfToken } from '@/api/http';
 
 /**
  * auth store
@@ -34,6 +34,42 @@ export const useAuthStore = defineStore('integrator/auth', () => {
         }
     };
 
+    /**
+     * Login operator. Dipakai ketika frontend dilayani pada subdomain
+     * terpisah sehingga cookie sesi SIAKAD tidak otomatis tersedia.
+     */
+    const login = async (email: string, password: string, remember = false): Promise<boolean> => {
+        loading.value = true;
+        error.value = null;
+        try {
+            session.value = await SiakadService.login(email, password, remember);
+            ready.value = true;
+            return true;
+        } catch (caught) {
+            error.value = caught instanceof ApiError ? caught.normalized.message : 'Login gagal. Silakan coba lagi.';
+            return false;
+        } finally {
+            loading.value = false;
+        }
+    };
+
+    /** Keluar dari sesi integrator dan kembali ke layar login. */
+    const logout = async (): Promise<void> => {
+        loading.value = true;
+        try {
+            await SiakadService.logout();
+        } catch {
+            // Kegagalan logout di server tidak boleh menahan operator keluar
+            // dari antarmuka; sesi lokal tetap dibersihkan apa adanya.
+        } finally {
+            clearCsrfToken();
+            session.value = null;
+            ready.value = true;
+            error.value = null;
+            loading.value = false;
+        }
+    };
+
     const hasPermission = (permission: string): boolean => session.value?.permissions.includes(permission) ?? false;
 
     const displayName = computed(() => session.value?.name ?? 'Operator');
@@ -60,6 +96,8 @@ export const useAuthStore = defineStore('integrator/auth', () => {
         institution,
         roleLabel,
         bootstrap,
+        login,
+        logout,
         hasPermission,
     };
 });

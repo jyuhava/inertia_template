@@ -47,6 +47,7 @@ const paths: Record<string, string> = {
     dots: 'M12 6h.01M12 12h.01M12 18h.01',
     clock: 'M12 4a8 8 0 100 16 8 8 0 000-16zM12 8v4l3 2',
     sync: 'M4 7h13l-3-3M20 17H7l3 3M4 7v4M20 17v-4',
+    logout: 'M14 4h4a2 2 0 012 2v12a2 2 0 01-2 2h-4M10 8l-4 4 4 4M6 12h11',
 };
 </script>
 

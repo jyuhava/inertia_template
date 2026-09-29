@@ -45,7 +45,9 @@ return new class extends Migration
 
         Schema::create('integrator_audit_events', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
+            // Sama seperti tabel users: kolom id-nya int signed.
+            $table->integer('user_id')->nullable();
+            $table->foreign('user_id')->references('id')->on('users')->nullOnDelete();
             $table->string('event_type', 50);
             $table->string('entity', 40)->nullable();
             $table->string('local_id')->nullable();

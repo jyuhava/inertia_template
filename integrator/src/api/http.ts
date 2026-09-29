@@ -27,6 +27,41 @@ export class ApiError extends Error {
 
 const isMock = (): boolean => appConfig.mockMode;
 
+/**
+ * Token CSRF untuk request yang mengubah data (POST/PUT/PATCH/DELETE).
+ *
+ * Frontend integrator dapat dilayani pada subdomain yang berbeda dari domain
+ * SIAKAD (mis. feeder.alwafi.ac.id). Cookie XSRF-TOKEN hanya bisa dibaca
+ * JavaScript pada origin yang mengaturnya, jadi dari subdomain lain token
+ * tersebut tidak bisa diambil lewat document.cookie. Karena itu token diambil
+ * dari endpoint /csrf dalam bentuk JSON dan dikirim sebagai header
+ * X-CSRF-TOKEN, yang oleh Laravel dibandingkan langsung dengan token sesi.
+ *
+ * Pada mock mode tidak ada backend sama sekali, sehingga token tidak pernah
+ * diambil dan tidak ada header yang ditambahkan.
+ */
+let csrfToken: string | null = null;
+
+export const getCsrfToken = (): string | null => csrfToken;
+
+/** Mengambil (bila perlu) token CSRF dari backend. Aman dipanggil berulang. */
+export const ensureCsrfToken = async (): Promise<string | null> => {
+    if (isMock()) return null;
+    if (csrfToken) return csrfToken;
+
+    const response = await axios.get<{ token: string }>(
+        `${appConfig.siakadApiUrl}${appConfig.integratorApiPrefix}/csrf`,
+        { withCredentials: true, timeout: appConfig.requestTimeoutMs },
+    );
+
+    csrfToken = typeof response.data?.token === 'string' ? response.data.token : null;
+    return csrfToken;
+};
+
+export const clearCsrfToken = (): void => {
+    csrfToken = null;
+};
+
 const stripPrefix = (url: string): string => {
     const prefix = appConfig.integratorApiPrefix.replace(/\/+$/, '');
     let path = url;
@@ -102,9 +137,28 @@ const createInstance = (baseURL: string): AxiosInstance => {
         instance.defaults.adapter = mockAdapter;
     }
 
+    instance.interceptors.request.use(async (config) => {
+        // Endpoint /csrf sendiri tidak butuh token, dan nighttime check:
+        // setiap request yang mengubah data harus membawa X-CSRF-TOKEN.
+        // Endpoint /csrf sendiri tidak butuh token, jadi cukup untuk setiap
+        // request yang mengubah data.
+        if (!isMock() && (config.method ?? 'get').toLowerCase() !== 'get') {
+            const token = await ensureCsrfToken();
+            if (token) config.headers.set('X-CSRF-TOKEN', token);
+        }
+        return config;
+    });
+
     instance.interceptors.response.use(
         (response) => response,
-        (error: unknown) => Promise.reject(error instanceof ApiError ? error : new ApiError(normalizeError(error))),
+        (error: unknown) => {
+            // Sesi berakhir di server (mis. cookie kedaluwarsa): token CSRF
+            // juga sudah tidak berlaku, jadi dibuang agar diambil ulang saat
+            // operator login kembali.
+            const status = (error as { response?: { status?: number } } | null)?.response?.status;
+            if (status === 419) clearCsrfToken();
+            return Promise.reject(error instanceof ApiError ? error : new ApiError(normalizeError(error)));
+        },
     );
 
     return instance;
