@@ -88,8 +88,12 @@ export const useConnectionStore = defineStore('integrator/connection', () => {
         authenticating.value = true;
         error.value = null;
         try {
-            await siakadApi.connection.authenticate();
+            const response = await siakadApi.connection.authenticate();
             await fetch();
+            if (response.status !== 'CONNECTED') {
+                error.value = response.message || 'Autentikasi Neo Feeder gagal.';
+                return false;
+            }
             return true;
         } catch (caught) {
             error.value = caught instanceof ApiError ? caught.normalized.message : 'Autentikasi gagal.';
@@ -104,7 +108,12 @@ export const useConnectionStore = defineStore('integrator/connection', () => {
         error.value = null;
         try {
             const response = await siakadApi.connection.refreshToken();
+            if (response.status !== 'CONNECTED') {
+                error.value = response.message || 'Refresh token Neo Feeder gagal.';
+                return false;
+            }
             token.value = { ...token.value, expiresAt: response.tokenExpiresAt };
+            await fetch();
             return true;
         } catch (caught) {
             error.value = caught instanceof ApiError ? caught.normalized.message : 'Gagal memperbarui token.';
@@ -120,6 +129,11 @@ export const useConnectionStore = defineStore('integrator/connection', () => {
         try {
             const response = await siakadApi.connection.syncDictionary();
             dictionary.value = { synced: response.synced, version: response.version, fetchedAt: response.fetchedAt, actCount: response.actCount };
+            if (!response.synced) {
+                error.value = response.message || 'Dictionary Neo Feeder belum berhasil disinkronkan.';
+                return false;
+            }
+            await fetch();
             return true;
         } catch (caught) {
             error.value = caught instanceof ApiError ? caught.normalized.message : 'Gagal mengambil dictionary Neo Feeder.';

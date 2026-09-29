@@ -132,7 +132,7 @@ const tokenBadge = computed(() => {
         <PageHeader
             icon="plug"
             title="Koneksi Neo Feeder"
-            description="Konfigurasi Web Service Neo Feeder dan pemantauan status koneksi. Kredensial (username, password, token) hanya disimpan backend — modul ini tidak pernah menerimanya."
+            description="Konfigurasi Web Service Neo Feeder dan pemantauan status koneksi. Password hanya dikirim ke backend melalui sesi terautentikasi, tidak dikembalikan ke browser; token selalu dikelola backend."
             hint="Endpoint standar Neo Feeder: ws/live2.php pada host aplikasi Neo Feeder (umumnya port 8082)."
         >
             <template #actions>
