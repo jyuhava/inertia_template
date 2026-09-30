@@ -35,12 +35,25 @@ return [
 
     'allowed_origins_patterns' => [],
 
+    /*
+    | Daftar ini harus memuat SETIAP header kustom yang dikirim frontend
+    | integrator. Header yang tidak terdaftar di sini tidak akan pernah
+    | sampai ke backend: browser memblokirnya pada tahap preflight dengan
+    | "Request header field X is not allowed by Access-Control-Allow-Headers".
+    |
+    | Saat ini frontend mengirim:
+    |   X-Requested-With   -> penanda request AJAX
+    |   X-Integrator-Client -> penanda klien integrator
+    |   X-CSRF-TOKEN       -> token CSRF pada request yang mengubah data
+    | dan bawaan browser: Accept, Content-Type, Origin.
+    */
     'allowed_headers' => [
         'Accept',
         'Authorization',
         'Content-Type',
         'Origin',
         'X-CSRF-TOKEN',
+        'X-Integrator-Client',
         'X-Requested-With',
         'X-XSRF-TOKEN',
     ],
