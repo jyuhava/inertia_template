@@ -1,5 +1,6 @@
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import Modal from '@/Components/Modal';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
 
 const STATUS_OPTIONS = [
@@ -76,6 +77,7 @@ export default function Index({ dosen, periodeAktif, jadwalKuliah, mahasiswas, p
     const { flash } = usePage().props;
     const [selectedTanggal, setSelectedTanggal] = useState(pertemuanList[0]?.tanggal || '');
     const [showCreatePertemuan, setShowCreatePertemuan] = useState(false);
+    const [pertemuanToDelete, setPertemuanToDelete] = useState(null);
 
     const {
         data: formPertemuan,
@@ -205,6 +207,32 @@ export default function Index({ dosen, periodeAktif, jadwalKuliah, mahasiswas, p
         putAbsensi(route('dosen.absensi.update', jadwalKuliah.id));
     };
 
+    /**
+     * Hapus satu pertemuan beserta seluruh data absensi mahasiswa pada
+     * tanggal tersebut. Endpointnya sudah ada di backend
+     * (dosen.absensi.pertemuan.delete); yang belum ada sebelumnya adalah
+     * tombolnya di halaman ini.
+     *
+     * `@tanggal` wajib dikirim sebagai query string karena route memakai
+     * satu parameter (jadwalKuliah) untuk DELETE.
+     */
+    const confirmDeletePertemuan = () => {
+        if (!pertemuanToDelete) return;
+
+        router.delete(route('dosen.absensi.pertemuan.delete', jadwalKuliah.id), {
+            data: { tanggal: pertemuanToDelete.tanggal },
+            preserveScroll: true,
+            onSuccess: () => {
+                // Pointew yang sedang dihapus tidak boleh tetap terpilih.
+                if (selectedTanggal === pertemuanToDelete.tanggal) {
+                    const remaining = pertemuanList.filter((item) => item.tanggal !== pertemuanToDelete.tanggal);
+                    setSelectedTanggal(remaining[0]?.tanggal || '');
+                }
+                setPertemuanToDelete(null);
+            },
+        });
+    };
+
     return (
         <AdminLayout title="Absensi Mahasiswa">
             <Head title={`Absensi - ${jadwalKuliah.mata_kuliah?.nama_mata_kuliah || 'Kelas'}`} />
@@ -303,22 +331,42 @@ export default function Index({ dosen, periodeAktif, jadwalKuliah, mahasiswas, p
                                     {pertemuanList.map((pertemuan, index) => {
                                         const selected = selectedTanggal === pertemuan.tanggal;
                                         return (
-                                            <button
+                                            <div
                                                 key={`${pertemuan.tanggal}-${index}`}
-                                                type="button"
-                                                onClick={() => setSelectedTanggal(pertemuan.tanggal)}
-                                                className={`w-full border p-3 text-left transition ${
+                                                className={`flex items-stretch border transition ${
                                                     selected
                                                         ? 'border-neutral-900 bg-neutral-100'
                                                         : 'border-neutral-200 bg-white hover:bg-neutral-50'
                                                 }`}
                                             >
-                                                <p className="text-sm font-semibold text-neutral-900">Pertemuan {index + 1}</p>
-                                                <p className="mt-0.5 text-xs text-neutral-600">{formatDate(pertemuan.tanggal)}</p>
-                                                <p className="mt-1 text-xs text-neutral-500">
-                                                    {formatTime(pertemuan.jam_mulai)} - {formatTime(pertemuan.jam_selesai)}
-                                                </p>
-                                            </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setSelectedTanggal(pertemuan.tanggal)}
+                                                    className="flex-1 p-3 text-left"
+                                                >
+                                                    <p className="text-sm font-semibold text-neutral-900">Pertemuan {index + 1}</p>
+                                                    <p className="mt-0.5 text-xs text-neutral-600">{formatDate(pertemuan.tanggal)}</p>
+                                                    <p className="mt-1 text-xs text-neutral-500">
+                                                        {formatTime(pertemuan.jam_mulai)} - {formatTime(pertemuan.jam_selesai)}
+                                                    </p>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setPertemuanToDelete(pertemuan)}
+                                                    title={`Hapus Pertemuan ${index + 1}`}
+                                                    aria-label={`Hapus Pertemuan ${index + 1} tanggal ${pertemuan.tanggal}`}
+                                                    className="flex w-11 shrink-0 items-center justify-center border-l border-neutral-200 text-neutral-400 transition hover:bg-red-50 hover:text-red-600"
+                                                >
+                                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            strokeWidth={1.5}
+                                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                                        />
+                                                    </svg>
+                                                </button>
+                                            </div>
                                         );
                                     })}
                                 </div>
@@ -534,6 +582,42 @@ export default function Index({ dosen, periodeAktif, jadwalKuliah, mahasiswas, p
                         </form>
                     </div>
                 </div>
+            ) : null}
+
+            {pertemuanToDelete ? (
+                <Modal show={Boolean(pertemuanToDelete)} onClose={() => setPertemuanToDelete(null)} maxWidth="md">
+                    <div className="border border-[#e4e4e7] bg-white p-6">
+                        <div className="mb-4 flex items-center">
+                            <div className="mr-3 flex h-10 w-10 items-center justify-center border border-red-100 bg-red-50">
+                                <svg className="h-5 w-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={1.5}
+                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                                    />
+                                </svg>
+                            </div>
+                            <h3 className="text-sm font-bold uppercase tracking-wider text-black">Konfirmasi Hapus Pertemuan</h3>
+                        </div>
+                        <p className="mb-2 text-sm text-neutral-600">
+                            Apakah Anda yakin ingin menghapus pertemuan tanggal{' '}
+                            <span className="font-semibold text-neutral-900">{formatDate(pertemuanToDelete.tanggal)}</span>?
+                        </p>
+                        <p className="mb-6 text-sm text-neutral-600">
+                            Seluruh data absensi mahasiswa pada pertemuan tersebut ({(absensiData[pertemuanToDelete.tanggal] || []).length} catatan)
+                            akan ikut terhapus. Tindakan ini tidak dapat dibatalkan.
+                        </p>
+                        <div className="flex justify-end gap-2">
+                            <ActionButton onClick={() => setPertemuanToDelete(null)} variant="secondary">
+                                Batal
+                            </ActionButton>
+                            <ActionButton onClick={confirmDeletePertemuan} variant="danger">
+                                Hapus Pertemuan
+                            </ActionButton>
+                        </div>
+                    </div>
+                </Modal>
             ) : null}
         </AdminLayout>
     );
