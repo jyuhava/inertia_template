@@ -1,6 +1,7 @@
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { ChevronDownIcon } from '@heroicons/react/24/outline';
 import Modal from '@/Components/Modal';
 
 function Box({ children, className = '', padded = true, variant = 'white' }) {
@@ -105,6 +106,19 @@ export default function Show({ course }) {
     });
 
     const chapters = course?.chapters || [];
+    const [openChapters, setOpenChapters] = useState([]);
+
+    // Semua topik terbuka secara default supaya dosen langsung melihat
+    // seluruh konten tanpa harus satu per satu diklik.
+    useEffect(() => {
+        setOpenChapters((current) => (current.length > 0 ? current : chapters.map((c) => c.id)));
+    }, [chapters]);
+
+    const toggleChapter = (id) => {
+        setOpenChapters((current) =>
+            current.includes(id) ? current.filter((x) => x !== id) : [...current, id],
+        );
+    };
     const totalMaterials = useMemo(() => chapters.reduce((sum, c) => sum + (c.materials?.length || 0), 0), [chapters]);
     const totalAssignments = useMemo(() => chapters.reduce((sum, c) => sum + (c.assignments?.length || 0), 0), [chapters]);
     const totalForums = useMemo(() => chapters.reduce((sum, c) => sum + (c.forums?.length || 0), 0), [chapters]);
@@ -238,124 +252,279 @@ export default function Show({ course }) {
                         </p>
                     </Box>
                 ) : (
-                    <section className="space-y-4">
-                        {chapters.map((chapter, index) => (
-                            <Box key={chapter.id}>
-                                <div className="mb-4 flex flex-wrap items-start justify-between gap-3 border-b border-[#e5e5e5] pb-4">
-                                    <div>
-                                        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-neutral-500">Topik {index + 1}</p>
-                                        <h2 className="text-lg font-bold uppercase tracking-tight text-black">{chapter.title}</h2>
-                                        <p className="text-[10px] uppercase tracking-widest text-neutral-500">
-                                            {chapter.materials?.length || 0} materi • {chapter.assignments?.length || 0} tugas • {chapter.forums?.length || 0} forum
-                                        </p>
+                    <section className="overflow-hidden border border-[#e5e5e5] bg-white">
+                        {chapters.map((chapter, index) => {
+                            const chapterMaterials = chapter.materials || [];
+                            const chapterAssignments = chapter.assignments || [];
+                            const chapterForums = chapter.forums || [];
+                            const isEmpty =
+                                chapterMaterials.length === 0 &&
+                                chapterAssignments.length === 0 &&
+                                chapterForums.length === 0;
+                            const isLengkap =
+                                chapterMaterials.length > 0 &&
+                                chapterAssignments.length > 0 &&
+                                chapterForums.length > 0;
+
+                            // Warna kepala menandai kelengkapan konten topik.
+                            const head = isLengkap
+                                ? 'bg-emerald-500'
+                                : isEmpty
+                                    ? 'bg-neutral-300'
+                                    : 'bg-brand-600';
+                            const headSoft = isLengkap
+                                ? 'bg-emerald-50 hover:bg-emerald-100'
+                                : isEmpty
+                                    ? 'bg-neutral-50 hover:bg-neutral-100'
+                                    : 'bg-brand-50 hover:bg-brand-100';
+
+                            const open = openChapters.includes(chapter.id);
+
+                            return (
+                                <article
+                                    key={chapter.id}
+                                    className={index > 0 ? 'border-t border-[#e5e5e5]' : ''}
+                                >
+                                    {/* Kepala topik berwarna — klik untuk buka/tutup */}
+                                    <div className={`flex items-stretch transition ${headSoft}`}>
+                                        <span className={`w-1.5 shrink-0 ${head}`} aria-hidden="true" />
+
+                                        <button
+                                            type="button"
+                                            onClick={() => toggleChapter(chapter.id)}
+                                            aria-expanded={open}
+                                            className="flex min-w-0 flex-1 items-center gap-3.5 px-4 py-3.5 text-left sm:px-5"
+                                        >
+                                            <span
+                                                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[11px] font-black text-white ${head}`}
+                                            >
+                                                {String(index + 1).padStart(2, '0')}
+                                            </span>
+
+                                            <span className="min-w-0 flex-1">
+                                                <span className="block text-[10px] font-semibold uppercase tracking-[0.2em] text-neutral-500">
+                                                    Topik {index + 1}
+                                                </span>
+                                                <span className="mt-0.5 block text-sm font-bold uppercase tracking-tight text-black">
+                                                    {chapter.title}
+                                                </span>
+                                                <span className="mt-0.5 block text-[10px] uppercase tracking-widest text-neutral-500">
+                                                    {(() => {
+                                                        if (isEmpty) {
+                                                            return 'Belum ada materi, tugas, atau forum';
+                                                        }
+
+                                                        return [
+                                                            chapterMaterials.length > 0
+                                                                ? `${chapterMaterials.length} materi`
+                                                                : null,
+                                                            chapterAssignments.length > 0
+                                                                ? `${chapterAssignments.length} tugas`
+                                                                : null,
+                                                            chapterForums.length > 0
+                                                                ? `${chapterForums.length} forum`
+                                                                : null,
+                                                        ]
+                                                            .filter(Boolean)
+                                                            .join(' • ');
+                                                    })()}
+                                                </span>
+                                            </span>
+
+                                            <span
+                                                className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                                                    isLengkap
+                                                        ? 'bg-emerald-100 text-emerald-800'
+                                                        : isEmpty
+                                                            ? 'bg-white/80 text-neutral-600'
+                                                            : 'bg-white/80 text-brand-700'
+                                                }`}
+                                            >
+                                                {isLengkap ? 'Lengkap' : isEmpty ? 'Kosong' : 'Berjalan'}
+                                            </span>
+
+                                            <ChevronDownIcon
+                                                className={`h-4 w-4 shrink-0 text-neutral-500 transition-transform duration-200 ${
+                                                    open ? 'rotate-180' : ''
+                                                }`}
+                                            />
+                                        </button>
+
+                                        <div className="flex shrink-0 items-center gap-2 pr-4 sm:pr-5">
+                                            <ActionButton
+                                                onClick={() => openChapterModal(chapter)}
+                                                variant="secondary"
+                                            >
+                                                Edit
+                                            </ActionButton>
+                                            <ActionButton onClick={() => deleteChapter(chapter.id)} variant="danger">
+                                                Hapus
+                                            </ActionButton>
+                                        </div>
                                     </div>
-                                    <div className="flex gap-2">
-                                        <ActionButton onClick={() => openChapterModal(chapter)} variant="secondary">Edit Topik</ActionButton>
-                                        <ActionButton onClick={() => deleteChapter(chapter.id)} variant="danger">Hapus Topik</ActionButton>
-                                    </div>
-                                </div>
 
-                                <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-                                    <Box variant="gray" className="p-4">
-                                        <div className="mb-3 flex items-center justify-between">
-                                            <h3 className="text-xs font-bold uppercase tracking-wider text-black">Materi Pembelajaran</h3>
-                                            <ActionButton href={route('dosen.lms.materials.create', chapter.id)} variant="primary">+ Materi</ActionButton>
-                                        </div>
+                                    {/* Isi: satu daftar aktivitas seragam, diindentasi */}
+                                    {open ? (
+                                        <div className="border-t border-[#e5e5e5] bg-[#f4f4f5] px-4 py-4 sm:px-5">
+                                            {/* materiality: tombol tambah per jenis */}
+                                            <div className="mb-3 flex flex-wrap gap-2">
+                                                <ActionButton
+                                                    href={route('dosen.lms.materials.create', chapter.id)}
+                                                    variant="primary"
+                                                >
+                                                    + Materi
+                                                </ActionButton>
+                                                <ActionButton
+                                                    href={route('dosen.lms.assignments.create', chapter.id)}
+                                                    variant="primary"
+                                                >
+                                                    + Tugas
+                                                </ActionButton>
+                                                <ActionButton
+                                                    onClick={() => openForumModal(chapter)}
+                                                    variant="primary"
+                                                >
+                                                    + Forum
+                                                </ActionButton>
+                                            </div>
 
-                                        <div className="space-y-2">
-                                            {(chapter.materials || []).length === 0 ? (
-                                                <div className="border border-dashed border-[#e5e5e5] bg-white p-3 text-xs text-neutral-500">Belum ada materi di topik ini.</div>
+                                            {isEmpty ? (
+                                                <p className="py-3 text-center text-xs text-neutral-500">
+                                                    Topik ini belum memiliki materi, tugas, atau forum.
+                                                </p>
                                             ) : (
-                                                chapter.materials.map((material) => (
-                                                    <div key={material.id} className="border border-[#e5e5e5] bg-white p-3">
-                                                        <div className="flex items-start justify-between gap-2">
-                                                            <div>
-                                                                <p className="text-xs font-semibold uppercase tracking-wider text-black">{material.title}</p>
-                                                                <p className="mt-0.5 text-[10px] uppercase tracking-widest text-neutral-500">{material.type}</p>
-                                                            </div>
-                                                            <div className="flex gap-1">
-                                                                <ActionButton href={route('dosen.lms.materials.show', material.id)} variant="secondary">Lihat</ActionButton>
-                                                                <ActionButton href={route('dosen.lms.materials.edit', material.id)} variant="secondary">Edit</ActionButton>
-                                                                <ActionButton onClick={() => deleteMaterial(material.id)} variant="danger">Hapus</ActionButton>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                ))
-                                            )}
-                                        </div>
-                                    </Box>
-
-                                    <Box variant="gray" className="p-4">
-                                        <div className="mb-3 flex items-center justify-between">
-                                            <h3 className="text-xs font-bold uppercase tracking-wider text-black">Tugas dan Evaluasi</h3>
-                                            <ActionButton href={route('dosen.lms.assignments.create', chapter.id)} variant="primary">+ Tugas</ActionButton>
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            {(chapter.assignments || []).length === 0 ? (
-                                                <div className="border border-dashed border-[#e5e5e5] bg-white p-3 text-xs text-neutral-500">Belum ada tugas di topik ini.</div>
-                                            ) : (
-                                                chapter.assignments.map((assignment) => (
-                                                    <div key={assignment.id} className="border border-[#e5e5e5] bg-white p-3">
-                                                        <div className="flex items-start justify-between gap-2">
-                                                            <div>
-                                                                <p className="text-xs font-semibold uppercase tracking-wider text-black">{assignment.title}</p>
-                                                                <p className="mt-0.5 text-[10px] uppercase tracking-widest text-neutral-500">
-                                                                    {assignment.deadline
-                                                                        ? `Deadline: ${new Date(assignment.deadline).toLocaleString('id-ID')}`
-                                                                        : 'Tanpa deadline'}
-                                                                </p>
-                                                                <div className="mt-2 flex flex-wrap gap-1">
-                                                                    <Badge variant="warning">{assignment.komponen || 'harian'}</Badge>
-                                                                    <Badge>Bobot {assignment.bobot_komponen || 1}</Badge>
+                                                <ul className="ml-9 space-y-2 border-l-2 border-[#d4d4d8] pl-3 sm:ml-10 sm:pl-4">
+                                                    {chapterMaterials.map((material) => (
+                                                        <li
+                                                            key={`m-${material.id}`}
+                                                            className="border border-[#e5e5e5] bg-white p-3"
+                                                        >
+                                                            <div className="flex items-start justify-between gap-2">
+                                                                <div className="min-w-0">
+                                                                    <p className="text-xs font-semibold uppercase tracking-wider text-black">
+                                                                        {material.title}
+                                                                    </p>
+                                                                    <p className="mt-0.5 text-[10px] uppercase tracking-widest text-neutral-500">
+                                                                        {material.type}
+                                                                    </p>
+                                                                </div>
+                                                                <div className="flex shrink-0 gap-1">
+                                                                    <ActionButton
+                                                                        href={route('dosen.lms.materials.show', material.id)}
+                                                                        variant="secondary"
+                                                                    >
+                                                                        Lihat
+                                                                    </ActionButton>
+                                                                    <ActionButton
+                                                                        href={route('dosen.lms.materials.edit', material.id)}
+                                                                        variant="secondary"
+                                                                    >
+                                                                        Edit
+                                                                    </ActionButton>
+                                                                    <ActionButton
+                                                                        onClick={() => deleteMaterial(material.id)}
+                                                                        variant="danger"
+                                                                    >
+                                                                        Hapus
+                                                                    </ActionButton>
                                                                 </div>
                                                             </div>
-                                                            <div className="flex flex-wrap gap-1">
-                                                                <ActionButton href={route('dosen.lms.assignments.grading', assignment.id)} variant="primary">Nilai</ActionButton>
-                                                                <ActionButton href={route('dosen.lms.assignments.edit', assignment.id)} variant="secondary">Edit</ActionButton>
-                                                                <ActionButton onClick={() => deleteAssignment(assignment.id)} variant="danger">Hapus</ActionButton>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                ))
-                                            )}
-                                        </div>
-                                    </Box>
+                                                        </li>
+                                                    ))}
 
-                                    <Box variant="gray" className="p-4">
-                                        <div className="mb-3 flex items-center justify-between">
-                                            <h3 className="text-xs font-bold uppercase tracking-wider text-black">Forum Diskusi</h3>
-                                            <ActionButton onClick={() => openForumModal(chapter)} variant="primary">+ Forum</ActionButton>
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            {(chapter.forums || []).length === 0 ? (
-                                                <div className="border border-dashed border-[#e5e5e5] bg-white p-3 text-xs text-neutral-500">Belum ada forum di topik ini.</div>
-                                            ) : (
-                                                chapter.forums.map((forum) => (
-                                                    <div key={forum.id} className="border border-[#e5e5e5] bg-white p-3">
-                                                        <div className="flex items-start justify-between gap-2">
-                                                            <div>
-                                                                <p className="text-xs font-semibold uppercase tracking-wider text-black">{forum.title}</p>
-                                                                <div className="mt-1 flex flex-wrap items-center gap-1">
-                                                                    <Badge variant={forum.is_active ? 'active' : 'default'}>{forum.is_active ? 'Aktif' : 'Nonaktif'}</Badge>
-                                                                    <Badge>{forum.threads_count || 0} thread</Badge>
+                                                    {chapterAssignments.map((assignment) => (
+                                                        <li
+                                                            key={`a-${assignment.id}`}
+                                                            className="border border-[#e5e5e5] bg-white p-3"
+                                                        >
+                                                            <div className="flex items-start justify-between gap-2">
+                                                                <div className="min-w-0">
+                                                                    <p className="text-xs font-semibold uppercase tracking-wider text-black">
+                                                                        {assignment.title}
+                                                                    </p>
+                                                                    <p className="mt-0.5 text-[10px] uppercase tracking-widest text-neutral-500">
+                                                                        {assignment.deadline
+                                                                            ? `Deadline: ${new Date(assignment.deadline).toLocaleString('id-ID')}`
+                                                                            : 'Tanpa deadline'}
+                                                                    </p>
+                                                                    <div className="mt-2 flex flex-wrap gap-1">
+                                                                        <Badge variant="warning">
+                                                                            {assignment.komponen || 'harian'}
+                                                                        </Badge>
+                                                                        <Badge>Bobot {assignment.bobot_komponen || 1}</Badge>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex shrink-0 flex-wrap gap-1">
+                                                                    <ActionButton
+                                                                        href={route('dosen.lms.assignments.grading', assignment.id)}
+                                                                        variant="primary"
+                                                                    >
+                                                                        Nilai
+                                                                    </ActionButton>
+                                                                    <ActionButton
+                                                                        href={route('dosen.lms.assignments.edit', assignment.id)}
+                                                                        variant="secondary"
+                                                                    >
+                                                                        Edit
+                                                                    </ActionButton>
+                                                                    <ActionButton
+                                                                        onClick={() => deleteAssignment(assignment.id)}
+                                                                        variant="danger"
+                                                                    >
+                                                                        Hapus
+                                                                    </ActionButton>
                                                                 </div>
                                                             </div>
-                                                            <div className="flex flex-wrap gap-1">
-                                                                <ActionButton href={route('dosen.lms.forums.show', forum.id)} variant="primary">Kelola</ActionButton>
-                                                                <ActionButton onClick={() => openForumModal(chapter, forum)} variant="secondary">Edit</ActionButton>
-                                                                <ActionButton onClick={() => deleteForum(forum.id)} variant="danger">Hapus</ActionButton>
+                                                        </li>
+                                                    ))}
+
+                                                    {chapterForums.map((forum) => (
+                                                        <li
+                                                            key={`f-${forum.id}`}
+                                                            className="border border-[#e5e5e5] bg-white p-3"
+                                                        >
+                                                            <div className="flex items-start justify-between gap-2">
+                                                                <div className="min-w-0">
+                                                                    <p className="text-xs font-semibold uppercase tracking-wider text-black">
+                                                                        {forum.title}
+                                                                    </p>
+                                                                    <div className="mt-1 flex flex-wrap items-center gap-1">
+                                                                        <Badge variant={forum.is_active ? 'active' : 'default'}>
+                                                                            {forum.is_active ? 'Aktif' : 'Nonaktif'}
+                                                                        </Badge>
+                                                                        <Badge>{forum.threads_count || 0} thread</Badge>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex shrink-0 flex-wrap gap-1">
+                                                                    <ActionButton
+                                                                        href={route('dosen.lms.forums.show', forum.id)}
+                                                                        variant="primary"
+                                                                    >
+                                                                        Kelola
+                                                                    </ActionButton>
+                                                                    <ActionButton
+                                                                        onClick={() => openForumModal(chapter, forum)}
+                                                                        variant="secondary"
+                                                                    >
+                                                                        Edit
+                                                                    </ActionButton>
+                                                                    <ActionButton
+                                                                        onClick={() => deleteForum(forum.id)}
+                                                                        variant="danger"
+                                                                    >
+                                                                        Hapus
+                                                                    </ActionButton>
+                                                                </div>
                                                             </div>
-                                                        </div>
-                                                    </div>
-                                                ))
+                                                        </li>
+                                                    ))}
+                                                </ul>
                                             )}
                                         </div>
-                                    </Box>
-                                </div>
-                            </Box>
-                        ))}
+                                    ) : null}
+                                </article>
+                            );
+                        })}
                     </section>
                 )}
             </div>

@@ -80,6 +80,11 @@ export default function Index({ dosens, filters }) {
         });
     };
 
+    const impersonate = (type, row) => {
+        if (!confirm(`Login sebagai ${row.nama_lengkap}? Anda akan masuk ke akun tersebut dan bisa kembali kapan saja.`)) return;
+        router.post(route('admin.impersonate.store', [type, row.id]));
+    };
+
     const handleDelete = (dosen) => {
         if (confirm('Apakah Anda yakin ingin menghapus dosen ini?')) {
             router.delete(`/admin/dosen/${dosen.id}`);
@@ -174,6 +179,9 @@ export default function Index({ dosens, filters }) {
                                             <div className="flex justify-end gap-2">
                                                 <ActionButton href={`/admin/dosen/${dosen.id}`} variant="secondary" size="sm">Detail</ActionButton>
                                                 <ActionButton href={`/admin/dosen/${dosen.id}/edit`} variant="primary" size="sm">Edit</ActionButton>
+                                                {dosen.user && (
+                                                    <ActionButton onClick={() => impersonate('dosen', dosen)} variant="primary" size="sm">Login As</ActionButton>
+                                                )}
                                                 <ActionButton onClick={() => handleDelete(dosen)} variant="danger" size="sm">Hapus</ActionButton>
                                             </div>
                                         </td>

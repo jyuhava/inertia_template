@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Krs;
 use App\Models\Mahasiswa;
 use App\Models\MahasiswaRegistrasi;
 use App\Models\MahasiswaStatusHistory;
+use App\Models\PeriodeKrs;
 use App\Models\Prodi;
 use App\Models\TahunAjaran;
 use App\Models\User;
@@ -244,7 +246,122 @@ class MahasiswaController extends Controller
             'komitmenUrl' => $mahasiswa->getKomitmenUrl(),
             'prodis' => Prodi::where('status', 'aktif')->orderBy('nama_prodi')->get(),
             'tahunAjarans' => TahunAjaran::orderByDesc('tanggal_mulai')->get(['id', 'nama_tahun_ajaran']),
+            'riwayatKrs' => $this->riwayatKrs($mahasiswa),
         ]);
+    }
+
+    /**
+     * Riwayat KRS mahasiswa dikelompokkan per periode untuk tab Riwayat KRS.
+     */
+    private function riwayatKrs(Mahasiswa $mahasiswa): array
+    {
+        return Krs::with(['jadwalKuliah.mataKuliah', 'periodeKrs.tahunAjaran', 'periodeKrs.semester'])
+            ->where('mahasiswa_id', $mahasiswa->id)
+            ->get()
+            ->groupBy('periode_krs_id')
+            ->map(function ($rows) {
+                $periode = $rows->first()->periodeKrs;
+                $dapatDibatalkan = $rows
+                    ->whereIn('status', ['disetujui', 'menunggu_persetujuan'])
+                    ->count();
+
+                return [
+                    'periode_id' => $periode?->id,
+                    'nama_periode' => $periode?->nama_periode ?? '-',
+                    'semester' => $periode?->semester?->nama_semester,
+                    'tahun_ajaran' => $periode?->tahunAjaran?->nama_tahun_ajaran,
+                    'tahun_ajaran_aktif' => $periode?->tahunAjaran?->status === 'aktif',
+                    'total' => $rows->count(),
+                    'disetujui' => $rows->where('status', 'disetujui')->count(),
+                    'menunggu' => $rows->where('status', 'menunggu_persetujuan')->count(),
+                    'dibatalkan' => $rows->where('status', 'dibatalkan')->count(),
+                    'ditolak' => $rows->where('status', 'ditolak')->count(),
+                    'dapat_dibatalkan' => $dapatDibatalkan,
+                    'items' => $rows->map(fn ($krs) => [
+                        'id' => $krs->id,
+                        'kode' => $krs->jadwalKuliah?->mataKuliah?->kode_mata_kuliah ?? '-',
+                        'nama' => $krs->jadwalKuliah?->mataKuliah?->nama_mata_kuliah ?? '-',
+                        'sks' => $krs->jadwalKuliah?->mataKuliah?->sks ?? 0,
+                        'kelas' => $krs->jadwalKuliah?->ruangan ?? '-',
+                        'status' => $krs->status,
+                    ])->values(),
+                ];
+            })
+            ->sortByDesc('periode_id')
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Batalkan seluruh mata kuliah KRS mahasiswa pada satu periode.
+     * Hanya diizinkan untuk periode yang tahun ajarannya sedang aktif.
+     */
+    public function cancelKrs(Mahasiswa $mahasiswa, PeriodeKrs $periodeKrs)
+    {
+        $periodeKrs->loadMissing('tahunAjaran');
+
+        if (! $periodeKrs->tahunAjaran || $periodeKrs->tahunAjaran->status !== 'aktif') {
+            return back()->with('error', 'Hanya KRS tahun ajaran aktif yang dapat dibatalkan.');
+        }
+
+        $rows = Krs::where('mahasiswa_id', $mahasiswa->id)
+            ->where('periode_krs_id', $periodeKrs->id)
+            ->whereIn('status', ['disetujui', 'menunggu_persetujuan'])
+            ->get();
+
+        if ($rows->isEmpty()) {
+            return back()->with('error', 'Tidak ada mata kuliah yang dapat dibatalkan pada periode ini.');
+        }
+
+        DB::transaction(function () use ($rows) {
+            foreach ($rows as $krs) {
+                $krs->update([
+                    'status' => 'dibatalkan',
+                    'catatan_admin' => 'Dibatalkan oleh admin ('.auth()->user()->name.')',
+                    'tanggal_approval' => now(),
+                    'approved_by' => auth()->id(),
+                ]);
+            }
+        });
+
+        return back()->with('success', $rows->count().' mata kuliah berhasil dibatalkan.');
+    }
+
+    /**
+     * Batalkan beberapa mata kuliah KRS pilihan admin.
+     * Hanya baris milik mahasiswa ini, berstatus disetujui/menunggu,
+     * dan periodenya bertahun ajaran aktif yang diproses.
+     */
+    public function bulkCancelKrs(Request $request, Mahasiswa $mahasiswa)
+    {
+        $data = $request->validate([
+            'krs_ids' => 'required|array|min:1',
+            'krs_ids.*' => 'integer',
+        ]);
+
+        $rows = Krs::with('periodeKrs.tahunAjaran')
+            ->where('mahasiswa_id', $mahasiswa->id)
+            ->whereIn('id', $data['krs_ids'])
+            ->whereIn('status', ['disetujui', 'menunggu_persetujuan'])
+            ->get()
+            ->filter(fn ($krs) => $krs->periodeKrs?->tahunAjaran?->status === 'aktif');
+
+        if ($rows->isEmpty()) {
+            return back()->with('error', 'Tidak ada mata kuliah terpilih yang dapat dibatalkan (hanya tahun ajaran aktif).');
+        }
+
+        DB::transaction(function () use ($rows) {
+            foreach ($rows as $krs) {
+                $krs->update([
+                    'status' => 'dibatalkan',
+                    'catatan_admin' => 'Dibatalkan oleh admin ('.auth()->user()->name.')',
+                    'tanggal_approval' => now(),
+                    'approved_by' => auth()->id(),
+                ]);
+            }
+        });
+
+        return back()->with('success', $rows->count().' mata kuliah berhasil dibatalkan.');
     }
 
     /**

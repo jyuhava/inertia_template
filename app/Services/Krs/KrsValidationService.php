@@ -109,6 +109,9 @@ class KrsValidationService
 
         foreach ($newSchedules as $newSchedule) {
             foreach ($existingItems as $item) {
+                if (! $item->kelasKuliah) {
+                    continue;
+                }
                 foreach ($item->kelasKuliah->jadwals as $existingSchedule) {
                     if ($existingSchedule->hari !== $newSchedule->hari) {
                         continue;

@@ -89,15 +89,16 @@ function InputError({ message }) {
 }
 
 export default function Edit({ periodeKrs, tahunAjarans, semesters }) {
+    const toDateInput = (value) => (value ? String(value).slice(0, 10) : '');
     const { data, setData, put, processing, errors } = useForm({
         nama_periode: periodeKrs.nama_periode || '',
         tahun_ajaran_id: periodeKrs.tahun_ajaran_id || '',
         semester_id: periodeKrs.semester_id || '',
-        tanggal_mulai: periodeKrs.tanggal_mulai || '',
-        tanggal_selesai: periodeKrs.tanggal_selesai || '',
+        tanggal_mulai: toDateInput(periodeKrs.tanggal_mulai),
+        tanggal_selesai: toDateInput(periodeKrs.tanggal_selesai),
         status: periodeKrs.status || 'tidak_aktif',
-        revisi_mulai: periodeKrs.revisi_mulai || '',
-        revisi_selesai: periodeKrs.revisi_selesai || '',
+        revisi_mulai: toDateInput(periodeKrs.revisi_mulai),
+        revisi_selesai: toDateInput(periodeKrs.revisi_selesai),
         wajib_persetujuan_pa: periodeKrs.wajib_persetujuan_pa || false,
         maksimal_sks: periodeKrs.maksimal_sks || '',
         minimal_sks: periodeKrs.minimal_sks || '',
@@ -156,7 +157,7 @@ export default function Edit({ periodeKrs, tahunAjarans, semesters }) {
                                     <option value="">Pilih Tahun Ajaran</option>
                                     {tahunAjarans.map((tahun) => (
                                         <option key={tahun.id} value={tahun.id}>
-                                            {tahun.tahun_mulai} - {tahun.tahun_selesai}
+                                            {tahun.nama_tahun_ajaran}
                                         </option>
                                     ))}
                                 </SelectInput>

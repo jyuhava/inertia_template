@@ -7,6 +7,7 @@ import {
     ChatBubbleLeftRightIcon,
     CheckBadgeIcon,
     ClipboardDocumentListIcon,
+    ClockIcon,
     ExclamationTriangleIcon,
     Squares2X2Icon,
 } from '@heroicons/react/24/outline';
@@ -106,13 +107,20 @@ function CourseCard({ course, index }) {
     const a = ACCENTS[accent];
     const progress = course.progress_percent ?? 0;
     const pending = Math.max(0, (course.assignments_count ?? 0) - (course.submitted_assignments ?? 0));
-
+    const clickable = Boolean(course.has_lms && course.can_access);
+    const Wrapper = clickable ? Link : 'div';
+    const wrapperProps = clickable
+        ? { href: route('mahasiswa.lms.show', course.lms_course_id) }
+        : {};
     const schedule = [course.hari, course.jam_mulai].filter(Boolean).join(', ');
+    const periodLabel = [course.periode?.tahun_ajaran, course.periode?.semester]
+        .filter(Boolean)
+        .join(' · ');
 
     return (
-        <Link
-            href={route('mahasiswa.lms.show', course.id)}
-            className={`group flex flex-col overflow-hidden rounded-xl bg-white ring-1 ring-neutral-200 transition duration-200 hover:-translate-y-0.5 hover:shadow-md ${a.hover}`}
+        <Wrapper
+            {...wrapperProps}
+            className={`group flex flex-col overflow-hidden rounded-xl bg-white ring-1 ring-neutral-200 transition duration-200 ${clickable ? `hover:-translate-y-0.5 hover:shadow-md ${a.hover}` : 'opacity-95'}`}
         >
             {/* Cover */}
             <div className={`relative h-14 shrink-0 overflow-hidden bg-gradient-to-br ${a.grad}`}>
@@ -146,10 +154,18 @@ function CourseCard({ course, index }) {
 
             {/* Body */}
             <div className="flex flex-1 flex-col p-3">
-                <h3 className="line-clamp-1 text-[13px] font-bold leading-snug text-neutral-900" title={course.mata_kuliah}>
-                    {course.mata_kuliah}
-                </h3>
+                <div className="flex items-start justify-between gap-2">
+                    <h3 className="line-clamp-1 text-[13px] font-bold leading-snug text-neutral-900" title={course.mata_kuliah}>
+                        {course.mata_kuliah}
+                    </h3>
+                    {course.is_active_period ? (
+                        <span className="shrink-0 rounded-md bg-emerald-50 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-700">
+                            Aktif
+                        </span>
+                    ) : null}
+                </div>
                 <p className="mt-0.5 truncate text-[11px] text-neutral-500">{course.dosen}</p>
+                {periodLabel ? <p className="mt-0.5 truncate text-[10px] text-neutral-400">{periodLabel}</p> : null}
 
                 {/* Meta line */}
                 <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[10px] font-medium text-neutral-500">
@@ -186,13 +202,19 @@ function CourseCard({ course, index }) {
                         </span>
                     )}
 
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-brand-700">
-                        Masuk
-                        <ArrowRightIcon className="h-3 w-3 transition group-hover:translate-x-0.5" />
-                    </span>
+                    {clickable ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-brand-700">
+                            Masuk
+                            <ArrowRightIcon className="h-3 w-3 transition group-hover:translate-x-0.5" />
+                        </span>
+                    ) : (
+                        <span className="text-right text-[10px] font-semibold text-neutral-400">
+                            {course.has_lms ? 'Menunggu persetujuan' : 'LMS belum tersedia'}
+                        </span>
+                    )}
                 </div>
             </div>
-        </Link>
+        </Wrapper>
     );
 }
 
@@ -200,8 +222,11 @@ function CourseCard({ course, index }) {
 /* Page                                                                */
 /* ------------------------------------------------------------------ */
 
-export default function Index({ courses = [], summary = {} }) {
+export default function Index({ courses = [], summary = {}, periodeAktif = null }) {
     const totalCourses = courses.length;
+    const activeCourses = summary.active_courses ?? courses.filter((course) => course.is_active_period).length;
+    const activeNow = courses.filter((course) => course.is_active_period);
+    const pastCourses = courses.filter((course) => !course.is_active_period);
     const totalMaterials = summary.materials ?? 0;
     const completedMaterials = summary.completed_materials ?? 0;
     const overallProgress = totalMaterials > 0 ? Math.round((completedMaterials / totalMaterials) * 100) : 0;
@@ -223,23 +248,30 @@ export default function Index({ courses = [], summary = {} }) {
                         <div className="min-w-0">
                             <h1 className="flex items-center gap-2 text-base font-bold text-white md:text-lg">
                                 <AcademicCapIcon className="h-5 w-5 shrink-0 text-white/80" />
-                                Kelas LMS Saya
+                                Kursus dari KRS Saya
                             </h1>
                             <p className="mt-0.5 text-[11px] text-white/80">
-                                Materi, tugas, dan forum diskusi mata kuliah semester aktif.
+                                Course yang terdaftar pada KRS, dengan periode aktif di paling atas.
                             </p>
                         </div>
 
                         <span className="inline-flex items-center gap-1.5 rounded-lg bg-white/15 px-2.5 py-1 text-[11px] font-bold text-white ring-1 ring-white/20">
                             <BookOpenIcon className="h-3.5 w-3.5" />
-                            {totalCourses} Kelas
+                            {totalCourses} Course
                         </span>
                     </div>
                 </div>
 
+                {periodeAktif ? (
+                    <div className="flex items-center justify-between gap-3 rounded-lg border border-brand-100 bg-brand-50 px-3 py-2 text-[11px] text-brand-800">
+                        <span className="font-semibold">Periode KRS aktif</span>
+                        <span className="truncate font-bold">{periodeAktif.nama} · {periodeAktif.tahun_ajaran} · {periodeAktif.semester}</span>
+                    </div>
+                ) : null}
+
                 {/* Compact stat strip */}
                 <section className="grid grid-cols-2 gap-px overflow-hidden rounded-xl bg-neutral-200 shadow-sm ring-1 ring-neutral-200 sm:grid-cols-4">
-                    <StatCell icon={BookOpenIcon} label="Kelas Aktif" value={totalCourses} accent="indigo" />
+                    <StatCell icon={BookOpenIcon} label="Course Aktif" value={activeCourses} accent="indigo" />
                     <StatCell
                         icon={CheckBadgeIcon}
                         label="Materi Selesai"
@@ -276,17 +308,61 @@ export default function Index({ courses = [], summary = {} }) {
                         <span className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-100 text-neutral-400">
                             <BookOpenIcon className="h-5 w-5" />
                         </span>
-                        <p className="mt-3 text-sm font-bold text-neutral-900">Belum ada kelas LMS</p>
+                        <p className="mt-3 text-sm font-bold text-neutral-900">Belum ada course KRS</p>
                         <p className="mx-auto mt-1 max-w-sm text-[11px] text-neutral-500">
-                            Kelas muncul di sini setelah dosen mengaktifkan LMS untuk mata kuliah yang Anda ambil.
+                            Course yang terdaftar pada KRS aktif akan tetap tampil di sini. Materi LMS dapat ditambahkan oleh dosen.
                         </p>
                     </div>
                 ) : (
-                    <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-                        {courses.map((course, index) => (
-                            <CourseCard key={course.id} course={course} index={index} />
-                        ))}
-                    </section>
+                    <div className="space-y-8">
+                        {/* Mata Kuliah Aktif Saat Ini */}
+                        <section>
+                            <div className="mb-3 flex items-center gap-2">
+                                <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
+                                    <BookOpenIcon className="h-3.5 w-3.5" />
+                                </span>
+                                <h2 className="text-[11px] font-bold uppercase tracking-[0.15em] text-neutral-900">
+                                    Mata Kuliah Aktif Saat Ini
+                                </h2>
+                                <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                                    {activeNow.length}
+                                </span>
+                            </div>
+                            {activeNow.length === 0 ? (
+                                <p className="rounded-xl border border-dashed border-neutral-300 bg-white p-5 text-center text-[11px] text-neutral-500">
+                                    Tidak ada mata kuliah pada periode KRS aktif.
+                                </p>
+                            ) : (
+                                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+                                    {activeNow.map((course, index) => (
+                                        <CourseCard key={course.lms_course_id ?? `krs-${course.krs_id}`} course={course} index={index} />
+                                    ))}
+                                </div>
+                            )}
+                        </section>
+
+                        {/* Mata Kuliah Lampau */}
+                        {pastCourses.length > 0 && (
+                            <section>
+                                <div className="mb-3 flex items-center gap-2">
+                                    <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-neutral-200 text-neutral-600">
+                                        <ClockIcon className="h-3.5 w-3.5" />
+                                    </span>
+                                    <h2 className="text-[11px] font-bold uppercase tracking-[0.15em] text-neutral-900">
+                                        Mata Kuliah Lampau
+                                    </h2>
+                                    <span className="rounded-full bg-neutral-200 px-2 py-0.5 text-[10px] font-bold text-neutral-600">
+                                        {pastCourses.length}
+                                    </span>
+                                </div>
+                                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+                                    {pastCourses.map((course, index) => (
+                                        <CourseCard key={course.lms_course_id ?? `krs-${course.krs_id}`} course={course} index={index} />
+                                    ))}
+                                </div>
+                            </section>
+                        )}
+                    </div>
                 )}
             </div>
         </AdminLayout>

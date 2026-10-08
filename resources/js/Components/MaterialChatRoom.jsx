@@ -85,8 +85,19 @@ export default function MaterialChatRoom({
             ]);
             scrollToBottom();
         } catch (e) {
-            const apiMessage = e?.response?.data?.message;
-            setError(apiMessage || e.message || 'Terjadi kesalahan saat chat AI.');
+            // Server bisa membalas HTML (timeout/proxy); jangan sampai pesan aslinya hilang.
+            const data = e?.response?.data;
+            const apiMessage = typeof data === 'string' ? null : data?.message;
+            const isHtmlResponse = typeof data === 'string' && /^\s*<(!doctype|html)/i.test(data);
+
+            setError(
+                apiMessage
+                    || (isHtmlResponse
+                        ? 'Layanan AI terlalu lama merespons sehingga koneksi terputus. Silakan coba lagi.'
+                        : null)
+                    || e.message
+                    || 'Terjadi kesalahan saat chat AI.',
+            );
         } finally {
             setSending(false);
         }

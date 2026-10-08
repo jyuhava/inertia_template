@@ -121,6 +121,12 @@ export default function Index({ mahasiswas, filters, totalMahasiswa, filteredCou
         }
     };
 
+    const impersonate = (type, row) => {
+        const nama = type === 'mahasiswa' ? row.nama_lengkap : row.nama_lengkap;
+        if (!confirm(`Login sebagai ${nama}? Anda akan masuk ke akun ${nama} dan bisa kembali kapan saja.`)) return;
+        router.post(route('admin.impersonate.store', [type, row.id]));
+    };
+
     const handleSort = (column) => {
         const dir = filters.sort_by === column && filters.sort_dir === 'asc' ? 'desc' : 'asc';
         applyFilters({ sort_by: column, sort_dir: dir });
@@ -274,6 +280,9 @@ export default function Index({ mahasiswas, filters, totalMahasiswa, filteredCou
                                         <td data-label="Aksi" className="px-5 py-4 whitespace-nowrap text-right">
                                             <div className="flex justify-end gap-2">
                                                 <ActionButton href={route('admin.mahasiswa.show', mahasiswa.id)} variant="secondary">Detail</ActionButton>
+                                                {mahasiswa.user && (
+                                                    <ActionButton onClick={() => impersonate('mahasiswa', mahasiswa)} variant="primary">Login As</ActionButton>
+                                                )}
                                                 <ActionButton onClick={() => handleDelete(mahasiswa)} variant="danger">Hapus</ActionButton>
                                             </div>
                                         </td>

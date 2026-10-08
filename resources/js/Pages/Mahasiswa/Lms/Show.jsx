@@ -1,6 +1,6 @@
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import InputError from '@/Components/InputError';
 import Modal from '@/Components/Modal';
 import RichTextEditor from '@/Components/RichTextEditor';
@@ -12,6 +12,7 @@ import {
     CalendarDaysIcon,
     ChatBubbleLeftRightIcon,
     CheckCircleIcon,
+    ChevronDownIcon,
     ChevronRightIcon,
     ClipboardDocumentListIcon,
     DocumentTextIcon,
@@ -116,9 +117,15 @@ function MaterialRow({ material, done }) {
                 <p className="truncate text-xs font-semibold text-neutral-900">{material.title}</p>
                 <p className="truncate text-[10px] uppercase tracking-wider text-neutral-400">
                     {material.type || 'Materi'}
-                    {done ? ' • selesai' : ''}
                 </p>
             </div>
+            <span
+                className={`shrink-0 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
+                    done ? 'bg-emerald-50 text-emerald-700' : 'bg-neutral-100 text-neutral-500'
+                }`}
+            >
+                {done ? 'Selesai' : 'Belum'}
+            </span>
             <ChevronRightIcon className="h-3.5 w-3.5 shrink-0 text-neutral-300 transition group-hover:translate-x-0.5 group-hover:text-neutral-500" />
         </Link>
     );
@@ -183,8 +190,25 @@ function ForumRow({ forum }) {
 
 export default function Show({ course, progress, submissions }) {
     const [selectedAssignment, setSelectedAssignment] = useState(null);
+    const [openChapters, setOpenChapters] = useState([]);
 
     const chapters = course?.chapters || [];
+
+    // Topik pertama yang punya materi dibuka otomatis supaya mahasiswa langsung
+    // melihat konten tanpa perlu klik dulu.
+    useEffect(() => {
+        setOpenChapters((current) => {
+            if (current.length > 0) return current;
+            const firstWithContent = chapters.find((c) => (c.materials?.length || 0) > 0);
+            return firstWithContent ? [firstWithContent.id] : [];
+        });
+    }, [chapters]);
+
+    const toggleChapter = (id) => {
+        setOpenChapters((current) =>
+            current.includes(id) ? current.filter((x) => x !== id) : [...current, id],
+        );
+    };
     const mataKuliah = course?.jadwal_kuliah?.mata_kuliah;
     const jadwal = course?.jadwal_kuliah;
 
@@ -315,91 +339,161 @@ export default function Show({ course, progress, submissions }) {
                         </p>
                     </div>
                 ) : (
-                    <section className="space-y-3">
+                    <section className="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-neutral-200">
                         {chapters.map((chapter, idx) => {
                             const chapterMaterials = chapter.materials || [];
                             const chapterAssignments = chapter.assignments || [];
                             const chapterForums = chapter.forums || [];
-                            const chapterCompleted = chapterMaterials.filter((m) => !!progress?.[m.id]).length;
+                            const done = chapterMaterials.filter((m) => !!progress?.[m.id]).length;
+                            const total = chapterMaterials.length;
+                            const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+                            const isComplete = total > 0 && done === total;
+                            const isEmpty =
+                                chapterMaterials.length === 0 &&
+                                chapterAssignments.length === 0 &&
+                                chapterForums.length === 0;
+                            const open = openChapters.includes(chapter.id);
+
+                            // Warna kepala topik mengikuti status: hijau = selesai,
+                            // emas = sedang berjalan, abu = belum ada materi.
+                            const head = isComplete
+                                ? 'bg-emerald-500'
+                                : total > 0
+                                    ? 'bg-brand-600'
+                                    : 'bg-neutral-300';
+                            const headSoft = isComplete
+                                ? 'bg-emerald-50 hover:bg-emerald-100'
+                                : total > 0
+                                    ? 'bg-brand-50 hover:bg-brand-100'
+                                    : 'bg-neutral-50 hover:bg-neutral-100';
 
                             return (
                                 <article
                                     key={chapter.id}
-                                    className="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-neutral-200"
+                                    className={idx > 0 ? 'border-t border-neutral-200' : ''}
                                 >
-                                    {/* Chapter header */}
-                                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-200 bg-neutral-50 px-3 py-2.5">
-                                        <div className="flex min-w-0 items-center gap-2.5">
-                                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-[11px] font-black text-brand-700">
-                                                {String(idx + 1).padStart(2, '0')}
+                                    {/* Kepala topik berwarna — diklik untuk buka/tutup */}
+                                    <button
+                                        type="button"
+                                        onClick={() => toggleChapter(chapter.id)}
+                                        aria-expanded={open}
+                                        className={`flex w-full items-stretch text-left transition ${headSoft}`}
+                                    >
+                                        <span className={`w-1.5 shrink-0 ${head}`} aria-hidden="true" />
+
+                                        <span className="flex min-w-0 flex-1 items-center gap-3.5 px-4 py-3.5 sm:px-5">
+                                            <span
+                                                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[11px] font-black text-white ${head}`}
+                                            >
+                                                {isComplete ? (
+                                                    <CheckCircleIcon className="h-4 w-4" />
+                                                ) : (
+                                                    String(idx + 1).padStart(2, '0')
+                                                )}
                                             </span>
-                                            <div className="min-w-0">
-                                                <h2 className="truncate text-[13px] font-bold text-neutral-900">{chapter.title}</h2>
-                                                <p className="text-[10px] text-neutral-500">
-                                                    {chapterCompleted}/{chapterMaterials.length} materi selesai
+
+                                            <span className="min-w-0 flex-1">
+                                                <span className="block text-[10px] font-bold uppercase tracking-wider text-neutral-500">
+                                                    Topik {idx + 1}
+                                                </span>
+                                                <span className="mt-0.5 block truncate text-[13px] font-bold text-neutral-900">
+                                                    {chapter.title}
+                                                </span>
+                                            </span>
+
+                                            <span className="min-w-0 flex-1">
+                                                <span className="mt-0.5 block text-[10px] text-neutral-500">
+                                                    {(() => {
+                                                        if (isEmpty) {
+                                                            return 'Belum ada materi, tugas, atau forum';
+                                                        }
+
+                                                        return [
+                                                            total > 0
+                                                                ? `${done}/${total} materi selesai`
+                                                                : null,
+                                                            chapterAssignments.length > 0
+                                                                ? `${chapterAssignments.length} tugas`
+                                                                : null,
+                                                            chapterForums.length > 0
+                                                                ? `${chapterForums.length} forum`
+                                                                : null,
+                                                        ]
+                                                            .filter(Boolean)
+                                                            .join(' · ');
+                                                    })()}
+                                                </span>
+                                            </span>
+
+                                            {total > 0 ? (
+                                                <span className="hidden w-28 shrink-0 sm:block">
+                                                    <span className="block h-1.5 overflow-hidden rounded-full bg-white/70">
+                                                        <span
+                                                            className={`block h-full rounded-full transition-all duration-500 ${
+                                                                isComplete ? 'bg-emerald-500' : 'bg-brand-600'
+                                                            }`}
+                                                            style={{ width: `${pct}%` }}
+                                                        />
+                                                    </span>
+                                                </span>
+                                            ) : null}
+
+                                            {total > 0 ? (
+                                                <span
+                                                    className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold tabular-nums ${
+                                                        isComplete
+                                                            ? 'bg-emerald-100 text-emerald-800'
+                                                            : 'bg-white/80 text-neutral-700'
+                                                    }`}
+                                                >
+                                                    {pct}%
+                                                </span>
+                                            ) : null}
+
+                                            <ChevronDownIcon
+                                                className={`h-4 w-4 shrink-0 text-neutral-500 transition-transform duration-200 ${
+                                                    open ? 'rotate-180' : ''
+                                                }`}
+                                            />
+                                        </span>
+                                    </button>
+
+                                    {/* Isi topik: satu daftar aktivitas seragam, diindentasi
+                                        agar jelas merupakan isi dari topik di atasnya. */}
+                                    {open ? (
+                                        <div className="border-t border-neutral-100 bg-neutral-50/70 px-4 py-3 sm:px-5 sm:py-4">
+                                            {isEmpty ? (
+                                                <p className="py-3 text-center text-[11px] text-neutral-400">
+                                                    Topik ini belum memiliki materi, tugas, atau forum.
                                                 </p>
-                                            </div>
+                                            ) : (
+                                                <ul className="ml-9 space-y-2 border-l-2 border-neutral-200 pl-3 sm:ml-10 sm:pl-4">
+                                                    {chapterMaterials.map((material) => (
+                                                        <li key={`m-${material.id}`}>
+                                                            <MaterialRow
+                                                                material={material}
+                                                                done={!!progress?.[material.id]}
+                                                            />
+                                                        </li>
+                                                    ))}
+                                                    {chapterAssignments.map((assignment) => (
+                                                        <li key={`a-${assignment.id}`}>
+                                                            <AssignmentRow
+                                                                assignment={assignment}
+                                                                submission={submissions?.[assignment.id]}
+                                                                onOpen={() => setSelectedAssignment(assignment)}
+                                                            />
+                                                        </li>
+                                                    ))}
+                                                    {chapterForums.map((forum) => (
+                                                        <li key={`f-${forum.id}`}>
+                                                            <ForumRow forum={forum} />
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            )}
                                         </div>
-
-                                        <div className="flex flex-wrap items-center gap-1.5">
-                                            <CountChip icon={BookOpenIcon} count={chapterMaterials.length} tone="indigo" />
-                                            <CountChip icon={ClipboardDocumentListIcon} count={chapterAssignments.length} tone="violet" />
-                                            <CountChip icon={ChatBubbleLeftRightIcon} count={chapterForums.length} tone="sky" />
-                                        </div>
-                                    </div>
-
-                                    {/* Chapter body */}
-                                    <div className="grid grid-cols-1 gap-3 p-3 lg:grid-cols-12">
-                                        <div className="lg:col-span-7">
-                                            <h3 className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-neutral-500">
-                                                Materi
-                                            </h3>
-                                            <div className="space-y-1.5">
-                                                {chapterMaterials.length === 0 ? (
-                                                    <EmptyMini text="Belum ada materi." />
-                                                ) : (
-                                                    chapterMaterials.map((material) => (
-                                                        <MaterialRow
-                                                            key={material.id}
-                                                            material={material}
-                                                            done={!!progress?.[material.id]}
-                                                        />
-                                                    ))
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        <div className="lg:col-span-5">
-                                            <h3 className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-neutral-500">
-                                                Tugas
-                                            </h3>
-                                            <div className="space-y-1.5">
-                                                {chapterAssignments.length === 0 ? (
-                                                    <EmptyMini text="Belum ada tugas." />
-                                                ) : (
-                                                    chapterAssignments.map((assignment) => (
-                                                        <AssignmentRow
-                                                            key={assignment.id}
-                                                            assignment={assignment}
-                                                            submission={submissions?.[assignment.id]}
-                                                            onOpen={() => setSelectedAssignment(assignment)}
-                                                        />
-                                                    ))
-                                                )}
-                                            </div>
-
-                                            <h3 className="mb-1.5 mt-3 text-[10px] font-bold uppercase tracking-wider text-neutral-500">
-                                                Forum
-                                            </h3>
-                                            <div className="space-y-1.5">
-                                                {chapterForums.length === 0 ? (
-                                                    <EmptyMini text="Belum ada forum." />
-                                                ) : (
-                                                    chapterForums.map((forum) => <ForumRow key={forum.id} forum={forum} />)
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
+                                    ) : null}
                                 </article>
                             );
                         })}

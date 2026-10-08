@@ -83,7 +83,7 @@ function fmtDate(value, withTime = false) {
 
 const TABS = [
     'Overview', 'Biodata', 'Kontak', 'Alamat', 'Orang Tua/Wali', 'Registrasi',
-    'Riwayat Pendidikan', 'Riwayat Status', 'Kebutuhan Khusus', 'Beasiswa/Bantuan', 'Dokumen', 'PDDikti',
+    'Riwayat Pendidikan', 'Riwayat Status', 'Kebutuhan Khusus', 'Beasiswa/Bantuan', 'Dokumen', 'PDDikti', 'Riwayat KRS',
 ];
 
 function TabButton({ label, active, onClick }) {
@@ -865,7 +865,117 @@ function PddiktiTab({ mahasiswa }) {
     );
 }
 
-export default function Show({ mahasiswa, tahunAjarans }) {
+function RiwayatKrsTab({ mahasiswa, riwayatKrs }) {
+    const [selected, setSelected] = useState({});
+    const cancel = (periode) => {
+        if (!confirm(`Batalkan seluruh (${periode.dapat_dibatalkan}) mata kuliah pada ${periode.nama_periode}?`)) return;
+        router.post(route('admin.mahasiswa.krs.cancel', [mahasiswa.id, periode.periode_id]));
+    };
+    const toggle = (periodeId, itemId) => {
+        setSelected((prev) => {
+            const current = prev[periodeId] || [];
+            return {
+                ...prev,
+                [periodeId]: current.includes(itemId) ? current.filter((id) => id !== itemId) : [...current, itemId],
+            };
+        });
+    };
+    const toggleAll = (periode) => {
+        const cancellable = periode.items.filter((i) => ['disetujui', 'menunggu_persetujuan'].includes(i.status)).map((i) => i.id);
+        setSelected((prev) => {
+            const current = prev[periode.periode_id] || [];
+            const allChecked = cancellable.length > 0 && cancellable.every((id) => current.includes(id));
+            return { ...prev, [periode.periode_id]: allChecked ? [] : cancellable };
+        });
+    };
+    const bulkCancel = (periode) => {
+        const ids = selected[periode.periode_id] || [];
+        if (ids.length === 0) return;
+        if (!confirm(`Batalkan ${ids.length} mata kuliah terpilih pada ${periode.nama_periode}?`)) return;
+        router.post(route('admin.mahasiswa.krs.bulk-cancel', mahasiswa.id), { krs_ids: ids }, {
+            onSuccess: () => setSelected((prev) => ({ ...prev, [periode.periode_id]: [] })),
+        });
+    };
+    return (
+        <div className="space-y-6">
+            {(riwayatKrs || []).map((periode) => {
+                const ids = selected[periode.periode_id] || [];
+                const cancellable = periode.items.filter((i) => ['disetujui', 'menunggu_persetujuan'].includes(i.status));
+                const allChecked = cancellable.length > 0 && cancellable.every((i) => ids.includes(i.id));
+                return (
+                <Box key={periode.periode_id} padded={false} className="overflow-hidden">
+                    <div className="px-6 py-4 border-b border-[#e5e5e5] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div>
+                            <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-neutral-900">{periode.nama_periode}</h2>
+                            <p className="text-xs text-neutral-500 mt-1">
+                                {periode.semester || '-'} &bull; TA {periode.tahun_ajaran || '-'} &bull;{' '}
+                                <span className={periode.tahun_ajaran_aktif ? 'font-bold text-green-700' : ''}>
+                                    {periode.tahun_ajaran_aktif ? 'Tahun ajaran aktif' : 'Tahun ajaran tidak aktif'}
+                                </span>
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                            {periode.tahun_ajaran_aktif && ids.length > 0 && (
+                                <ActionButton variant="danger" onClick={() => bulkCancel(periode)}>
+                                    Batalkan {ids.length} Terpilih
+                                </ActionButton>
+                            )}
+                            {periode.tahun_ajaran_aktif && periode.dapat_dibatalkan > 0 && (
+                                <ActionButton variant="danger" onClick={() => cancel(periode)}>
+                                    Batalkan {periode.dapat_dibatalkan} Matkul
+                                </ActionButton>
+                            )}
+                        </div>
+                    </div>
+                    <table className="min-w-full divide-y divide-[#e5e5e5]">
+                        <thead className="bg-[#fafafa]">
+                            <tr>
+                                {periode.tahun_ajaran_aktif && (
+                                    <th className="px-4 py-3 text-left">
+                                        <input type="checkbox" checked={allChecked} onChange={() => toggleAll(periode)} disabled={cancellable.length === 0} />
+                                    </th>
+                                )}
+                                <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-neutral-500">Kode</th>
+                                <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-neutral-500">Mata Kuliah</th>
+                                <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-neutral-500">Kelas</th>
+                                <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-neutral-500">SKS</th>
+                                <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-neutral-500">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#e5e5e5]">
+                            {periode.items.map((item) => {
+                                const canSelect = periode.tahun_ajaran_aktif && ['disetujui', 'menunggu_persetujuan'].includes(item.status);
+                                return (
+                                <tr key={item.id}>
+                                    {periode.tahun_ajaran_aktif && (
+                                        <td className="px-4 py-3">
+                                            <input type="checkbox" checked={ids.includes(item.id)} disabled={!canSelect} onChange={() => toggle(periode.periode_id, item.id)} />
+                                        </td>
+                                    )}
+                                    <td className="px-4 py-3 text-sm font-bold">{item.kode}</td>
+                                    <td className="px-4 py-3 text-sm">{item.nama}</td>
+                                    <td className="px-4 py-3 text-sm">{item.kelas}</td>
+                                    <td className="px-4 py-3 text-sm">{item.sks}</td>
+                                    <td className="px-4 py-3 text-sm capitalize">{item.status?.replace(/_/g, ' ')}</td>
+                                </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                    <div className="px-6 py-3 bg-[#fafafa] text-xs text-neutral-500">
+                        Total {periode.total} &bull; Disetujui {periode.disetujui} &bull; Menunggu {periode.menunggu} &bull; Dibatalkan {periode.dibatalkan} &bull; Ditolak {periode.ditolak}
+                    </div>
+                </Box>
+                );
+            })}
+            {(!riwayatKrs || riwayatKrs.length === 0) && (
+                <Box><p className="text-sm text-neutral-500 text-center py-4">Belum ada riwayat KRS.</p></Box>
+            )}
+        </div>
+    );
+}
+
+export default function Show({ mahasiswa, tahunAjarans, riwayatKrs }) {
     const [tab, setTab] = useState('Overview');
 
     return (
@@ -909,6 +1019,7 @@ export default function Show({ mahasiswa, tahunAjarans }) {
                 {tab === 'Beasiswa/Bantuan' && <BeasiswaTab mahasiswa={mahasiswa} />}
                 {tab === 'Dokumen' && <DokumenTab mahasiswa={mahasiswa} />}
                 {tab === 'PDDikti' && <PddiktiTab mahasiswa={mahasiswa} />}
+                {tab === 'Riwayat KRS' && <RiwayatKrsTab mahasiswa={mahasiswa} riwayatKrs={riwayatKrs} />}
             </div>
         </AdminLayout>
     );

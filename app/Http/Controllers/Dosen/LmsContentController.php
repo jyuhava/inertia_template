@@ -12,10 +12,12 @@ use App\Models\LmsForum;
 use App\Models\LmsForumThread;
 use App\Models\LmsForumReply;
 use App\Models\Penilaian;
+use App\Jobs\GenerateMaterialDraftJob;
+use App\Models\AiJob;
+use App\Services\Ai\ChatClient;
 use App\Services\LmsMaterialAssistantService;
 use App\Services\LmsPenilaianSyncService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
@@ -336,78 +338,55 @@ class LmsContentController extends Controller
         return redirect()->route('dosen.lms.show', $chapter->lms_course_id)->with('success', 'Materi berhasil ditambahkan');
     }
 
+    /**
+     * Membuat draft materi AI secara asinkron.
+     *
+     * Panggilan LLM butuh 90-150 detik, sedangkan shared hosting memutus
+     * request web di atas ~55 detik. Jadi request ini hanya mengantre
+     * pekerjaan dan langsung mengembalikan id job; frontend lalu polling
+     * endpoint status sampai selesai.
+     */
     public function generateMaterialDraft(Request $request, LmsChapter $chapter)
     {
-        @set_time_limit(120);
-
         $validated = $request->validate([
             'prompt' => 'required|string|max:3000',
         ]);
 
-        $apiKey = config('services.openrouter.api_key');
-        if (!$apiKey) {
+        if (! config('services.atria.api_key')) {
             return response()->json([
-                'message' => 'OPENROUTER_API_KEY belum diatur di environment.',
+                'message' => 'ATRIA_API_KEY belum diatur di environment.',
             ], 422);
         }
 
-        $chapter->loadMissing('course.jadwalKuliah.mataKuliah');
-        $courseName = $chapter->course?->jadwalKuliah?->mataKuliah?->nama_mata_kuliah ?? 'Mata Kuliah';
+        $aiJob = AiJob::create([
+            'user_id' => $request->user()->id,
+            'type' => AiJob::TYPE_GENERATE_DRAFT,
+            'status' => 'pending',
+            'input' => [
+                'chapter_id' => $chapter->id,
+                'prompt' => $validated['prompt'],
+            ],
+        ]);
 
-        $systemPrompt = "Kamu adalah asisten dosen untuk membuat materi kuliah berbahasa Indonesia. "
-            ."Keluarkan konten dalam format HTML sederhana yang rapi (h2, h3, p, ul, ol, li, blockquote) "
-            ."tanpa tag html/body/script. Fokus praktis, terstruktur, akademik, dan siap ditempel ke rich text editor.";
-
-        $userPrompt = "Mata kuliah: {$courseName}\n"
-            ."Bab: {$chapter->title}\n"
-            ."Permintaan dosen: {$validated['prompt']}\n\n"
-            ."Buat: judul materi singkat + isi materi lengkap.";
-
-        try {
-            $response = Http::timeout(120)
-                ->withHeaders([
-                    'Authorization' => 'Bearer '.$apiKey,
-                    'Content-Type' => 'application/json',
-                    'HTTP-Referer' => config('app.url'),
-                    'X-Title' => config('app.name'),
-                ])
-                ->post('https://openrouter.ai/api/v1/chat/completions', [
-                    'model' => 'openai/gpt-oss-120b:free',
-                    'messages' => [
-                        ['role' => 'system', 'content' => $systemPrompt],
-                        ['role' => 'user', 'content' => $userPrompt],
-                    ],
-                    'reasoning' => [
-                        'enabled' => true,
-                    ],
-                ]);
-        } catch (\Throwable $e) {
-            return response()->json([
-                'message' => 'Gagal terhubung ke OpenRouter: '.$e->getMessage(),
-            ], 500);
-        }
-
-        if (!$response->successful()) {
-            return response()->json([
-                'message' => 'OpenRouter error.',
-                'detail' => $response->json(),
-            ], 502);
-        }
-
-        $content = data_get($response->json(), 'choices.0.message.content', '');
-        if (is_array($content)) {
-            $content = collect($content)->pluck('text')->filter()->implode("\n");
-        }
-
-        $content = trim((string) $content);
-        if ($content === '') {
-            return response()->json([
-                'message' => 'Model tidak mengembalikan konten.',
-            ], 422);
-        }
+        GenerateMaterialDraftJob::dispatch($aiJob->id);
 
         return response()->json([
-            'content' => $content,
+            'job_id' => $aiJob->id,
+            'message' => 'Permintaan terkirim. Materi sedang dibuat oleh AI, biasanya 1-2 menit.',
+        ], 202);
+    }
+
+    /**
+     * Status pekerjaan AI untuk polling frontend.
+     */
+    public function aiJobStatus(Request $request, AiJob $aiJob)
+    {
+        abort_unless($aiJob->user_id === $request->user()->id, 403);
+
+        return response()->json([
+            'status' => $aiJob->status,
+            'content' => $aiJob->status === 'done' ? $aiJob->result : null,
+            'message' => $aiJob->error,
         ]);
     }
 

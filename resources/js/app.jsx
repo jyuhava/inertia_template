@@ -58,6 +58,8 @@ const routeTemplates = {
         'admin.mahasiswa.kebutuhan-khusus.store': '/admin/mahasiswa/{mahasiswa}/kebutuhan-khusus',
         'admin.mahasiswa.kontak.destroy': '/admin/mahasiswa/{mahasiswa}/kontak/{kontak}',
         'admin.mahasiswa.kontak.store': '/admin/mahasiswa/{mahasiswa}/kontak',
+        'admin.mahasiswa.krs.cancel': '/admin/mahasiswa/{mahasiswa}/krs/{periodeKrs}/cancel',
+        'admin.mahasiswa.krs.bulk-cancel': '/admin/mahasiswa/{mahasiswa}/krs/bulk-cancel',
         'admin.mahasiswa.orang-tua.store': '/admin/mahasiswa/{mahasiswa}/orang-tua',
         'admin.mahasiswa.pddikti.mapping.update': '/admin/mahasiswa/{mahasiswa}/pddikti/mapping',
         'admin.mahasiswa.pddikti.sync': '/admin/mahasiswa/{mahasiswa}/pddikti/sync',
@@ -127,6 +129,8 @@ window.route = (name, params = {}) => {
         'admin.dashboard': '/admin/dashboard',
         'mahasiswa.dashboard': '/mahasiswa/dashboard',
         'dosen.dashboard': '/dosen/dashboard',
+        'admin.impersonate.store': '/admin/impersonate/{type}/{id}',
+        'admin.impersonate.stop': '/admin/impersonate/stop',
         'admin.mahasiswa.index': '/admin/mahasiswa',
         'admin.mahasiswa.create': '/admin/mahasiswa/create',
         'admin.mahasiswa.store': '/admin/mahasiswa',
@@ -324,6 +328,7 @@ window.route = (name, params = {}) => {
         'dosen.lms.materials.create': (id) => `/dosen/lms/chapters/${id}/materials/create`,
         'dosen.lms.materials.store': (id) => `/dosen/lms/chapters/${id}/materials`,
         'dosen.lms.materials.generate': (id) => `/dosen/lms/chapters/${id}/materials/generate`,
+        'dosen.lms.ai.jobs.status': (id) => `/dosen/lms/ai/jobs/${id}`,
         'dosen.lms.materials.show': (id) => `/dosen/lms/materials/${id}/view`,
         'dosen.lms.materials.edit': (id) => `/dosen/lms/materials/${id}/edit`,
         'dosen.lms.materials.update': (id) => `/dosen/lms/materials/${id}`,
@@ -479,6 +484,12 @@ window.route = (name, params = {}) => {
         return route(params);
     }
     if (typeof route === 'string') {
+        // Template ber-placeholder HARUS selalu diisi, apa pun bentuk params
+        // (skalar, array, atau objek). Tanpa ini, URL placeholder mentah
+        // ikut terkirim ke server, mis. /admin/impersonate/{type}/{id}.
+        if (/\{[^}]+\}/.test(route)) {
+            return fillTemplate(route, params);
+        }
         if (params && typeof params === 'object' && !Array.isArray(params) && Object.keys(params).length > 0) {
             const queryParams = new URLSearchParams();
             Object.entries(params).forEach(([key, val]) => {

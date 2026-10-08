@@ -4,6 +4,7 @@ import TopNavbar from '@/Components/TopNavbar';
 import MobileBottomNav from '@/Components/MobileBottomNav';
 import PwaInstallPrompt from '@/Components/PwaInstallPrompt';
 import FlashMessage from '@/Components/FlashMessage';
+import ImpersonationBanner from '@/Components/ImpersonationBanner';
 
 export default function AdminLayout({ children, title = 'Dashboard' }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -48,7 +49,9 @@ export default function AdminLayout({ children, title = 'Dashboard' }) {
     }, []);
 
     return (
-        <div className="flex min-h-dvh bg-[#f4f4f5]">
+        <div className="flex min-h-dvh flex-col bg-[#f4f4f5]">
+            <ImpersonationBanner />
+            <div className="flex flex-1">
             {/* Sidebar — desktop */}
             <div className={`hidden lg:block lg:flex-shrink-0 ${sidebarCollapsed ? 'lg:w-16' : 'lg:w-64'}`}>
                 <div className="fixed inset-y-0 left-0 z-30 h-screen">
@@ -97,6 +100,7 @@ export default function AdminLayout({ children, title = 'Dashboard' }) {
 
             {/* Flash Messages */}
             <FlashMessage />
+            </div>
         </div>
     );
 }

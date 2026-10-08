@@ -292,53 +292,38 @@ function StaffSidebar({ isOpen, isCollapsed, toggleSidebar, toggleCollapse }) {
         }
     ];
 
-    // Tema sidebar: mahasiswa = hitam dominan, role lain = putih bersih.
-    const dark = user.role === 'mahasiswa';
+    // Token visual disamakan persis dengan MahasiswaSidebar di bawah, supaya
+    // sidebar admin, dosen, dan mahasiswa benar-benar satu sistem.
+    const panelBg = 'bg-neutral-950';
+    const panelText = 'text-neutral-100';
+    const lineBorder = 'border-white/5';
+    const mutedCls = 'text-brand-400';
+    const logoBoxCls = 'bg-gradient-to-br from-brand-400 to-brand-700 shadow-lg shadow-brand-900/40 ring-1 ring-white/10';
+    const dotCls = 'bg-brand-400';
+    const ghostBtnCls = 'text-neutral-500 hover:bg-white/5 hover:text-white';
+    const closeBtnCls = 'rounded-lg text-neutral-500 hover:bg-white/5 hover:text-white';
 
-    const panelBg = dark ? 'bg-neutral-950' : 'bg-white';
-    const panelText = dark ? 'text-neutral-100' : 'text-neutral-900';
-    const lineBorder = dark ? 'border-neutral-800' : 'border-neutral-200';
-    const lineBg = dark ? 'bg-neutral-800' : 'bg-neutral-200';
-    const titleCls = dark ? 'text-white' : 'text-neutral-900';
-    const mutedCls = dark ? 'text-neutral-500' : 'text-neutral-500';
-    const iconBoxCls = dark ? 'border-neutral-800 bg-neutral-900' : 'border-brand-200 bg-brand-50';
-    const iconTextCls = dark ? 'text-brand-400' : 'text-brand-700';
-    const dotCls = dark ? 'bg-brand-400' : 'bg-brand-500';
-    const ghostBtnCls = dark
-        ? 'text-neutral-400 hover:border-neutral-800 hover:bg-white/5 hover:text-white'
-        : 'text-neutral-600 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-800';
-    const closeBtnCls = dark
-        ? 'border-neutral-800 text-neutral-400 hover:border-neutral-600 hover:text-white'
-        : 'border-neutral-200 text-neutral-500 hover:border-neutral-300 hover:text-neutral-900';
+    const activeCls = 'rounded-xl bg-brand-500/15 text-brand-300';
+    const inactiveCls = 'rounded-xl text-neutral-400 hover:bg-white/5 hover:text-white';
+    const subInactiveCls = 'rounded-lg text-neutral-500 hover:bg-white/5 hover:text-white';
 
-    const activeCls = dark
-        ? 'rounded-lg bg-brand-500/15 text-brand-300'
-        : 'rounded-lg bg-brand-50 text-brand-800';
-    const inactiveCls = dark
-        ? 'rounded-lg text-neutral-400 hover:text-white hover:bg-white/5'
-        : 'rounded-lg text-neutral-600 hover:text-brand-800 hover:bg-brand-50';
-    const subInactiveCls = dark
-        ? 'rounded-md text-neutral-500 hover:text-white hover:bg-white/5'
-        : 'rounded-md text-neutral-500 hover:text-brand-800 hover:bg-brand-50';
-
-    const cardCls = dark ? 'border border-white/10 bg-white/5' : 'border border-neutral-200 bg-neutral-50';
-    const groupLabelCls = dark ? 'text-neutral-600' : 'text-neutral-400';
+    const cardCls = 'rounded-2xl bg-gradient-to-br from-brand-500/20 via-white/[0.04] to-transparent ring-1 ring-white/10';
 
     const navItemClass = (active) => `
-        flex items-center text-xs font-bold uppercase tracking-widest transition-colors duration-200 relative group
-        ${collapsed ? 'px-2.5 py-2 justify-center' : isMobile ? 'px-3.5 py-3' : 'px-3.5 py-2'}
+        group relative flex items-center gap-3 text-[12px] font-bold transition-all duration-150
+        ${collapsed ? 'px-2.5 py-2.5 justify-center' : isMobile ? 'px-2.5 py-2.5' : 'px-2.5 py-2.5'}
         ${active ? activeCls : inactiveCls}
     `;
 
     const categoryButtonClass = (active) => `
-        w-full flex items-center text-xs font-bold uppercase tracking-widest transition-colors duration-200 relative group
-        ${collapsed ? 'px-2.5 py-2 justify-center' : isMobile ? 'px-3.5 py-3 justify-between' : 'px-3.5 py-2 justify-between'}
+        w-full flex items-center text-[12px] font-bold transition-all duration-150 group
+        ${collapsed ? 'px-2.5 py-2.5 justify-center' : isMobile ? 'px-2.5 py-2.5 justify-between' : 'px-2.5 py-2.5 justify-between'}
         ${active ? activeCls : inactiveCls}
     `;
 
     const subItemClass = (active) => `
-        flex items-center text-[11px] font-bold uppercase tracking-wider transition-colors duration-200
-        ${isMobile ? 'py-2.5 px-3' : 'py-1.5 px-3'}
+        flex items-center text-[11px] font-bold transition-all duration-150
+        ${isMobile ? 'py-2 px-3 rounded-lg' : 'py-1.5 px-3 rounded-lg'}
         ${active ? activeCls : subInactiveCls}
     `;
 
@@ -356,7 +341,7 @@ function StaffSidebar({ isOpen, isCollapsed, toggleSidebar, toggleCollapse }) {
             {/* Sidebar */}
             <aside
                 className={`
-                    ${collapsed ? 'lg:w-16' : 'w-[84vw] max-w-[19rem] lg:w-64'}
+                    ${collapsed ? 'lg:w-[72px]' : 'w-[86vw] max-w-[20rem] lg:w-[268px]'}
                     ${panelBg} ${panelText} transition-all duration-300 ease-out
                     lg:fixed lg:inset-y-0 lg:left-0 lg:translate-x-0
                     ${isOpen ? 'fixed inset-y-0 left-0 z-40 translate-x-0' : 'fixed inset-y-0 left-0 z-40 -translate-x-full'}
@@ -369,25 +354,25 @@ function StaffSidebar({ isOpen, isCollapsed, toggleSidebar, toggleCollapse }) {
                 <div className="flex h-14 flex-shrink-0 items-center justify-between border-b ${lineBorder} ${panelBg} px-3.5">
                     <Link href="/" className={`flex min-w-0 items-center group ${collapsed ? 'w-full justify-center' : ''}`}>
                         <div className="relative flex-shrink-0">
-                            <div className={`flex h-8 w-8 items-center justify-center overflow-hidden border ${iconBoxCls}`}>
+                            <div className={`flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl ${logoBoxCls}`}>
                                 <img
                                     src="https://alwafi.ac.id/assets/img/stit.png"
                                     alt="Logo"
-                                    className="h-7 w-auto object-contain"
+                                    className="h-6 w-auto object-contain"
                                     onError={(e) => {
                                         e.target.style.display = 'none';
                                         e.target.nextSibling.style.display = 'flex';
                                     }}
                                 />
                                 <div className="hidden h-full w-full items-center justify-center">
-                                    <span className={`text-[10px] font-extrabold tracking-widest ${iconTextCls}`}>SI</span>
+                                    <span className="text-[11px] font-extrabold tracking-widest text-white">SI</span>
                                 </div>
                             </div>
                         </div>
                         {!collapsed && (
-                            <div className="ml-2.5 overflow-hidden">
-                                <h1 className={`text-xs font-extrabold uppercase tracking-[0.2em] ${titleCls}`}>SIAKAD</h1>
-                                <p className={`-mt-0.5 text-[9px] uppercase tracking-widest ${mutedCls}`}>STIT Al Wafi</p>
+                            <div className="ml-2.5 min-w-0 overflow-hidden">
+                                <h1 className="truncate text-[13px] font-extrabold uppercase tracking-[0.18em] text-white">SIAKAD</h1>
+                                <p className="truncate text-[9px] font-extrabold uppercase tracking-[0.18em] text-brand-400">STIT Al Wafi</p>
                             </div>
                         )}
                     </Link>
@@ -395,7 +380,7 @@ function StaffSidebar({ isOpen, isCollapsed, toggleSidebar, toggleCollapse }) {
                     <button
                         type="button"
                         onClick={toggleSidebar}
-                        className={`flex h-9 w-9 flex-shrink-0 items-center justify-center border ${closeBtnCls} transition-colors lg:hidden`}
+                        className={`flex h-9 w-9 flex-shrink-0 items-center justify-center transition-colors lg:hidden ${closeBtnCls}`}
                         aria-label="Tutup menu"
                     >
                         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -404,25 +389,33 @@ function StaffSidebar({ isOpen, isCollapsed, toggleSidebar, toggleCollapse }) {
                     </button>
                 </div>
 
-                {/* User Info */}
+                {/* Kartu profil — sama persis dengan sidebar mahasiswa */}
                 {!collapsed && (
-                    <div className="flex-shrink-0 border-b ${lineBorder} ${panelBg} px-3.5 py-2.5">
-                        <div className="flex items-center gap-2.5">
-                            <div className={`flex h-8 w-8 flex-shrink-0 items-center justify-center border ${iconBoxCls}`}>
-                                <span className={`text-xs font-extrabold tracking-widest ${iconTextCls}`}>
+                    <div className="shrink-0 px-3.5 pt-3.5">
+                        <div className={`relative overflow-hidden p-3.5 ${cardCls}`}>
+                            <span className="pointer-events-none absolute -right-8 -top-10 h-24 w-24 rounded-full bg-brand-500/15" />
+
+                            <div className="relative flex items-center gap-3">
+                                <span
+                                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-400 to-brand-700 text-sm font-extrabold text-white shadow-lg shadow-brand-900/40"
+                                >
                                     {user.name.charAt(0).toUpperCase()}
                                 </span>
-                            </div>
-                            <div className="min-w-0 flex-1">
-                                <p className={`truncate text-xs font-bold uppercase tracking-wider ${titleCls}`}>{user.name}</p>
-                                <p className={`text-[9px] uppercase tracking-widest ${mutedCls}`}>{user.role}</p>
+
+                                <div className="min-w-0 flex-1">
+                                    <p className="truncate text-[13px] font-extrabold leading-tight text-white">{user.name}</p>
+                                    <span className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-brand-500/20 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-[0.14em] text-brand-300 ring-1 ring-brand-500/30">
+                                        <span className="h-1.5 w-1.5 rounded-full bg-brand-400" />
+                                        {user.role}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
                 )}
 
                 {/* Navigation */}
-                <nav className={`flex-1 overflow-y-auto py-2.5 pb-3 space-y-0.5 ${collapsed ? 'px-2' : 'px-3'}`}>
+                <nav className={`mt-3 flex-1 space-y-4 overflow-y-auto pb-4 ${collapsed ? 'px-2.5' : 'px-3'}`}>
                     {/* Standalone items */}
                     {standaloneMenu.map((item) => (
                         <div key={item.name}>
@@ -467,7 +460,7 @@ function StaffSidebar({ isOpen, isCollapsed, toggleSidebar, toggleCollapse }) {
                     {/* Divider */}
                     {!collapsed && roleCategories.length > 0 && (
                         <div className="pb-1 pt-2">
-                            <div className={`h-px ${lineBg}`} />
+                            <div className="h-px bg-white/10" />
                         </div>
                     )}
 

@@ -10,6 +10,7 @@ use App\Models\LmsForum;
 use App\Models\LmsForumThread;
 use App\Models\LmsMaterial;
 use App\Models\LmsMaterialProgress;
+use App\Models\PeriodeKrs;
 use App\Services\LmsMaterialAssistantService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -20,27 +21,80 @@ class LmsStudentController extends Controller
     {
         $mahasiswa = auth()->user()->mahasiswa;
 
-        // Get courses from KRS
+        abort_if(! $mahasiswa, 404, 'Data mahasiswa tidak ditemukan.');
+
+        $periodeAktif = $this->activePeriode();
+
+        // KRS adalah sumber daftar course. Jangan filter berdasarkan
+        // lms_courses di query awal: course yang sudah terdaftar tetap harus
+        // terlihat meskipun dosen belum membuat materi LMS-nya.
         $krsList = $mahasiswa->krs()
-            ->whereIn('status', ['diambil', 'disetujui'])
-            ->whereHas('jadwalKuliah.lmsCourse')
+            ->whereIn('status', ['diambil', 'disetujui', 'menunggu_persetujuan'])
+            ->whereHas('jadwalKuliah')
             ->with([
                 'jadwalKuliah.mataKuliah',
                 'jadwalKuliah.dosen',
                 'jadwalKuliah.lmsCourse.chapters.materials',
                 'jadwalKuliah.lmsCourse.chapters.assignments',
                 'jadwalKuliah.lmsCourse.chapters.forums',
+                'periodeKrs.tahunAjaran',
+                'periodeKrs.semester',
             ])
             ->get();
 
-        // Kumpulkan id materi & tugas dari seluruh kelas untuk query progress sekali jalan
-        $materialIds = $krsList
-            ->flatMap(fn ($krs) => $krs->jadwalKuliah->lmsCourse->chapters->flatMap->materials->pluck('id'))
-            ->unique();
+        // Tahun/periode aktif selalu berada di bagian atas. Setelah itu,
+        // course yang lebih baru dan jadwal paling awal ditampilkan lebih dulu.
+        $dayOrder = [
+            'Senin' => 1,
+            'Selasa' => 2,
+            'Rabu' => 3,
+            'Kamis' => 4,
+            'Jumat' => 5,
+            'Sabtu' => 6,
+            'Minggu' => 7,
+        ];
 
-        $assignmentIds = $krsList
-            ->flatMap(fn ($krs) => $krs->jadwalKuliah->lmsCourse->chapters->flatMap->assignments->pluck('id'))
-            ->unique();
+        $krsList = $krsList->sort(function ($a, $b) use ($periodeAktif, $dayOrder) {
+            $aActive = $periodeAktif && $a->periode_krs_id === $periodeAktif->id;
+            $bActive = $periodeAktif && $b->periode_krs_id === $periodeAktif->id;
+
+            if ($aActive !== $bActive) {
+                return $aActive ? -1 : 1;
+            }
+
+            $aPeriodDate = $a->periodeKrs?->tanggal_mulai?->getTimestamp() ?? 0;
+            $bPeriodDate = $b->periodeKrs?->tanggal_mulai?->getTimestamp() ?? 0;
+            if ($aPeriodDate !== $bPeriodDate) {
+                return $bPeriodDate <=> $aPeriodDate;
+            }
+
+            $aDay = $dayOrder[$a->jadwalKuliah?->hari] ?? 99;
+            $bDay = $dayOrder[$b->jadwalKuliah?->hari] ?? 99;
+            if ($aDay !== $bDay) {
+                return $aDay <=> $bDay;
+            }
+
+            $aTime = $a->jadwalKuliah?->jam_mulai?->format('H:i') ?? '99:99';
+            $bTime = $b->jadwalKuliah?->jam_mulai?->format('H:i') ?? '99:99';
+            if ($aTime !== $bTime) {
+                return strcmp($aTime, $bTime);
+            }
+
+            $aCode = $a->jadwalKuliah?->mataKuliah?->kode_mata_kuliah ?? '';
+            $bCode = $b->jadwalKuliah?->mataKuliah?->kode_mata_kuliah ?? '';
+            return [$aCode, $a->id] <=> [$bCode, $b->id];
+        })->values();
+
+        // Kumpulkan id materi & tugas dari seluruh course yang memiliki LMS.
+        $materialIds = $krsList->flatMap(function ($krs) {
+            $chapters = $krs->jadwalKuliah?->lmsCourse?->chapters ?? collect();
+            return collect($chapters)->flatMap(fn ($chapter) => $chapter->materials ?? collect())->pluck('id');
+        })->filter()->unique()->values();
+
+        $assignmentIds = $krsList->flatMap(function ($krs) {
+            $chapters = $krs->jadwalKuliah?->lmsCourse?->chapters ?? collect();
+            return collect($chapters)->flatMap(fn ($chapter) => $chapter->assignments ?? collect())->pluck('id');
+        })->filter()->unique()->values();
 
         $completedMaterialIds = LmsMaterialProgress::where('mahasiswa_id', $mahasiswa->id)
             ->whereIn('lms_material_id', $materialIds)
@@ -52,46 +106,63 @@ class LmsStudentController extends Controller
             ->pluck('lms_assignment_id')
             ->flip();
 
-        $courses = $krsList->map(function ($krs) use ($completedMaterialIds, $submittedAssignmentIds) {
+        $courses = $krsList->map(function ($krs) use ($completedMaterialIds, $submittedAssignmentIds, $periodeAktif) {
             $jadwal = $krs->jadwalKuliah;
-            $course = $jadwal->lmsCourse;
-            $chapters = $course->chapters;
-
-            $materials = $chapters->flatMap->materials;
-            $assignments = $chapters->flatMap->assignments;
+            $course = $jadwal?->lmsCourse;
+            $chapters = collect($course?->chapters ?? []);
+            $materials = $chapters->flatMap(fn ($chapter) => $chapter->materials ?? collect());
+            $assignments = $chapters->flatMap(fn ($chapter) => $chapter->assignments ?? collect());
+            $forums = $chapters->flatMap(fn ($chapter) => $chapter->forums ?? collect());
 
             $totalMaterials = $materials->count();
             $completedMaterials = $materials->filter(fn ($m) => $completedMaterialIds->has($m->id))->count();
             $totalAssignments = $assignments->count();
             $submittedAssignments = $assignments->filter(fn ($a) => $submittedAssignmentIds->has($a->id))->count();
+            $periode = $krs->periodeKrs;
+            $isActivePeriod = (bool) ($periodeAktif && $periode?->id === $periodeAktif->id);
+            $canAccess = in_array($krs->status, ['diambil', 'disetujui'], true) && (bool) $course;
 
             return [
-                'id' => $course->id,
-                'mata_kuliah' => $jadwal->mataKuliah->nama_mata_kuliah,
-                'kode' => $jadwal->mataKuliah->kode_mata_kuliah,
-                'sks' => $jadwal->mataKuliah->sks,
-                'semester' => $jadwal->mataKuliah->semester,
-                'dosen' => $jadwal->dosen->nama_lengkap,
-                'hari' => $jadwal->hari,
-                'jam_mulai' => optional($jadwal->jam_mulai)->format('H:i'),
-                'jam_selesai' => optional($jadwal->jam_selesai)->format('H:i'),
-                'ruangan' => $jadwal->ruangan,
-                'description' => $course->description,
-                'thumbnail' => $course->thumbnail,
+                'id' => $course?->id,
+                'krs_id' => $krs->id,
+                'lms_course_id' => $course?->id,
+                'has_lms' => (bool) $course,
+                'can_access' => $canAccess,
+                'mata_kuliah' => $jadwal?->mataKuliah?->nama_mata_kuliah ?? 'Mata kuliah tidak tersedia',
+                'kode' => $jadwal?->mataKuliah?->kode_mata_kuliah ?? '-',
+                'sks' => $jadwal?->mataKuliah?->sks ?? 0,
+                'semester' => $jadwal?->mataKuliah?->semester,
+                'dosen' => $jadwal?->dosen?->nama_lengkap ?? '-',
+                'hari' => $jadwal?->hari,
+                'jam_mulai' => $jadwal?->jam_mulai?->format('H:i'),
+                'jam_selesai' => $jadwal?->jam_selesai?->format('H:i'),
+                'ruangan' => $jadwal?->ruangan,
+                'description' => $course?->description
+                    ?? 'Course ini sudah terdaftar pada KRS. Materi LMS akan tersedia setelah dosen mengaktifkannya.',
+                'thumbnail' => $course?->thumbnail,
                 'chapters_count' => $chapters->count(),
                 'materials_count' => $totalMaterials,
                 'completed_materials' => $completedMaterials,
                 'assignments_count' => $totalAssignments,
                 'submitted_assignments' => $submittedAssignments,
-                'forums_count' => $chapters->flatMap->forums->count(),
+                'forums_count' => $forums->count(),
                 'progress_percent' => $totalMaterials > 0
                     ? (int) round($completedMaterials / $totalMaterials * 100)
                     : 0,
+                'status' => $krs->status,
+                'is_active_period' => $isActivePeriod,
+                'periode' => [
+                    'id' => $periode?->id,
+                    'nama' => $periode?->nama_periode,
+                    'tahun_ajaran' => $periode?->tahunAjaran?->nama_tahun_ajaran,
+                    'semester' => $periode?->semester?->nama_semester,
+                ],
             ];
         })->values();
 
         $summary = [
             'courses' => $courses->count(),
+            'active_courses' => $courses->where('is_active_period', true)->count(),
             'materials' => $courses->sum('materials_count'),
             'completed_materials' => $courses->sum('completed_materials'),
             'assignments' => $courses->sum('assignments_count'),
@@ -103,7 +174,22 @@ class LmsStudentController extends Controller
         return Inertia::render('Mahasiswa/Lms/Index', [
             'courses' => $courses,
             'summary' => $summary,
+            'periodeAktif' => $periodeAktif ? [
+                'nama' => $periodeAktif->nama_periode,
+                'tahun_ajaran' => $periodeAktif->tahunAjaran?->nama_tahun_ajaran,
+                'semester' => $periodeAktif->semester?->nama_semester,
+            ] : null,
         ]);
+    }
+
+    private function activePeriode(): ?PeriodeKrs
+    {
+        return PeriodeKrs::with(['tahunAjaran', 'semester'])
+            ->where('status', 'aktif')
+            ->whereHas('tahunAjaran', fn ($query) => $query->where('status', 'aktif'))
+            ->orderByDesc('tanggal_mulai')
+            ->orderByDesc('id')
+            ->first();
     }
 
     public function show(LmsCourse $lmsCourse)
@@ -205,6 +291,9 @@ class LmsStudentController extends Controller
 
     public function askMaterialAssistant(Request $request, LmsMaterial $material, LmsMaterialAssistantService $assistantService)
     {
+        // Model AI butuh waktu berpikir panjang; samakan dengan timeout klien.
+        @set_time_limit((int) config('services.atria.timeout', 280));
+
         $request->validate([
             'question' => 'required|string|max:2000',
             'messages' => 'nullable|array|max:20',

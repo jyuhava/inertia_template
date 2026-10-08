@@ -22,9 +22,19 @@ Route::get('/', function () {
     ]);
 });
 
+// Berhenti impersonasi — SENGAJA di luar group role:admin, karena saat
+// impersonasi akun admin sudah tidak berperan sebagai admin, namun tetap
+// harus bisa kembali ke akun aslinya.
+Route::middleware(['auth', 'verified'])
+    ->post('admin/impersonate/stop', [\App\Http\Controllers\Admin\ImpersonateController::class, 'destroy'])
+    ->name('admin.impersonate.stop');
+
 // Admin routes
 Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
+
+    // Impersonasi akun (login-as) — mulai, hanya admin
+    Route::post('impersonate/{type}/{id}', [\App\Http\Controllers\Admin\ImpersonateController::class, 'store'])->name('impersonate.store');
 
     // Mahasiswa CRUD routes
     Route::resource('mahasiswa', \App\Http\Controllers\Admin\MahasiswaController::class);
@@ -61,6 +71,9 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
 
         Route::put('pddikti/mapping', [\App\Http\Controllers\Admin\Mahasiswa\PddiktiController::class, 'updateMapping'])->name('pddikti.mapping.update');
         Route::post('pddikti/sync', [\App\Http\Controllers\Admin\Mahasiswa\PddiktiController::class, 'sync'])->name('pddikti.sync');
+
+        Route::post('krs/{periodeKrs}/cancel', [\App\Http\Controllers\Admin\MahasiswaController::class, 'cancelKrs'])->name('krs.cancel');
+        Route::post('krs/bulk-cancel', [\App\Http\Controllers\Admin\MahasiswaController::class, 'bulkCancelKrs'])->name('krs.bulk-cancel');
     });
 
     // Bulk Import Mahasiswa routes
@@ -93,7 +106,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
     });
 
     // Kelas Kuliah CRUD routes
-    Route::resource('kelas-kuliah', \App\Http\Controllers\Admin\KelasKuliahController::class);
+    Route::resource('kelas-kuliah', \App\Http\Controllers\Admin\KelasKuliahController::class)->parameters(['kelas-kuliah' => 'kelasKuliah']);
     Route::prefix('kelas-kuliah/{kelasKuliah}')->name('kelas-kuliah.')->group(function () {
         Route::post('pengajar', [\App\Http\Controllers\Admin\KelasKuliah\PengajarController::class, 'store'])->name('pengajar.store');
         Route::delete('pengajar/{pengajar}', [\App\Http\Controllers\Admin\KelasKuliah\PengajarController::class, 'destroy'])->name('pengajar.destroy');
@@ -133,19 +146,19 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
     });
 
     // Tahun Ajaran CRUD routes
-    Route::resource('tahun-ajaran', \App\Http\Controllers\Admin\TahunAjaranController::class);
+    Route::resource('tahun-ajaran', \App\Http\Controllers\Admin\TahunAjaranController::class)->parameters(['tahun-ajaran' => 'tahunAjaran']);
 
     // Semester CRUD routes
     Route::resource('semester', \App\Http\Controllers\Admin\SemesterController::class);
 
     // Mata Kuliah CRUD routes
-    Route::resource('mata-kuliah', \App\Http\Controllers\Admin\MataKuliahController::class);
+    Route::resource('mata-kuliah', \App\Http\Controllers\Admin\MataKuliahController::class)->parameters(['mata-kuliah' => 'mataKuliah']);
 
     // Jadwal Kuliah CRUD routes
-    Route::resource('jadwal-kuliah', \App\Http\Controllers\Admin\JadwalKuliahController::class);
+    Route::resource('jadwal-kuliah', \App\Http\Controllers\Admin\JadwalKuliahController::class)->parameters(['jadwal-kuliah' => 'jadwalKuliah']);
 
     // Periode KRS CRUD routes
-    Route::resource('periode-krs', \App\Http\Controllers\Admin\PeriodeKrsController::class);
+    Route::resource('periode-krs', \App\Http\Controllers\Admin\PeriodeKrsController::class)->parameters(['periode-krs' => 'periodeKrs']);
     Route::post('periode-krs/{periodeKrs}/activate', [\App\Http\Controllers\Admin\PeriodeKrsController::class, 'activate'])->name('periode-krs.activate');
     Route::post('periode-krs/{periodeKrs}/deactivate', [\App\Http\Controllers\Admin\PeriodeKrsController::class, 'deactivate'])->name('periode-krs.deactivate');
     Route::post('periode-krs/{periodeKrs}/open-krs', [\App\Http\Controllers\Admin\PeriodeKrsController::class, 'openKrs'])->name('periode-krs.open-krs');
@@ -166,7 +179,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
     });
 
     // Dosen Pembimbing Akademik (Student Advisor)
-    Route::resource('student-advisor', \App\Http\Controllers\Admin\StudentAdvisorController::class)->only(['index', 'store', 'destroy']);
+    Route::resource('student-advisor', \App\Http\Controllers\Admin\StudentAdvisorController::class)->only(['index', 'store', 'destroy'])->parameters(['student-advisor' => 'advisor']);
 
     // KHS Student List (for Sidebar)
     Route::get('/khs', [\App\Http\Controllers\Admin\KhsController::class, 'studentList'])->name('khs.student-list');
@@ -214,7 +227,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
     });
 
     // PMB Management routes
-    Route::resource('periode-pmb', \App\Http\Controllers\Admin\PeriodePmbController::class);
+    Route::resource('periode-pmb', \App\Http\Controllers\Admin\PeriodePmbController::class)->parameters(['periode-pmb' => 'periodePmb']);
     Route::post('periode-pmb/{periodePmb}/activate', [\App\Http\Controllers\Admin\PeriodePmbController::class, 'activate'])->name('periode-pmb.activate');
     Route::post('periode-pmb/{periodePmb}/deactivate', [\App\Http\Controllers\Admin\PeriodePmbController::class, 'deactivate'])->name('periode-pmb.deactivate');
 
@@ -247,7 +260,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
         Route::post('outputs/{output}/validate', [\App\Http\Controllers\Admin\Lpm\ProposalController::class, 'validateOutput'])->name('outputs.validate');
     });
 
-    Route::resource('dokumen-pmb', \App\Http\Controllers\Admin\DokumenPmbController::class);
+    Route::resource('dokumen-pmb', \App\Http\Controllers\Admin\DokumenPmbController::class)->parameters(['dokumen-pmb' => 'dokumenPmb']);
     Route::post('dokumen-pmb/{dokumenPmb}/toggle-status', [\App\Http\Controllers\Admin\DokumenPmbController::class, 'toggleStatus'])->name('dokumen-pmb.toggle-status');
 
     Route::prefix('calon-mahasiswa')->name('calon-mahasiswa.')->group(function () {
@@ -475,6 +488,7 @@ Route::middleware(['auth', 'verified', 'role:dosen'])->prefix('dosen')->name('do
         Route::get('/chapters/{chapter}/materials/create', [\App\Http\Controllers\Dosen\LmsContentController::class, 'createMaterial'])->name('materials.create');
         Route::post('/chapters/{chapter}/materials', [\App\Http\Controllers\Dosen\LmsContentController::class, 'storeMaterial'])->name('materials.store');
         Route::post('/chapters/{chapter}/materials/generate', [\App\Http\Controllers\Dosen\LmsContentController::class, 'generateMaterialDraft'])->name('materials.generate');
+        Route::get('/ai/jobs/{aiJob}', [\App\Http\Controllers\Dosen\LmsContentController::class, 'aiJobStatus'])->name('ai.jobs.status');
         Route::get('/materials/{material}/view', [\App\Http\Controllers\Dosen\LmsContentController::class, 'showMaterial'])->name('materials.show');
         Route::get('/materials/{material}/edit', [\App\Http\Controllers\Dosen\LmsContentController::class, 'editMaterial'])->name('materials.edit');
         Route::put('/materials/{material}', [\App\Http\Controllers\Dosen\LmsContentController::class, 'updateMaterial'])->name('materials.update');
@@ -569,7 +583,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/upload/ckeditor', [\App\Http\Controllers\UploadController::class, 'ckeditorUpload'])->name('upload.ckeditor');
 
     // Meeting Minutes (Notulen Rapat)
-    Route::resource('meeting-minutes', \App\Http\Controllers\MeetingMinuteController::class);
+    Route::resource('meeting-minutes', \App\Http\Controllers\MeetingMinuteController::class)->parameters(['meeting-minutes' => 'meetingMinute']);
     Route::post('meeting-minutes/{meetingMinute}/status', [\App\Http\Controllers\MeetingMinuteController::class, 'updateStatus'])->name('meeting-minutes.status');
     Route::post('meeting-minutes/{meetingMinute}/toggle-public', [\App\Http\Controllers\MeetingMinuteController::class, 'togglePublic'])->name('meeting-minutes.toggle-public');
     Route::post('meeting-agenda-items/{agendaItem}/progress', [\App\Http\Controllers\MeetingMinuteController::class, 'updateProgress'])->name('meeting-agenda-items.progress');
