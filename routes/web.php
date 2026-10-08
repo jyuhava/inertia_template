@@ -111,6 +111,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
     Route::resource('prodi', \App\Http\Controllers\Admin\ProdiController::class);
 
     // Dosen CRUD routes
+    Route::get('dosen-export', [\App\Http\Controllers\Admin\DosenController::class, 'export'])->name('dosen.export');
     Route::resource('dosen', \App\Http\Controllers\Admin\DosenController::class);
     Route::put('dosen/{dosen}/reset-password', [\App\Http\Controllers\Admin\DosenController::class, 'resetPassword'])->name('dosen.reset-password');
     Route::post('dosen/{id}/restore', [\App\Http\Controllers\Admin\DosenController::class, 'restore'])->name('dosen.restore');

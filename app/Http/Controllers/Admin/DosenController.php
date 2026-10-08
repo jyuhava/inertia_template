@@ -124,6 +124,86 @@ class DosenController extends Controller
         return back()->with('success', 'Password dosen berhasil direset.');
     }
 
+    /**
+     * Export data dosen as CSV.
+     * Kolom mengacu pada format push dosen Neo Feeder / PDDikti.
+     */
+    public function export(Request $request)
+    {
+        $query = Dosen::with(['user', 'homebaseAktif.prodi', 'kepegawaian', 'pddiktiMapping'])->withoutTrashed();
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(fn ($q) => $q->where('nip', 'like', "%{$search}%")->orWhere('nidn', 'like', "%{$search}%")->orWhere('nama_lengkap', 'like', "%{$search}%")->orWhere('bidang_keahlian', 'like', "%{$search}%"));
+        }
+        foreach (['status', 'jenis_kelamin', 'status_kepegawaian'] as $filter) {
+            if ($request->filled($filter)) {
+                $query->where($filter, $request->$filter);
+            }
+        }
+
+        $dosens = $query->orderBy('nama_lengkap')->get();
+
+        $fileName = 'data_dosen_neo_feeder_' . date('Y-m-d_H-i-s') . '.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+        ];
+
+        $callback = function () use ($dosens) {
+            $file = fopen('php://output', 'w');
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+
+            // Header mengacu kolom push dosen Neo Feeder
+            fputcsv($file, [
+                'nidn', 'nuptk', 'nip', 'nik', 'npwp', 'nama_lengkap', 'gelar_depan', 'gelar_belakang',
+                'jenis_kelamin', 'tempat_lahir', 'tanggal_lahir', 'agama', 'kewarganegaraan', 'alamat',
+                'no_hp', 'email', 'bidang_keahlian', 'jabatan_akademik', 'status', 'status_kepegawaian',
+                'status_dosen', 'status_pns', 'unit_kerja', 'pendidikan_terakhir', 'program_studi_homebase',
+                'kode_prodi_homebase', 'pddikti_id', 'id_registrasi_dosen', 'status_mapping_pddikti',
+            ]);
+
+            foreach ($dosens as $dosen) {
+                fputcsv($file, [
+                    $dosen->nidn ?? '',
+                    $dosen->nuptk ?? '',
+                    $dosen->nip ?? '',
+                    $dosen->nik ?? '',
+                    $dosen->npwp ?? '',
+                    $dosen->nama_lengkap,
+                    $dosen->gelar_depan ?? '',
+                    $dosen->gelar_belakang ?? '',
+                    $dosen->jenis_kelamin, // L / P sesuai format Neo Feeder
+                    $dosen->tempat_lahir ?? '',
+                    $dosen->tanggal_lahir ? $dosen->tanggal_lahir->format('Y-m-d') : '',
+                    $dosen->agama ?? '',
+                    $dosen->kewarganegaraan ?? '',
+                    $dosen->alamat ?? '',
+                    $dosen->no_hp ?? '',
+                    $dosen->email ?? ($dosen->user->email ?? ''),
+                    $dosen->bidang_keahlian ?? '',
+                    $dosen->jabatan_akademik ?? '',
+                    $dosen->status ?? '',
+                    $dosen->status_kepegawaian ?? ($dosen->kepegawaian?->status_kepegawaian ?? ''),
+                    $dosen->kepegawaian?->status_dosen ?? '',
+                    $dosen->kepegawaian?->status_pns ?? '',
+                    $dosen->kepegawaian?->unit_kerja ?? '',
+                    $dosen->pendidikan_terakhir ?? '',
+                    $dosen->homebaseAktif?->prodi?->nama_prodi ?? '',
+                    $dosen->homebaseAktif?->prodi?->kode_prodi ?? '',
+                    $dosen->pddiktiMapping?->pddikti_id ?? '',
+                    $dosen->pddiktiMapping?->id_registrasi_dosen ?? '',
+                    $dosen->pddiktiMapping?->status_mapping ?? '',
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
     private function validateDosen(Request $request, ?Dosen $dosen = null): array
     {
         $ignore = $dosen?->id;

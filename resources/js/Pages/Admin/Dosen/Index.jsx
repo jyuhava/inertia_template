@@ -102,7 +102,17 @@ export default function Index({ dosens, filters }) {
 
                 {/* Controls */}
                 <Box>
-                    <SectionTitle action={<ActionButton href="/admin/dosen/create" variant="primary">+ Tambah Dosen</ActionButton>}>
+                    <SectionTitle action={
+                        <div className="flex flex-wrap gap-2">
+                            <a
+                                href={`/admin/dosen-export${filters.search ? `?search=${encodeURIComponent(filters.search)}` : ''}`}
+                                className="inline-flex items-center justify-center px-4 py-2 text-[11px] font-semibold uppercase tracking-widest border bg-white text-black border-[#e4e4e7] hover:border-black transition-colors duration-200"
+                            >
+                                Export CSV (Neo Feeder)
+                            </a>
+                            <ActionButton href="/admin/dosen/create" variant="primary">+ Tambah Dosen</ActionButton>
+                        </div>
+                    }>
                         Daftar Dosen
                     </SectionTitle>
 
