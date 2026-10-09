@@ -103,6 +103,18 @@ export default function Index({ calonMahasiswa = {}, filters = {}, periodePmb })
         });
     };
 
+    // Carry the active filters into the export so the CSV matches the list.
+    const exportUrl = () => {
+        const params = new URLSearchParams();
+        if (search) params.append('search', search);
+        if (filterStatus) params.append('status', filterStatus);
+        if (filters.periode_pmb_id) params.append('periode_pmb_id', filters.periode_pmb_id);
+        if (filters.prodi_id) params.append('prodi_id', filters.prodi_id);
+
+        const query = params.toString();
+        return route('admin.calon-mahasiswa.export') + (query ? `?${query}` : '');
+    };
+
     const handleBulkAction = (action) => {
         if (selectedItems.length === 0) {
             alert('Pilih minimal satu calon mahasiswa');
@@ -144,7 +156,7 @@ export default function Index({ calonMahasiswa = {}, filters = {}, periodePmb })
                             <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/75 mb-1">Penerimaan Mahasiswa Baru</p>
                             <h1 className="text-xl font-bold uppercase tracking-tight text-white">Calon Mahasiswa</h1>
                         </div>
-                        <ActionButton href={route('admin.calon-mahasiswa.export')} variant="secondary">Export CSV</ActionButton>
+                        <ActionButton href={exportUrl()} variant="secondary">Export CSV</ActionButton>
                     </div>
                 </Box>
 

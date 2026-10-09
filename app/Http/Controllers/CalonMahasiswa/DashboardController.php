@@ -109,7 +109,10 @@ class DashboardController extends Controller
             'nilai_rata_rata' => 'nullable|numeric|between:0,100',
         ]);
 
-        $calonMahasiswa->update($request->all());
+        // Only the validated profile fields may be written. Using
+        // $request->all() here let a candidate set status_pendaftaran,
+        // verified_by or no_pendaftaran, because they are all fillable.
+        $calonMahasiswa->update($request->validated());
 
         return back()->with('success', 'Data profil berhasil diperbarui!');
     }
@@ -216,11 +219,16 @@ class DashboardController extends Controller
             return back()->with('error', 'Pendaftaran sudah disubmit atau sedang diproses.');
         }
 
-        // Check if all required documents are uploaded
-        $dokumenRequired = DokumenPmb::aktif()->wajib()->count();
-        $dokumenUploaded = $calonMahasiswa->dokumenUploads()->count();
+        // Check that every *required* document has been uploaded. Counting all
+        // uploads let a candidate satisfy the gate with optional documents only.
+        $dokumenRequiredIds = DokumenPmb::aktif()->wajib()->pluck('id');
 
-        if ($dokumenUploaded < $dokumenRequired) {
+        $dokumenUploaded = $calonMahasiswa->dokumenUploads()
+            ->whereIn('dokumen_pmb_id', $dokumenRequiredIds)
+            ->distinct()
+            ->count('dokumen_pmb_id');
+
+        if ($dokumenUploaded < $dokumenRequiredIds->count()) {
             return back()->with('error', 'Harap upload semua dokumen yang diperlukan terlebih dahulu.');
         }
 

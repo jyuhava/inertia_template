@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class CalonMahasiswa extends Model
 {
@@ -106,12 +106,45 @@ class CalonMahasiswa extends Model
     }
 
     // Methods
-    public function generateNoPendaftaran($periodePmb)
+    /**
+     * Generate a registration number that is guaranteed not to collide.
+     *
+     * The next sequence is derived from the highest number already issued for
+     * the same prefix instead of `count() + 1`. Counting reuses numbers as soon
+     * as a row is deleted, which silently produced duplicate
+     * `no_pendaftaran` values (and therefore colliding document folders).
+     *
+     * @param  \App\Models\PeriodePmb  $periodePmb
+     */
+    public static function generateNoPendaftaran($periodePmb)
     {
-        $tahun = Carbon::parse($periodePmb->tanggal_buka)->year;
-        $urutan = CalonMahasiswa::where('periode_pmb_id', $periodePmb->id)->count() + 1;
-        
-        return sprintf('PMB%d%04d', $tahun, $urutan);
+        // Numbering follows the calendar year of registration, matching every
+        // number already issued. Deriving it from the period's opening date
+        // instead would split the sequence across two prefixes.
+        $prefix = sprintf('PMB%d', now()->year);
+
+        return DB::transaction(function () use ($periodePmb, $prefix) {
+            // Lock the period row so concurrent registrations queue up here
+            // instead of both computing the same next sequence.
+            PeriodePmb::whereKey($periodePmb->getKey())->lockForUpdate()->first();
+
+            $terakhir = static::where('no_pendaftaran', 'like', $prefix . '%')
+                ->orderByDesc('no_pendaftaran')
+                ->value('no_pendaftaran');
+
+            $urutan = $terakhir
+                ? ((int) substr($terakhir, strlen($prefix))) + 1
+                : 1;
+
+            // Belt-and-braces: never hand out a number that is still in use,
+            // even if legacy rows use an inconsistent width.
+            do {
+                $kandidat = $prefix . str_pad($urutan, 4, '0', STR_PAD_LEFT);
+                $urutan++;
+            } while (static::where('no_pendaftaran', $kandidat)->exists());
+
+            return $kandidat;
+        });
     }
 
     public function getStatusBadgeAttribute()
