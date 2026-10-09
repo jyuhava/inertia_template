@@ -13,20 +13,70 @@ use App\Models\ThesisType;
 use App\Services\Thesis\ThesisService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class ThesisController extends Controller
 {
     public function index(Request $request)
     {
-        $theses = Thesis::with(['mahasiswa.prodi', 'type', 'activeSupervisors.dosen'])->when($request->status, fn ($query) => $query->where('status', $request->status))->latest()->paginate(20)->withQueryString();
+        $filters = $request->validate([
+            'status' => 'nullable|string|max:40',
+            'search' => 'nullable|string|max:255',
+        ]);
 
-        return Inertia::render('Admin/TugasAkhir/Index', ['theses' => $theses, 'capacityOverview' => [], 'filters' => $request->only('status')]);
+        $theses = Thesis::with(['mahasiswa.prodi', 'type', 'activeSupervisors.dosen'])
+            ->when($filters['status'] ?? null, fn ($query) => $query->where('status', $filters['status']))
+            ->when($filters['search'] ?? null, function ($query, string $search) {
+                $query->where(function ($query) use ($search) {
+                    $query->where('title', 'like', "%{$search}%")
+                        ->orWhereHas('mahasiswa', fn ($query) => $query->where(function ($query) use ($search) {
+                            $query->where('nama_lengkap', 'like', "%{$search}%")->orWhere('nim', 'like', "%{$search}%");
+                        }));
+                });
+            })
+            ->latest()
+            ->paginate(20)
+            ->withQueryString();
+
+        return Inertia::render('Admin/TugasAkhir/Index', [
+            'theses' => $theses,
+            'capacityOverview' => $this->capacityOverview(),
+            'filters' => ['status' => $filters['status'] ?? null, 'search' => $filters['search'] ?? null],
+        ]);
+    }
+
+    /** Beban bimbing tiap dosen beserta kuota yang ditetapkan per prodi. */
+    private function capacityOverview(): array
+    {
+        return Dosen::where('status', 'aktif')
+            ->whereHas('thesisSupervisors', fn ($query) => $query->where('status', 'active'))
+            ->withCount(['thesisSupervisors as active_count' => fn ($query) => $query->where('status', 'active')])
+            ->with('thesisSupervisors.thesis.prodi.thesisSetting')
+            ->orderByDesc('active_count')
+            ->take(12)
+            ->get()
+            ->map(function (Dosen $dosen) {
+                $capacity = $dosen->thesisSupervisors
+                    ->where('status', 'active')
+                    ->pluck('thesis.prodi.thesisSetting.supervisor_capacity')
+                    ->filter()
+                    ->min();
+
+                return [
+                    'id' => $dosen->id,
+                    'name' => $dosen->nama_lengkap,
+                    'active_count' => (int) $dosen->active_count,
+                    'capacity' => $capacity !== null ? (int) $capacity : null,
+                ];
+            })
+            ->values()
+            ->all();
     }
 
     public function show(Thesis $thesis)
     {
-        $thesis->load(['mahasiswa.prodi', 'type', 'titleSubmissions', 'supervisors.dosen', 'sessions.supervisor.dosen', 'documents', 'events', 'revisions', 'audits.user']);
+        $thesis->load(['mahasiswa.prodi', 'prodi', 'semester', 'type', 'titleSubmissions', 'supervisors.dosen', 'sessions.supervisor.dosen', 'documents', 'events', 'revisions', 'audits.user']);
 
         return Inertia::render('Admin/TugasAkhir/Show', ['thesis' => $thesis, 'lecturers' => Dosen::where('status', 'aktif')->get(['id', 'nama_lengkap'])]);
     }
@@ -73,10 +123,12 @@ class ThesisController extends Controller
     public function assignSupervisors(Request $request, Thesis $thesis, ThesisService $service)
     {
         $data = $request->validate(['primary_supervisor_id' => 'required|exists:dosens,id', 'secondary_supervisor_id' => 'nullable|different:primary_supervisor_id|exists:dosens,id']);
-        $service->assignSupervisor($thesis, $data['primary_supervisor_id'], 'pembimbing_1', $request->user());
-        if (! empty($data['secondary_supervisor_id'])) {
-            $service->assignSupervisor($thesis, $data['secondary_supervisor_id'], 'pembimbing_2', $request->user());
-        }
+        DB::transaction(function () use ($data, $service, $thesis, $request) {
+            $service->assignSupervisor($thesis, $data['primary_supervisor_id'], 'pembimbing_1', $request->user());
+            if (! empty($data['secondary_supervisor_id'])) {
+                $service->assignSupervisor($thesis, $data['secondary_supervisor_id'], 'pembimbing_2', $request->user());
+            }
+        });
 
         return back()->with('success', 'Pembimbing berhasil ditetapkan.');
     }
@@ -115,7 +167,14 @@ class ThesisController extends Controller
 
     public function storeType(Request $request)
     {
-        $data = $request->validate(['prodi_id' => 'nullable|exists:prodis,id', 'mata_kuliah_id' => 'nullable|exists:mata_kuliahs,id', 'code' => 'required|string|max:50', 'name' => 'required|string|max:255', 'description' => 'nullable|string', 'is_active' => 'boolean']);
+        $data = $request->validate([
+            'prodi_id' => 'nullable|exists:prodis,id',
+            'mata_kuliah_id' => 'nullable|exists:mata_kuliahs,id',
+            'code' => ['required', 'string', 'max:50', Rule::unique('thesis_types')->where(fn ($query) => $query->where('prodi_id', $request->input('prodi_id')))],
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'is_active' => 'boolean',
+        ]);
         ThesisType::create($data + ['is_active' => $request->boolean('is_active', true)]);
 
         return back()->with('success', 'Jenis tugas akhir berhasil ditambahkan.');

@@ -21,7 +21,7 @@ class ThesisController extends Controller
     public function index(Request $request, ThesisEligibilityService $eligibility)
     {
         $mahasiswa = $this->mahasiswa($request);
-        $thesis = $mahasiswa->theses()->with(['type', 'titleSubmissions', 'activeSupervisors.dosen', 'documents', 'events', 'revisions'])->latest()->first();
+        $thesis = $mahasiswa->theses()->with(['type', 'titleSubmissions', 'activeSupervisors.dosen', 'documents', 'events', 'revisions', 'audits.user'])->withCount('sessions')->latest()->first();
         $problems = $eligibility->validate($mahasiswa);
 
         return Inertia::render('Mahasiswa/TugasAkhir/Index', [
@@ -54,7 +54,13 @@ class ThesisController extends Controller
         $submission = $service->submitTitle($thesis, collect($data)->except(['thesis_type_id', 'semester_id', 'kurikulum_id'])->all(), $request->user());
         $similar = $service->similarTitles($thesis, $submission->title);
 
-        return back()->with('success', 'Judul tugas akhir berhasil diajukan.')->with('warning', $similar ? 'Terdapat judul serupa untuk ditinjau prodi.' : null);
+        if ($similar !== []) {
+            return back()
+                ->with('success', 'Judul tugas akhir berhasil diajukan.')
+                ->with('warning', 'Terdapat judul serupa untuk ditinjau prodi: '.implode('; ', $similar).'.');
+        }
+
+        return back()->with('success', 'Judul tugas akhir berhasil diajukan.');
     }
 
     public function sessions(Request $request)
@@ -77,9 +83,16 @@ class ThesisController extends Controller
     public function uploadDocument(Request $request, Thesis $thesis, ThesisService $service)
     {
         abort_unless($thesis->mahasiswa_id === $this->mahasiswa($request)->id, 403);
-        $data = $request->validate(['type' => 'required|in:proposal,final,attachment,instrument', 'document' => 'required|file|mimes:pdf,doc,docx|max:10240']);
+        $data = $request->validate([
+            'type' => 'required|in:proposal,final,attachment,instrument',
+            'document' => 'required|file|mimes:pdf,doc,docx|max:10240',
+        ]);
         $file = $data['document'];
-        $service->uploadDocument($thesis, $data['type'], $file->store("theses/{$thesis->id}", 'public'), $file->getClientOriginalName(), $request->user());
+        $path = $file->store("theses/{$thesis->id}", 'public');
+        if ($path === false || $path === null) {
+            throw ValidationException::withMessages(['document' => 'Dokumen gagal disimpan. Silakan coba lagi.']);
+        }
+        $service->uploadDocument($thesis, $data['type'], $path, $file->getClientOriginalName(), $request->user());
 
         return back()->with('success', 'Dokumen berhasil diunggah.');
     }

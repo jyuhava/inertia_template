@@ -19,6 +19,31 @@ use Illuminate\Validation\ValidationException;
 
 class ThesisService
 {
+    /**
+     * Urutan tahap tugas akhir. Transisi hanya boleh maju (tidak boleh mundur),
+     * kecuali pada tahap yang memang designed untuk berputar: `title_revision`.
+     */
+    private const STAGE_RANK = [
+        'draft' => 0,
+        'submitted' => 1,
+        'under_review' => 1,
+        'title_revision' => 1,
+        'title_approved' => 2,
+        'supervisor_assignment' => 3,
+        'proposal' => 4,
+        'proposal_rejected' => 4,
+        'proposal_approved' => 5,
+        'seminar_proposal' => 6,
+        'research' => 7,
+        'result_seminar' => 8,
+        'thesis_defense' => 9,
+        'revision' => 10,
+        'revision_verified' => 11,
+        'completed' => 12,
+        'cancelled' => 12,
+        'withdrawn' => 12,
+    ];
+
     public function __construct(private ThesisEligibilityService $eligibility, private ThesisAuditService $audit) {}
 
     public function create(Mahasiswa $mahasiswa, ThesisType $type, ?int $semesterId = null, ?int $kurikulumId = null, ?User $actor = null): Thesis
@@ -50,7 +75,11 @@ class ThesisService
                 'status' => 'submitted',
             ]));
             $before = ['status' => $thesis->status];
-            $thesis->update(['status' => 'under_review']);
+            // Tanggal pengajuan pertama tidak ditimpa saat mahasiswa mengajukan revisi judul.
+            $thesis->update([
+                'status' => 'under_review',
+                'submitted_at' => $thesis->submitted_at ?? now(),
+            ]);
             $this->audit->log($submission, 'TITLE_SUBMITTED', null, ['version' => $submission->version, 'title' => $submission->title], null, $actor?->id);
             $this->audit->log($thesis, 'TITLE_SENT_FOR_REVIEW', $before, ['status' => 'under_review'], null, $actor?->id);
 
@@ -120,11 +149,14 @@ class ThesisService
             if ($dosen->status !== 'aktif') {
                 throw ValidationException::withMessages(['dosen_id' => 'Dosen pembimbing harus berstatus aktif.']);
             }
+            $this->ensureActive($thesis);
+            // Kosongkan peran ini lebih dulu agar penggantian pada thesis yang sama
+            // tidak ikut menghitung slot lama terhadap kuota.
+            $thesis->supervisors()->where('role', $role)->whereIn('status', ['proposed', 'approved', 'active'])->update(['status' => 'replaced', 'ended_at' => now()]);
             $capacity = $thesis->prodi->thesisSetting?->supervisor_capacity;
             if ($capacity !== null && $dosen->thesisSupervisors()->whereIn('status', ['proposed', 'approved', 'active'])->count() >= $capacity) {
                 throw ValidationException::withMessages(['dosen_id' => 'Kuota bimbingan dosen sudah penuh.']);
             }
-            $thesis->supervisors()->where('role', $role)->whereIn('status', ['proposed', 'approved', 'active'])->update(['status' => 'replaced', 'ended_at' => now()]);
             $supervisor = $thesis->supervisors()->create(['dosen_id' => $dosen->id, 'role' => $role, 'status' => $activate ? 'active' : 'proposed', 'appointed_at' => now(), 'appointed_by' => $actor->id]);
             if ($thesis->status === 'title_approved') {
                 $thesis->update(['status' => 'supervisor_assignment']);
@@ -167,11 +199,14 @@ class ThesisService
     public function reviewSession(\App\Models\ThesisSupervisionSession $session, Dosen $dosen, string $feedback, string $status, User $actor): \App\Models\ThesisSupervisionSession
     {
         $session->loadMissing('supervisor');
-        if ($session->supervisor->dosen_id !== $dosen->id || $session->supervisor->status !== 'active') {
+        if (! $session->supervisor || $session->supervisor->dosen_id !== $dosen->id || $session->supervisor->status !== 'active') {
             throw ValidationException::withMessages(['session' => 'Anda bukan pembimbing aktif untuk sesi ini.']);
         }
         if (! in_array($status, ['reviewed', 'revision'], true)) {
             throw ValidationException::withMessages(['status' => 'Status review bimbingan tidak valid.']);
+        }
+        if ($session->status !== 'submitted') {
+            throw ValidationException::withMessages(['session' => 'Sesi bimbingan ini sudah ditinjau.']);
         }
         $before = ['status' => $session->status];
         $session->update(['feedback' => $feedback, 'status' => $status, 'reviewed_by' => $actor->id, 'reviewed_at' => now()]);
@@ -182,10 +217,12 @@ class ThesisService
 
     public function uploadDocument(Thesis $thesis, string $type, string $path, ?string $originalName, User $actor): ThesisDocument
     {
+        $this->ensureActive($thesis);
+
         return DB::transaction(function () use ($thesis, $type, $path, $originalName, $actor) {
             $version = ((int) $thesis->documents()->where('type', $type)->max('version')) + 1;
             $document = $thesis->documents()->create(['type' => $type, 'version' => $version, 'file_path' => $path, 'original_name' => $originalName, 'uploaded_by' => $actor->id]);
-            if ($type === 'proposal' && in_array($thesis->status, ['supervisor_assignment', 'title_approved'], true)) {
+            if ($type === 'proposal' && in_array($thesis->status, ['supervisor_assignment', 'title_approved', 'proposal_rejected'], true)) {
                 $thesis->update(['status' => 'proposal']);
             }
             $this->audit->log($document, 'DOCUMENT_UPLOADED', null, ['type' => $type, 'version' => $version], null, $actor->id);
@@ -202,8 +239,14 @@ class ThesisService
         if (! in_array($decision, ['approved', 'revision', 'rejected'], true)) {
             throw ValidationException::withMessages(['decision' => 'Keputusan proposal tidak valid.']);
         }
+        $this->ensureActive($thesis);
         $before = ['status' => $thesis->status];
-        $thesis->update(['status' => $decision === 'approved' ? 'proposal_approved' : 'proposal']);
+        $status = match ($decision) {
+            'approved' => 'proposal_approved',
+            'rejected' => 'proposal_rejected',
+            default => 'proposal',
+        };
+        $thesis->update(['status' => $status]);
         $this->audit->log($thesis, 'PROPOSAL_REVIEWED', $before, ['status' => $thesis->status], $comment, $actor->id);
 
         return $thesis->fresh();
@@ -220,12 +263,25 @@ class ThesisService
             throw ValidationException::withMessages(['ends_at' => 'Waktu selesai harus setelah waktu mulai.']);
         }
         $examinerIds = array_values(array_unique(array_map('intval', $examinerIds)));
+        if ($examinerIds === []) {
+            throw ValidationException::withMessages(['examiner_ids' => 'Minimal satu penguji harus dipilih.']);
+        }
         if (count($examinerIds) !== Dosen::whereIn('id', $examinerIds)->count()) {
             throw ValidationException::withMessages(['examiner_ids' => 'Penguji tidak ditemukan.']);
         }
 
-        return DB::transaction(function () use ($thesis, $kind, $start, $end, $examinerIds, $actor) {
-            $candidates = ThesisEvent::whereNotIn('status', ['cancelled'])->where('scheduled_at', '<', $end)->get();
+        $status = ['seminar_proposal' => 'seminar_proposal', 'result_seminar' => 'result_seminar', 'defense' => 'thesis_defense'][$kind];
+        $this->ensureNotRegressing($thesis, $status);
+
+        return DB::transaction(function () use ($thesis, $kind, $start, $end, $examinerIds, $actor, $status) {
+            $candidates = ThesisEvent::whereNotIn('status', ['cancelled'])
+                ->where('scheduled_at', '<', $end)
+                ->where(function ($query) use ($examinerIds) {
+                    foreach ($examinerIds as $id) {
+                        $query->orWhereJsonContains('examiner_ids', (int) $id);
+                    }
+                })
+                ->get();
             foreach ($candidates as $event) {
                 $eventEnd = $event->ends_at ?? $event->scheduled_at->copy()->addHours(2);
                 if ($event->scheduled_at->lt($end) && $eventEnd->gt($start) && array_intersect($examinerIds, $event->examiner_ids ?? [])) {
@@ -233,7 +289,6 @@ class ThesisService
                 }
             }
             $event = $thesis->events()->create(['kind' => $kind, 'scheduled_at' => $start, 'ends_at' => $end, 'examiner_ids' => $examinerIds, 'scheduled_by' => $actor->id]);
-            $status = ['seminar_proposal' => 'seminar_proposal', 'result_seminar' => 'result_seminar', 'defense' => 'thesis_defense'][$kind];
             $thesis->update(['status' => $status]);
             $this->audit->log($event, 'EVENT_SCHEDULED', null, ['kind' => $kind, 'scheduled_at' => $start->toDateTimeString()], null, $actor->id);
 
@@ -246,6 +301,7 @@ class ThesisService
         if ($items === []) {
             throw ValidationException::withMessages(['items' => 'Minimal satu butir revisi harus diisi.']);
         }
+        $this->ensureActive($thesis);
 
         return DB::transaction(function () use ($thesis, $items, $actor) {
             $revision = $thesis->revisions()->create(['items' => array_values($items), 'status' => 'submitted']);
@@ -325,6 +381,25 @@ class ThesisService
         $problems = $this->eligibility->validate($mahasiswa);
         if ($problems !== []) {
             throw ValidationException::withMessages(['eligibility' => $problems]);
+        }
+    }
+
+    /** Tolak perubahan pada tugas akhir yang sudah selesai / dibatalkan. */
+    private function ensureActive(Thesis $thesis): void
+    {
+        if ($thesis->isTerminal()) {
+            throw ValidationException::withMessages(['thesis' => 'Tugas akhir ini sudah selesai dan tidak dapat diubah.']);
+        }
+    }
+
+    /** Tolak transisi status yang mundur, mis. jadwal Sidang pada tugas akhir `completed`. */
+    private function ensureNotRegressing(Thesis $thesis, string $targetStatus): void
+    {
+        $this->ensureActive($thesis);
+        $current = self::STAGE_RANK[$thesis->status] ?? 0;
+        $target = self::STAGE_RANK[$targetStatus] ?? 0;
+        if ($target < $current) {
+            throw ValidationException::withMessages(['status' => 'Tahap tugas akhir saat ini tidak dapat dikembalikan ke tahap sebelumnya.']);
         }
     }
 }

@@ -10,25 +10,26 @@ const steps = [
 const labels = {
     draft: 'Draft', submitted: 'Menunggu review', under_review: 'Dalam review', title_revision: 'Revisi judul',
     title_approved: 'Judul disetujui', supervisor_assignment: 'Penetapan pembimbing', proposal: 'Proposal',
-    proposal_approved: 'Proposal disetujui', seminar_proposal: 'Seminar proposal', research: 'Penelitian',
+    proposal_rejected: 'Proposal ditolak', proposal_approved: 'Proposal disetujui', seminar_proposal: 'Seminar proposal', research: 'Penelitian',
     result_seminar: 'Seminar hasil', thesis_defense: 'Sidang akhir', revision: 'Revisi', revision_verified: 'Revisi terverifikasi', completed: 'Selesai',
 };
 
 function StatusBadge({ status }) {
-    const tone = status === 'completed' ? 'bg-emerald-100 text-emerald-800' : status === 'title_revision' || status === 'revision' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800';
+    const tone = status === 'completed' ? 'bg-emerald-100 text-emerald-800' : status === 'proposal_rejected' ? 'bg-rose-100 text-rose-800' : status === 'title_revision' || status === 'revision' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800';
     return <span className={`inline-flex rounded px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${tone}`}>{labels[status] || status || 'Belum diajukan'}</span>;
 }
 
-export default function Index({ thesis = null, titleSubmissions = [], history = [], eligibility = {}, thesisTypes = [], types = [] }) {
-    const availableTypes = thesisTypes.length ? thesisTypes : types;
+export default function Index({ thesis = null, titleSubmissions = [], history = [], eligibility = {}, thesisTypes = [] }) {
+    const availableTypes = thesisTypes || [];
     const { data, setData, post, processing, errors, reset } = useForm({
         title: thesis?.title || '', alternate_titles: ['', ''], thesis_type_id: thesis?.thesis_type_id || availableTypes[0]?.id || '',
         background: '', problem_statement: '', objective: '', topic: '', method: '',
     });
     const submissions = titleSubmissions.length ? titleSubmissions : (thesis?.title_submissions || []);
-    const events = history.length ? history : (thesis?.histories || []);
-    const requirements = eligibility?.requirements || eligibility?.unmet_requirements || [];
-    const canSubmit = !thesis || ['draft', 'title_revision', 'withdrawn'].includes(thesis.status);
+    const events = history.length ? history : [];
+    const requirements = eligibility?.requirements || [];
+    // Menyamakan dengan ThesisService::submitTitle (draft, submitted, title_revision).
+    const canSubmit = !thesis || ['draft', 'submitted', 'title_revision'].includes(thesis.status);
 
     const submit = (event) => {
         event.preventDefault();
@@ -59,8 +60,8 @@ export default function Index({ thesis = null, titleSubmissions = [], history = 
 
                 {thesis && (
                     <section className="border bg-white p-5">
-                        <div className="flex flex-wrap items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-widest text-neutral-500">Tugas akhir aktif</p><h2 className="mt-1 text-lg font-bold">{thesis.title || 'Judul sedang diproses'}</h2><p className="mt-1 text-sm text-neutral-600">{thesis.program_study?.nama_prodi || thesis.prodi?.nama_prodi || thesis.type?.name || (typeof thesis.type === 'string' ? thesis.type : 'Skripsi')}</p></div><Link href="/mahasiswa/tugas-akhir/sessions" className="bg-black px-4 py-2 text-xs font-bold text-white">Bimbingan Saya</Link></div>
-                        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3"><div><p className="text-xs uppercase text-neutral-500">Pembimbing 1</p><p className="mt-1 text-sm font-semibold">{thesis.primary_supervisor?.nama_lengkap || thesis.active_supervisors?.find((item) => item.role === 'pembimbing_1')?.dosen?.nama_lengkap || '-'}</p></div><div><p className="text-xs uppercase text-neutral-500">Pembimbing 2</p><p className="mt-1 text-sm font-semibold">{thesis.secondary_supervisor?.nama_lengkap || thesis.active_supervisors?.find((item) => item.role === 'pembimbing_2')?.dosen?.nama_lengkap || '-'}</p></div><div><p className="text-xs uppercase text-neutral-500">Bimbingan tercatat</p><p className="mt-1 text-sm font-semibold">{thesis.sessions_count ?? thesis.sessions?.length ?? 0} sesi</p></div></div>
+                        <div className="flex flex-wrap items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-widest text-neutral-500">Tugas akhir aktif</p><h2 className="mt-1 text-lg font-bold">{thesis.title || 'Judul sedang diproses'}</h2><p className="mt-1 text-sm text-neutral-600">{thesis.prodi?.nama_prodi || thesis.type?.name || 'Skripsi'}</p></div>{thesis.status === 'completed' ? <span className="border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-bold text-emerald-800">Tugas akhir selesai</span> : <Link href="/mahasiswa/tugas-akhir/sessions" className="bg-black px-4 py-2 text-xs font-bold text-white">Bimbingan Saya</Link>}</div>
+                        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3"><div><p className="text-xs uppercase text-neutral-500">Pembimbing 1</p><p className="mt-1 text-sm font-semibold">{(thesis.active_supervisors || []).find((item) => item.role === 'pembimbing_1')?.dosen?.nama_lengkap || '-'}</p></div><div><p className="text-xs uppercase text-neutral-500">Pembimbing 2</p><p className="mt-1 text-sm font-semibold">{(thesis.active_supervisors || []).find((item) => item.role === 'pembimbing_2')?.dosen?.nama_lengkap || '-'}</p></div><div><p className="text-xs uppercase text-neutral-500">Bimbingan tercatat</p><p className="mt-1 text-sm font-semibold">{thesis.sessions_count ?? 0} sesi</p></div></div>
                     </section>
                 )}
 
@@ -87,10 +88,10 @@ export default function Index({ thesis = null, titleSubmissions = [], history = 
                         </form> : <p className="mt-5 border border-dashed p-4 text-sm text-neutral-600">Pengajuan baru tersedia saat judul perlu direvisi atau belum ada tugas akhir aktif.</p>}
                     </section>
 
-                    <section className="border bg-white p-6"><h2 className="text-sm font-bold uppercase">Riwayat pengajuan</h2><div className="mt-4 space-y-3">{submissions.map((item) => <article className="border p-3" key={item.id}><div className="flex items-start justify-between gap-2"><p className="text-sm font-bold">{item.title || item.judul}</p><StatusBadge status={item.status} /></div><p className="mt-2 text-xs text-neutral-500">{item.reviewed_at ? `Ditinjau ${new Date(item.reviewed_at).toLocaleDateString('id-ID')}` : item.created_at ? `Diajukan ${new Date(item.created_at).toLocaleDateString('id-ID')}` : ''}</p>{item.comment && <p className="mt-2 text-xs text-neutral-700">{item.comment}</p>}</article>)}{submissions.length === 0 && <p className="py-6 text-sm text-neutral-500">Belum ada riwayat pengajuan judul.</p>}</div></section>
+                    <section className="border bg-white p-6"><h2 className="text-sm font-bold uppercase">Riwayat pengajuan</h2><div className="mt-4 space-y-3">{submissions.map((item) => <article className="border p-3" key={item.id}><div className="flex items-start justify-between gap-2"><p className="text-sm font-bold">{item.title || item.judul}</p><StatusBadge status={item.status} /></div><p className="mt-2 text-xs text-neutral-500">{item.reviewed_at ? `Ditinjau ${new Date(item.reviewed_at).toLocaleDateString('id-ID')}` : item.created_at ? `Diajukan ${new Date(item.created_at).toLocaleDateString('id-ID')}` : ''}</p>{item.review_comment && <p className="mt-2 text-xs text-neutral-700">{item.review_comment}</p>}</article>)}{submissions.length === 0 && <p className="py-6 text-sm text-neutral-500">Belum ada riwayat pengajuan judul.</p>}</div></section>
                 </div>
 
-                <section className="border bg-white p-5"><h2 className="text-sm font-bold uppercase">Riwayat proses</h2><div className="mt-4 divide-y">{events.map((event) => <div className="flex flex-wrap justify-between gap-2 py-3 text-sm" key={event.id}><div><p className="font-semibold">{event.label || event.event_type || labels[event.status] || event.status}</p><p className="text-xs text-neutral-500">{event.notes || event.comment || '-'}</p></div><p className="text-xs text-neutral-500">{event.created_at ? new Date(event.created_at).toLocaleDateString('id-ID') : '-'}</p></div>)}{events.length === 0 && <p className="py-5 text-sm text-neutral-500">Aktivitas proses akan tampil setelah pengajuan diproses.</p>}</div></section>
+                <section className="border bg-white p-5"><h2 className="text-sm font-bold uppercase">Riwayat proses</h2><div className="mt-4 divide-y">{events.map((event) => <div className="flex flex-wrap justify-between gap-2 py-3 text-sm" key={event.id}><div><p className="font-semibold">{event.action || '-'}</p><p className="text-xs text-neutral-500">{event.reason || '-'}</p></div><p className="text-xs text-neutral-500">{event.created_at ? new Date(event.created_at).toLocaleDateString('id-ID') : '-'}</p></div>)}{events.length === 0 && <p className="py-5 text-sm text-neutral-500">Aktivitas proses akan tampil setelah pengajuan diproses.</p>}</div></section>
             </div>
         </AdminLayout>
     );
