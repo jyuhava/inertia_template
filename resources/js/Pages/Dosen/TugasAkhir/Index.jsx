@@ -4,14 +4,15 @@ import AdminLayout from '@/Layouts/AdminLayout';
 
 const labels = {
     submitted: 'Menunggu review', under_review: 'Dalam review', title_approved: 'Judul disetujui',
-    proposal: 'Proposal', proposal_approved: 'Proposal disetujui', research: 'Penelitian',
+    proposal: 'Proposal', proposal_rejected: 'Proposal ditolak', proposal_approved: 'Proposal disetujui', research: 'Penelitian',
     revision: 'Perlu revisi', completed: 'Selesai', reviewed: 'Bimbingan ditinjau',
 };
 
 function Badge({ status }) {
     const tone = status === 'completed' || status === 'title_approved' || status === 'proposal_approved'
         ? 'bg-emerald-100 text-emerald-800'
-        : status === 'revision' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800';
+        : status === 'proposal_rejected' ? 'bg-rose-100 text-rose-800'
+            : status === 'revision' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800';
     return <span className={`inline-flex rounded px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${tone}`}>{labels[status] || status || '-'}</span>;
 }
 
@@ -35,9 +36,10 @@ export default function Index({ supervisions = [], theses = [], pendingSessions 
             onSuccess: () => { setSelectedSession(null); reset(); },
         });
     };
-    const approveProposal = (thesis) => {
-        if (confirm(`Setujui proposal tugas akhir ${thesis.mahasiswa?.nama_lengkap || 'mahasiswa'}?`)) {
-            router.post(`/dosen/tugas-akhir/${thesis.id}/proposal/review`, { decision: 'approved' }, { preserveScroll: true });
+    const reviewProposal = (thesis, decision) => {
+        const label = decision === 'approved' ? 'Setujui' : decision === 'revision' ? 'Minta revisi' : 'Tolak';
+        if (confirm(`${label} proposal tugas akhir ${thesis.mahasiswa?.nama_lengkap || 'mahasiswa'}?`)) {
+            router.post(`/dosen/tugas-akhir/${thesis.id}/proposal/review`, { decision }, { preserveScroll: true });
         }
     };
 
@@ -62,7 +64,7 @@ export default function Index({ supervisions = [], theses = [], pendingSessions 
                                     <td className="max-w-xs px-3 py-3 text-xs font-medium">{thesis.title || '-'}</td>
                                     <td className="px-3 py-3"><Badge status={thesis.status} /></td>
                                     <td className="px-3 py-3 text-xs">{thesis.sessions_count ?? thesis.sessions?.length ?? 0} sesi</td>
-                                    <td className="px-3 py-3">{thesis.status === 'proposal' ? <button onClick={() => approveProposal(thesis)} className="text-xs font-bold underline">Setujui proposal</button> : <span className="text-xs text-neutral-400">-</span>}</td>
+                                    <td className="px-3 py-3">{thesis.status === 'proposal' || thesis.status === 'proposal_rejected' ? <div className="flex flex-wrap gap-2"><button onClick={() => reviewProposal(thesis, 'approved')} className="text-xs font-bold underline">Setujui</button><button onClick={() => reviewProposal(thesis, 'revision')} className="text-xs font-bold text-amber-700 underline">Revisi</button><button onClick={() => reviewProposal(thesis, 'rejected')} className="text-xs font-bold text-rose-700 underline">Tolak</button></div> : <span className="text-xs text-neutral-400">-</span>}</td>
                                 </tr>)}{rows.length === 0 && <tr><td colSpan="5" className="px-3 py-10 text-center text-neutral-500">Belum ada mahasiswa tugas akhir dalam bimbingan Anda.</td></tr>}</tbody>
                             </table>
                         </div>

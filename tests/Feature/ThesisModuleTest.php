@@ -90,6 +90,21 @@ class ThesisModuleTest extends TestCase
         $service->assignSupervisor($second, $lecturer->id, 'pembimbing_1', $admin);
     }
 
+    public function test_replacing_a_supervisor_on_same_thesis_does_not_consume_extra_capacity(): void
+    {
+        extract($this->context());
+        ThesisSetting::create(['prodi_id' => $prodi->id, 'supervisor_capacity' => 1]);
+        $service = app(ThesisService::class);
+        $thesis = $service->create($student, $type, $semester->id, $curriculum->id, $studentUser);
+        $service->assignSupervisor($thesis, $lecturer->id, 'pembimbing_1', $admin);
+
+        // Dosen yang sama boleh ditetapkan ulang pada thesis yang sama walau kuota = 1.
+        $replacement = $service->assignSupervisor($thesis, $lecturer->id, 'pembimbing_1', $admin);
+        $this->assertSame('active', $replacement->status);
+        $this->assertSame(1, $thesis->supervisors()->where('status', 'active')->count());
+        $this->assertSame(1, $thesis->supervisors()->where('status', 'replaced')->count());
+    }
+
     public function test_supervision_review_is_scoped_to_active_supervisor(): void
     {
         extract($this->context());
@@ -116,6 +131,86 @@ class ThesisModuleTest extends TestCase
         $service->scheduleEvent($one, 'defense', '2027-01-10 09:00:00', '2027-01-10 11:00:00', [$lecturer->id], $admin);
         $this->expectException(ValidationException::class);
         $service->scheduleEvent($two, 'defense', '2027-01-10 10:00:00', '2027-01-10 12:00:00', [$lecturer->id], $admin);
+    }
+
+    public function test_completed_thesis_cannot_be_scheduled_or_mutated(): void
+    {
+        extract($this->context());
+        $service = app(ThesisService::class);
+        $thesis = $service->create($student, $type, $semester->id, $curriculum->id, $studentUser);
+        $thesis->update(['status' => 'completed']);
+
+        try {
+            $service->scheduleEvent($thesis, 'seminar_proposal', '2027-01-10 09:00:00', '2027-01-10 11:00:00', [$lecturer->id], $admin);
+            $this->fail('Tugas akhir selesai tidak boleh dijadwalkan seminar.');
+        } catch (ValidationException) {
+            $this->assertSame('completed', $thesis->fresh()->status);
+        }
+
+        $this->expectException(ValidationException::class);
+        $service->submitRevision($thesis, ['Perbaiki abstrak'], $studentUser);
+    }
+
+    public function test_event_schedule_cannot_regress_to_earlier_stage(): void
+    {
+        extract($this->context());
+        $service = app(ThesisService::class);
+        $thesis = $service->create($student, $type, $semester->id, $curriculum->id, $studentUser);
+        $thesis->update(['status' => 'research']);
+
+        $this->expectException(ValidationException::class);
+        $service->scheduleEvent($thesis, 'seminar_proposal', '2027-01-10 09:00:00', '2027-01-10 11:00:00', [$lecturer->id], $admin);
+    }
+
+    public function test_proposal_rejection_uses_distinct_status(): void
+    {
+        extract($this->context());
+        $service = app(ThesisService::class);
+        $thesis = $service->create($student, $type, $semester->id, $curriculum->id, $studentUser);
+        $service->assignSupervisor($thesis, $lecturer->id, 'pembimbing_1', $admin);
+        $thesis->update(['status' => 'proposal']);
+
+        $rejected = $service->reviewProposal($thesis, $lecturer, 'rejected', 'Proposal tidak layak.', $lecturerUser);
+        $this->assertSame('proposal_rejected', $rejected->status);
+
+        $revised = $service->reviewProposal($thesis, $lecturer, 'revision', 'Perbaiki metode.', $lecturerUser);
+        $this->assertSame('proposal', $revised->status);
+
+        $approved = $service->reviewProposal($thesis, $lecturer, 'approved', null, $lecturerUser);
+        $this->assertSame('proposal_approved', $approved->status);
+    }
+
+    public function test_submitted_at_is_set_once_and_kept_on_revision(): void
+    {
+        extract($this->context());
+        $service = app(ThesisService::class);
+        $thesis = $service->create($student, $type, $semester->id, $curriculum->id, $studentUser);
+        $this->assertNull($thesis->submitted_at);
+
+        $first = $service->submitTitle($thesis, ['title' => 'Sistem Informasi Akademik'], $studentUser);
+        $firstSubmittedAt = $thesis->fresh()->submitted_at;
+        $this->assertNotNull($firstSubmittedAt);
+
+        $service->reviewTitle($first, 'revision', 'Perjelas.', null, $admin);
+        $service->submitTitle($thesis->fresh(), ['title' => 'Sistem Informasi Akademik Berbasis Web'], $studentUser);
+
+        $this->assertSame(
+            $firstSubmittedAt->toDateTimeString(),
+            $thesis->fresh()->submitted_at->toDateTimeString(),
+        );
+    }
+
+    public function test_session_cannot_be_reviewed_twice(): void
+    {
+        extract($this->context());
+        $service = app(ThesisService::class);
+        $thesis = $service->create($student, $type, $semester->id, $curriculum->id, $studentUser);
+        $supervisor = $service->assignSupervisor($thesis, $lecturer->id, 'pembimbing_1', $admin);
+        $session = $service->submitSession($thesis, $student, $supervisor->id, ['meeting_date' => today(), 'topic' => 'Bab 1'], $studentUser);
+        $service->reviewSession($session, $lecturer, 'Lanjutkan Bab 2.', 'reviewed', $lecturerUser);
+
+        $this->expectException(ValidationException::class);
+        $service->reviewSession($session->fresh(), $lecturer, 'Ulangi.', 'reviewed', $lecturerUser);
     }
 
     public function test_revision_finalization_locks_grade_and_syncs_matching_krs_item(): void
