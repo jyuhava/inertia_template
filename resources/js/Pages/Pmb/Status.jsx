@@ -94,7 +94,7 @@ export default function Status({ calonMahasiswa }) {
                             Penerimaan Mahasiswa Baru
                         </span>
                         <h1 className="mt-4 text-3xl font-bold text-[#22130d]">Status Pendaftaran PMB</h1>
-                        <p className="mt-2 text-lg text-[#7f4f2e]">{calonMahasiswa.periode_pmb.nama_periode}</p>
+                        <p className="mt-2 text-lg text-[#7f4f2e]">{calonMahasiswa.periode_pmb?.nama_periode || '-'}</p>
                     </div>
 
                     <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -161,14 +161,14 @@ export default function Status({ calonMahasiswa }) {
                                         <div>
                                             <dt className="text-xs font-semibold uppercase tracking-wider text-[#633d25]">Pilihan 1</dt>
                                             <dd className="text-[#22130d]">
-                                                {calonMahasiswa.prodi_pilihan_1?.nama_prodi} ({calonMahasiswa.prodi_pilihan_1?.jenjang})
+                                                {calonMahasiswa.prodi_pilihan1?.nama_prodi} ({calonMahasiswa.prodi_pilihan1?.jenjang})
                                             </dd>
                                         </div>
-                                        {calonMahasiswa.prodi_pilihan_2 && (
+                                        {calonMahasiswa.prodi_pilihan2 && (
                                             <div>
                                                 <dt className="text-xs font-semibold uppercase tracking-wider text-[#633d25]">Pilihan 2</dt>
                                                 <dd className="text-[#22130d]">
-                                                    {calonMahasiswa.prodi_pilihan_2?.nama_prodi} ({calonMahasiswa.prodi_pilihan_2?.jenjang})
+                                                    {calonMahasiswa.prodi_pilihan2?.nama_prodi} ({calonMahasiswa.prodi_pilihan2?.jenjang})
                                                 </dd>
                                             </div>
                                         )}

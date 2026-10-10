@@ -22,6 +22,11 @@ export default function CalonMahasiswaDashboard({
     const [showSubmitModal, setShowSubmitModal] = useState(false);
     const [selectedDokumen, setSelectedDokumen] = useState(null);
 
+    // `uploadedDocs` is keyed by dokumen_pmb_id over *every* upload, optional
+    // ones included. Counting its keys against the required list could report
+    // "Upload -2 dokumen lagi" once optional documents were added.
+    const dokumenRequiredSisa = dokumenRequired.filter((doc) => !uploadedDocs[doc.id]).length;
+
     const { data: profileData, setData: setProfileData, put: updateProfile, processing: updatingProfile, errors: profileErrors } = useForm({
         nama_lengkap: calonMahasiswa.nama_lengkap || '',
         jenis_kelamin: calonMahasiswa.jenis_kelamin || '',
@@ -144,7 +149,7 @@ export default function CalonMahasiswaDashboard({
                     <p className="text-sm text-gray-600">
                         {progress === 100 
                             ? 'Semua dokumen telah diupload. Anda dapat submit pendaftaran.'
-                            : `Upload ${dokumenRequired.length - Object.keys(uploadedDocs).length} dokumen lagi untuk menyelesaikan pendaftaran.`
+                            : `Upload ${dokumenRequiredSisa} dokumen lagi untuk menyelesaikan pendaftaran.`
                         }
                     </p>
                 </div>
@@ -371,9 +376,9 @@ export default function CalonMahasiswaDashboard({
                                                                     uploaded.status_verifikasi === 'rejected' ? 'text-red-600' :
                                                                     'text-blue-600'
                                                                 }`}>
-                                                                    {uploaded.status_verifikasi === 'rejected' && uploaded.catatan_penolakan ? 
-                                                                        `Ditolak: ${uploaded.catatan_penolakan}` :
-                                                                        `Uploaded: ${new Date(uploaded.created_at).toLocaleDateString('id-ID')} • Size: ${(uploaded.ukuran_file / 1024 / 1024).toFixed(2)} MB${uploaded.status_verifikasi === 'pending' ? ' • Sedang direview' : ''}`
+                                                                    {uploaded.status_verifikasi === 'rejected' && uploaded.catatan_verifikasi ?
+                                                                        `Ditolak: ${uploaded.catatan_verifikasi}` :
+                                                                        `Uploaded: ${new Date(uploaded.created_at).toLocaleDateString('id-ID')} • Size: ${(uploaded.file_size_mb ?? 0).toFixed(2)} MB${uploaded.status_verifikasi === 'pending' ? ' • Sedang direview' : ''}`
                                                                     }
                                                                 </p>
                                                             </div>

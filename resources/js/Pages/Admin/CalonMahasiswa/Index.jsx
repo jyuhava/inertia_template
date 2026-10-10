@@ -1,6 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 function Box({ children, className = '', padded = true, variant = 'white' }) {
     const variants = {
@@ -80,10 +80,24 @@ function StatCard({ label, count }) {
     );
 }
 
-export default function Index({ calonMahasiswa = {}, filters = {}, periodePmb }) {
+export default function Index({ calonMahasiswa = {}, filters = {} }) {
     const [search, setSearch] = useState(filters.search || '');
     const [filterStatus, setFilterStatus] = useState(filters.status || '');
     const [selectedItems, setSelectedItems] = useState([]);
+
+    // Keep the inputs in step with the URL. Without this the local state kept
+    // the value typed before the last "Cari", so the list and the CSV export
+    // silently disagreed about which filter was active.
+    useEffect(() => {
+        setSearch(filters.search || '');
+        setFilterStatus(filters.status || '');
+    }, [filters.search, filters.status]);
+
+    // Selections belong to the page they were ticked on; navigating away must
+    // not leave stale ids checked for the next bulk action.
+    useEffect(() => {
+        setSelectedItems([]);
+    }, [calonMahasiswa?.current_page, filters.search, filters.status, filters.periode_pmb_id]);
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -122,9 +136,15 @@ export default function Index({ calonMahasiswa = {}, filters = {}, periodePmb })
         }
 
         if (confirm(`Apakah Anda yakin ingin ${action} ${selectedItems.length} calon mahasiswa yang dipilih?`)) {
+            // The controller validates `calon_mahasiswa_ids` /
+            // `status_pendaftaran`. Sending `ids` / `status` made every bulk
+            // action fail with a 422 that the page never surfaced.
             router.post(route('admin.calon-mahasiswa.bulk-update-status'), {
-                ids: selectedItems,
-                status: action
+                calon_mahasiswa_ids: selectedItems,
+                status_pendaftaran: action
+            }, {
+                preserveScroll: true,
+                onSuccess: () => setSelectedItems([])
             });
         }
     };
@@ -183,7 +203,7 @@ export default function Index({ calonMahasiswa = {}, filters = {}, periodePmb })
                         </select>
                         <div className="md:col-span-2 flex gap-2">
                             <ActionButton type="submit" variant="primary">Cari</ActionButton>
-                            {(filters.search || filters.status) && (
+                            {(filters.search || filters.status || filters.periode_pmb_id || filters.prodi_id) && (
                                 <ActionButton href={route('admin.calon-mahasiswa.index')} variant="secondary">Reset</ActionButton>
                             )}
                         </div>
@@ -239,7 +259,7 @@ export default function Index({ calonMahasiswa = {}, filters = {}, periodePmb })
                             <tbody className="divide-y divide-[#e5e5e5]">
                                 {(calonMahasiswa?.data || []).map((calon) => (
                                     <tr key={calon.id} className="hover:bg-[#fafafa]">
-                                        <td data-label="0} className=&quot;w-4 h-4 border-[#ccc] text-black focus:ring-black&quot; />" className="px-4 py-3">
+                                        <td data-label="Pilih" className="px-4 py-3">
                                             <input
                                                 type="checkbox"
                                                 checked={selectedItems.includes(calon.id)}
@@ -257,9 +277,12 @@ export default function Index({ calonMahasiswa = {}, filters = {}, periodePmb })
                                             <div>{calon.no_hp}</div>
                                         </td>
                                         <td data-label="Pilihan Prodi" className="px-4 py-3 text-sm text-neutral-600">
-                                            <div className="font-medium">1. {calon.prodi_pilihan_1?.nama_prodi}</div>
-                                            {calon.prodi_pilihan_2 && (
-                                                <div>2. {calon.prodi_pilihan_2?.nama_prodi}</div>
+                                            {/* Eloquent serialises the relations as
+                                                `prodi_pilihan1` / `prodi_pilihan2`;
+                                                `prodi_pilihan_1` is the raw FK id. */}
+                                            <div className="font-medium">1. {calon.prodi_pilihan1?.nama_prodi || '-'}</div>
+                                            {calon.prodi_pilihan2 && (
+                                                <div>2. {calon.prodi_pilihan2?.nama_prodi}</div>
                                             )}
                                         </td>
                                         <td data-label="Status" className="px-4 py-3"><StatusBadge status={calon.status_pendaftaran} /></td>

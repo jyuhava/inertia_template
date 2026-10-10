@@ -28,7 +28,7 @@ function SectionTitle({ children, action }) {
     );
 }
 
-function ActionButton({ children, href, onClick, variant = 'primary', type = 'button' }) {
+function ActionButton({ children, href, onClick, variant = 'primary', type = 'button', disabled = false }) {
     const map = {
         primary: 'bg-black text-white border-black hover:bg-neutral-800',
         secondary: 'bg-white text-black border-[#ccc] hover:bg-[#f5f5f5]',
@@ -44,7 +44,7 @@ function ActionButton({ children, href, onClick, variant = 'primary', type = 'bu
         );
     }
     return (
-        <button type={type} onClick={onClick} className={`${base} ${map[variant]}`}>
+        <button type={type} onClick={onClick} disabled={disabled} className={`${base} ${map[variant]} disabled:opacity-50 disabled:pointer-events-none`}>
             {children}
         </button>
     );

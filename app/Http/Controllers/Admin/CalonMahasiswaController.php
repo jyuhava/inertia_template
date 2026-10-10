@@ -138,6 +138,7 @@ class CalonMahasiswaController extends Controller
     {
         $request->validate([
             'status_pendaftaran' => 'required|in:draft,submitted,verified,accepted,rejected',
+            'status_berkas' => 'nullable|in:incomplete,complete,verified,revision',
             'catatan_admin' => 'nullable|string',
         ]);
 
@@ -145,6 +146,13 @@ class CalonMahasiswaController extends Controller
             'status_pendaftaran' => $request->status_pendaftaran,
             'catatan_admin' => $request->catatan_admin,
         ];
+
+        // The detail form always submits status_berkas, but it used to be
+        // dropped here: the admin picked "Perlu Revisi" and the row never
+        // changed.
+        if ($request->filled('status_berkas')) {
+            $data['status_berkas'] = $request->status_berkas;
+        }
 
         if (in_array($request->status_pendaftaran, ['verified', 'accepted', 'rejected'])) {
             $data['tanggal_verifikasi'] = now();

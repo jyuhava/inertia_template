@@ -31,9 +31,13 @@ return new class extends Migration
     public function down(): void
     {
         foreach (['no_pendaftaran', 'nik', 'email'] as $column) {
-            if ($this->hasUniqueIndex('calon_mahasiswas', $column)) {
-                Schema::table('calon_mahasiswas', function (Blueprint $table) use ($column) {
-                    $table->dropUnique([$column]);
+            // Drop by the index's real name: it is not always the conventional
+            // {table}_{column}_unique, and dropUnique() would throw otherwise.
+            $name = $this->uniqueIndexName('calon_mahasiswas', $column);
+
+            if ($name !== null) {
+                Schema::table('calon_mahasiswas', function (Blueprint $table) use ($name) {
+                    $table->dropUnique($name);
                 });
             }
         }
@@ -137,7 +141,7 @@ return new class extends Migration
     private function restoreUniqueIndexes(): void
     {
         foreach (['no_pendaftaran', 'nik', 'email'] as $column) {
-            if ($this->hasUniqueIndex('calon_mahasiswas', $column)) {
+            if ($this->uniqueIndexName('calon_mahasiswas', $column) !== null) {
                 continue;
             }
 
@@ -147,10 +151,26 @@ return new class extends Migration
         }
     }
 
-    private function hasUniqueIndex(string $table, string $column): bool
+    /**
+     * Name of the single-column UNIQUE index on `$column`, or null when the
+     * column carries no unique constraint.
+     *
+     * `Schema::hasIndex($table, $column)` cannot be used here: with no `$type`
+     * it matches any index (and also matches on columns, not just names), so a
+     * plain non-unique index on `nik` would report true and leave the column
+     * without the uniqueness this migration exists to restore.
+     */
+    private function uniqueIndexName(string $table, string $column): ?string
     {
-        return Schema::hasIndex($table, $table . '_' . $column . '_unique')
-            || Schema::hasIndex($table, $column);
+        foreach (Schema::getIndexes($table) as $index) {
+            $columns = (array) ($index['columns'] ?? []);
+
+            if (($index['unique'] ?? false) && count($columns) === 1 && $columns[0] === $column) {
+                return $index['name'];
+            }
+        }
+
+        return null;
     }
 
     /**
