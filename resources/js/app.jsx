@@ -291,7 +291,7 @@ window.route = (name, params = {}) => {
         'admin.calon-mahasiswa.bulk-update-status': '/admin/calon-mahasiswa/bulk-update-status',
         'admin.calon-mahasiswa.convert': (id) => `/admin/calon-mahasiswa/${id}/convert`,
         'admin.calon-mahasiswa.export': '/admin/calon-mahasiswa/export/csv',
-        'admin.calon-mahasiswa.download-dokumen': (id) => `/admin/calon-mahasiswa/download-dokumen/${id}`,
+        'admin.calon-mahasiswa.download-dokumen': (id) => `/admin/calon-mahasiswa/dokumen/${id}/download`,
         'admin.upload-dokumen.download': (id) => `/admin/upload-dokumen/${id}/download`,
 
         // Calon Mahasiswa routes

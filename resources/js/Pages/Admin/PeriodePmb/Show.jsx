@@ -82,7 +82,7 @@ function CalonRow({ calon }) {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-[#f5f5f5] border border-[#e5e5e5]">
             <div>
                 <p className="text-sm font-bold text-neutral-900">{calon.nama_lengkap}</p>
-                <p className="text-xs text-neutral-500">{calon.no_pendaftaran} • {calon.prodi_pilihan_1?.nama_prodi}</p>
+                <p className="text-xs text-neutral-500">{calon.no_pendaftaran} • {calon.prodi_pilihan1?.nama_prodi}</p>
             </div>
             <div className="flex items-center gap-2">
                 <span className="inline-flex px-3 py-1 text-[10px] font-bold uppercase tracking-widest bg-white border border-[#e5e5e5] text-neutral-900">

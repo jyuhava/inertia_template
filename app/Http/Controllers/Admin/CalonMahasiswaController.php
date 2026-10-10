@@ -17,30 +17,26 @@ use Inertia\Inertia;
 class CalonMahasiswaController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Build the applicant query with the filters shared by the index listing
+     * and the CSV export.
      */
-    public function index(Request $request)
+    private function filteredQuery(Request $request)
     {
-        $query = CalonMahasiswa::with(['periodePmb', 'prodiPilihan1', 'prodiPilihan2', 'user'])
-            ->orderBy('created_at', 'desc');
+        $query = CalonMahasiswa::with(['periodePmb', 'prodiPilihan1', 'prodiPilihan2', 'user']);
 
-        // Filter by periode PMB
-        if ($request->has('periode_pmb_id') && $request->periode_pmb_id) {
+        if ($request->filled('periode_pmb_id')) {
             $query->where('periode_pmb_id', $request->periode_pmb_id);
         }
 
-        // Filter by status pendaftaran 
-        if ($request->has('status') && $request->status) {
+        if ($request->filled('status')) {
             $query->where('status_pendaftaran', $request->status);
         }
 
-        // Filter by prodi
-        if ($request->has('prodi_id') && $request->prodi_id) {
+        if ($request->filled('prodi_id')) {
             $query->where('prodi_pilihan_1', $request->prodi_id);
         }
 
-        // Search functionality
-        if ($request->has('search') && $request->search) {
+        if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('no_pendaftaran', 'like', "%{$search}%")
@@ -50,7 +46,18 @@ class CalonMahasiswaController extends Controller
             });
         }
 
-        $calonMahasiswas = $query->paginate(15)->withQueryString();
+        return $query;
+    }
+
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request)
+    {
+        $calonMahasiswas = $this->filteredQuery($request)
+            ->orderBy('created_at', 'desc')
+            ->paginate(15)
+            ->withQueryString();
 
         // Get filter options
         $periodePmbList = PeriodePmb::orderBy('created_at', 'desc')->get(['id', 'nama_periode']);
@@ -131,6 +138,7 @@ class CalonMahasiswaController extends Controller
     {
         $request->validate([
             'status_pendaftaran' => 'required|in:draft,submitted,verified,accepted,rejected',
+            'status_berkas' => 'nullable|in:incomplete,complete,verified,revision',
             'catatan_admin' => 'nullable|string',
         ]);
 
@@ -138,6 +146,13 @@ class CalonMahasiswaController extends Controller
             'status_pendaftaran' => $request->status_pendaftaran,
             'catatan_admin' => $request->catatan_admin,
         ];
+
+        // The detail form always submits status_berkas, but it used to be
+        // dropped here: the admin picked "Perlu Revisi" and the row never
+        // changed.
+        if ($request->filled('status_berkas')) {
+            $data['status_berkas'] = $request->status_berkas;
+        }
 
         if (in_array($request->status_pendaftaran, ['verified', 'accepted', 'rejected'])) {
             $data['tanggal_verifikasi'] = now();
@@ -154,6 +169,12 @@ class CalonMahasiswaController extends Controller
      */
     public function convertToMahasiswa(Request $request, CalonMahasiswa $calonMahasiswa)
     {
+        $request->validate([
+            'prodi_id' => 'nullable|exists:prodis,id',
+            'angkatan' => 'nullable|string|max:4',
+            'nim' => 'nullable|string|max:20|unique:mahasiswas,nim',
+        ]);
+
         // Whatever the status, allow conversion
         $prodiId = $request->prodi_id 
             ?: ($calonMahasiswa->prodi_pilihan_1 
@@ -162,12 +183,9 @@ class CalonMahasiswaController extends Controller
 
         $angkatan = $request->angkatan ?: (string) now()->year;
 
+        // generateNim() already loops until the value is unused, so a supplied
+        // NIM only needs the uniqueness rule above.
         $nim = $request->nim ?: $this->generateNim($prodiId, $angkatan);
-
-        // Ensure NIM uniqueness
-        if (Mahasiswa::where('nim', $nim)->exists()) {
-            $nim = $this->generateNim($prodiId, $angkatan);
-        }
 
         $prodi = Prodi::find($prodiId);
 
@@ -253,7 +271,10 @@ class CalonMahasiswaController extends Controller
             ->first();
             
         if ($lastMahasiswa) {
-            $lastSequence = (int) substr($lastMahasiswa->nim, -3);
+            // Read everything after the prefix, not just the last 3 chars:
+            // once a sequence passes 999 the trailing-3 slice read the wrong
+            // number and could reissue an existing NIM.
+            $lastSequence = (int) substr($lastMahasiswa->nim, strlen($prefix));
             $newSequence = $lastSequence + 1;
         } else {
             $newSequence = 1;
@@ -299,18 +320,12 @@ class CalonMahasiswaController extends Controller
      */
     public function export(Request $request)
     {
-        $query = CalonMahasiswa::with(['periodePmb', 'prodiPilihan1', 'prodiPilihan2']);
-
-        // Apply same filters as index
-        if ($request->has('periode_pmb_id') && $request->periode_pmb_id) {
-            $query->where('periode_pmb_id', $request->periode_pmb_id);
-        }
-
-        if ($request->has('status_pendaftaran') && $request->status_pendaftaran) {
-            $query->where('status_pendaftaran', $request->status_pendaftaran);
-        }
-
-        $calonMahasiswas = $query->orderBy('created_at', 'desc')->get();
+        // Reuse the index filters so the CSV matches what the admin is looking
+        // at. Previously this read `status_pendaftaran`, a parameter nothing
+        // ever sent, so a filtered list exported every row instead.
+        $calonMahasiswas = $this->filteredQuery($request)
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         $fileName = 'calon_mahasiswa_' . date('Y-m-d_H-i-s') . '.csv';
         
