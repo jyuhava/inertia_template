@@ -18,7 +18,10 @@ return [
     |
     */
 
-    'driver' => env('SESSION_DRIVER', 'database'),
+    // Default "file": memakai driver database memaksa setiap request menjadi
+    // penulis tabel sessions. Pada SQLite itu memicu lock dan memperlambat
+    // seluruh halaman.
+    'driver' => env('SESSION_DRIVER', 'file'),
 
     /*
     |--------------------------------------------------------------------------
