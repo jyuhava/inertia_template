@@ -250,7 +250,7 @@ window.route = (name, params = {}) => {
         'admin.obe.cpmk.index': '/admin/obe/cpmk',
         'admin.obe.mapping.index': '/admin/obe/mapping',
         'admin.obe.assessments.index': '/admin/obe/assessments',
-        'admin.obe.report': '/admin/obe/report',
+        'admin.obe.report.index': '/admin/obe/report',
         'dosen.obe.index': '/dosen/obe',
         // Profile routes
         'profile.edit': '/profile',

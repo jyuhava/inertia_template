@@ -122,7 +122,17 @@ class LpmProposal extends Model
 
     public function averageReviewScore(): ?float
     {
-        $scores = $this->reviews()->where('status', 'submitted')->whereNotNull('total_score')->pluck('total_score');
+        // Pakai relasi yang sudah di-eager-load bila tersedia, supaya tidak
+        // menembak query yang sama dua kali dalam satu request. Tetap jatuh
+        // ke query biasa bila relasi belum dimuat.
+        $reviews = $this->relationLoaded('reviews')
+            ? $this->reviews
+            : $this->reviews()->get();
+
+        $scores = $reviews
+            ->where('status', 'submitted')
+            ->whereNotNull('total_score')
+            ->pluck('total_score');
 
         if ($scores->isEmpty()) {
             return null;

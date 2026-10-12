@@ -131,7 +131,7 @@ function StaffSidebar({ isOpen, isCollapsed, toggleSidebar, toggleCollapse }) {
                 { name: 'CPMK & Sub-CPMK', href: '/admin/obe/cpmk' },
                 { name: 'Pemetaan OBE', href: '/admin/obe/mapping' },
                 { name: 'Assessment OBE', href: '/admin/obe/assessments' },
-                { name: 'Laporan OBE', href: '/admin/obe/report' },
+                { name: 'Laporan OBE', href: route('admin.obe.report.index') },
             ]
         },
         {

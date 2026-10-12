@@ -31,7 +31,7 @@ class DashboardController extends Controller
             ->get()
             ->map(fn ($p) => ['nama' => $p->nama_program, 'jumlah' => $p->proposals_count]);
 
-        $recent = LpmProposal::with(['program', 'ketua'])
+        $recent = LpmProposal::with(['program', 'ketua.dosen'])
             ->orderBy('updated_at', 'desc')
             ->take(8)
             ->get();

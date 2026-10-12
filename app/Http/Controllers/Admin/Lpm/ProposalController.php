@@ -19,7 +19,7 @@ class ProposalController extends Controller
 {
     public function index(Request $request)
     {
-        $query = LpmProposal::with(['program', 'ketua', 'members.user'])
+        $query = LpmProposal::with(['program', 'ketua.dosen', 'members.user'])
             ->orderBy('updated_at', 'desc');
 
         if ($request->has('status') && $request->status) {
@@ -45,29 +45,43 @@ class ProposalController extends Controller
 
     public function show(LpmProposal $proposal)
     {
+        // Hanya relasi yang benar-benar dibaca Show.jsx. Relasi uploader,
+        // creator, dan criteria sebelumnya ikut dimuat padahal tidak pernah
+        // dirender — satu query sia-sia tiap relasi tersebut.
         $proposal->load([
-            'program.reviewScheme.criteria',
-            'ketua',
-            'creator',
-            'members.user',
-            'documents.uploader',
-            'reviews.reviewer',
+            'program.reviewScheme',
+            'ketua.dosen',
+            'members.user.dosen',
+            'documents',
+            'reviews.reviewer.dosen',
             'contract',
-            'activities.creator',
-            'reports.uploader',
-            'outputs.creator',
+            'activities',
+            'reports',
+            'outputs',
         ]);
 
-        $reviewableReviewers = User::where('role', 'dosen')
-            ->with('dosen')
-            ->get()
-            ->map(fn ($u) => [
-                'id' => $u->id,
-                'name' => $u->dosen?->nama_lengkap ?? $u->name,
-                'assigned' => LpmReview::where('proposal_id', $proposal->id)
-                    ->where('reviewer_user_id', $u->id)
-                    ->exists(),
-            ]);
+        // Daftar dosen untuk penugasan reviewer hanya dirender pada status
+        // admin_approved (lihat Show.jsx). Di luar status itu daftar ini tidak
+        // dipakai, jadi tidak perlu diambil maupun dikirim ke browser.
+        $reviewableReviewers = [];
+
+        if ($proposal->status === 'admin_approved') {
+            // Satu query untuk penanda "sudah ditugaskan", bukan satu per dosen.
+            $assignedIds = LpmReview::where('proposal_id', $proposal->id)
+                ->pluck('reviewer_user_id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
+
+            $reviewableReviewers = User::where('role', 'dosen')
+                ->with('dosen')
+                ->get()
+                ->map(fn ($u) => [
+                    'id' => $u->id,
+                    'name' => $u->dosen?->nama_lengkap ?? $u->name,
+                    'assigned' => in_array($u->id, $assignedIds, true),
+                ])
+                ->values();
+        }
 
         $reviewPassedCount = $proposal->reviews->where('status', 'submitted')->where('kesimpulan', 'lolos')->count();
         $totalSubmittedReviews = $proposal->reviews->where('status', 'submitted')->count();

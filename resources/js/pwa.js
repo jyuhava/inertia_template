@@ -57,8 +57,44 @@ export async function promptInstall() {
     return choice?.outcome === 'accepted';
 }
 
+/**
+ * Cabut service worker yang sudah terdaftar dan kosongkan cache-nya.
+ *
+ * Dipakai saat pengembangan: SW memakai strategi stale-while-revalidate,
+ * jadi ia menyajikan bundle JS versi lama dan dynamic import halaman gagal
+ * (layar putih / "page tidak muncul"). Setelah SW dicabut, cache ikut dibersihkan.
+ */
+export async function unregisterServiceWorker() {
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return;
+
+    try {
+        if (typeof navigator.serviceWorker.getRegistrations === 'function') {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(registrations.map((registration) => registration.unregister()));
+        }
+    } catch {
+        /* SW tidak didukung / mode privat — abaikan */
+    }
+
+    if (typeof caches === 'undefined' || typeof caches.keys !== 'function') return;
+
+    try {
+        const keys = await caches.keys();
+        await Promise.all(keys.filter((key) => key.startsWith('siakad-')).map((key) => caches.delete(key)));
+    } catch {
+        /* cache tidak tersedia — abaikan */
+    }
+}
+
 export function registerServiceWorker() {
     if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return;
+
+    // Vite dev server: SW dinonaktifkan & sisa cache dibersihkan.
+    if (import.meta.env.DEV) {
+        unregisterServiceWorker();
+        return;
+    }
+
     if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
         return;
     }

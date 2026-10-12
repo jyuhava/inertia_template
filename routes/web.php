@@ -316,6 +316,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
         Route::delete('assessment-mappings/{mapping}', [\App\Http\Controllers\Admin\Obe\AssessmentController::class, 'destroyMapping'])->name('assessment-mappings.destroy');
         Route::post('assessments/{assessment}/scores', [\App\Http\Controllers\Admin\Obe\AssessmentController::class, 'storeScore'])->name('assessments.scores.store');
 
+        Route::get('report', [\App\Http\Controllers\Admin\Obe\ReportController::class, 'index'])->name('report.index');
         Route::get('kurikulum/{kurikulum}/matrix', [\App\Http\Controllers\Admin\Obe\ReportController::class, 'matrix'])->name('matrix');
         Route::get('kurikulum/{kurikulum}/mahasiswa/{mahasiswa}/gap-report', [\App\Http\Controllers\Admin\Obe\ReportController::class, 'gap'])->name('gap-report');
     });
