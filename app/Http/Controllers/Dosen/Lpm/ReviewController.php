@@ -31,7 +31,9 @@ class ReviewController extends Controller
             abort(403);
         }
 
-        $review->load(['proposal.program.reviewScheme.criteria', 'proposal.ketua.dosen', 'proposal.members.user', 'proposal.documents']);
+        // Review.jsx membaca criteria (skor berbobot), dokumen, dan nama ketua.
+        // `members` tidak pernah dirender di sana.
+        $review->load(['proposal.program.reviewScheme.criteria', 'proposal.ketua.dosen', 'proposal.documents']);
 
         return Inertia::render('Dosen/Lpm/Review', [
             'review' => $review,

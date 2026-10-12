@@ -99,7 +99,10 @@ class ProposalController extends Controller
             abort(403, 'Anda bukan ketua proposal ini.');
         }
 
-        $proposal->load(['program', 'members.user', 'documents.uploader']);
+        // Form.jsx hanya memakai path/jenis/nama_file pada dokumen, jadi uploader
+        // tidak perlu dimuat. Sebaliknya `dosen` milik anggota memang dibaca
+        // (baris _name) dan sebelumnya lazy-load satu query per anggota.
+        $proposal->load(['program', 'members.user.dosen', 'documents']);
 
         // Non-ketua member yang belum setujui bisa konfirmasi
         $memberRow = LpmProposalMember::where('proposal_id', $proposal->id)
@@ -231,18 +234,17 @@ class ProposalController extends Controller
 
     public function show(Request $request, LpmProposal $proposal)
     {
+        // Hanya relasi yang dibaca Dosen/Lpm/Show.jsx. Relasi uploader,
+        // creator, ketua, dan reviewScheme tidak pernah dirender di sana.
         $proposal->load([
             'program',
-            'ketua.dosen',
-            'creator',
             'members.user.dosen',
-            'documents.uploader',
+            'documents',
             'reviews.reviewer.dosen',
             'contract',
             'activities',
-            'reports.uploader',
-            'outputs.creator',
-            'program.reviewScheme.criteria',
+            'reports',
+            'outputs',
         ]);
 
         $isReviewer = LpmReview::where('proposal_id', $proposal->id)

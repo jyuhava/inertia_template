@@ -45,17 +45,19 @@ class ProposalController extends Controller
 
     public function show(LpmProposal $proposal)
     {
+        // Hanya relasi yang benar-benar dibaca Show.jsx. Relasi uploader,
+        // creator, dan criteria sebelumnya ikut dimuat padahal tidak pernah
+        // dirender — satu query sia-sia tiap relasi tersebut.
         $proposal->load([
-            'program.reviewScheme.criteria',
+            'program.reviewScheme',
             'ketua.dosen',
-            'creator',
             'members.user.dosen',
-            'documents.uploader',
+            'documents',
             'reviews.reviewer.dosen',
             'contract',
-            'activities.creator',
-            'reports.uploader',
-            'outputs.creator',
+            'activities',
+            'reports',
+            'outputs',
         ]);
 
         // Daftar dosen untuk penugasan reviewer hanya dirender pada status
