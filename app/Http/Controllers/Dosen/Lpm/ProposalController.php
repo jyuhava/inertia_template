@@ -233,11 +233,11 @@ class ProposalController extends Controller
     {
         $proposal->load([
             'program',
-            'ketua',
+            'ketua.dosen',
             'creator',
-            'members.user',
+            'members.user.dosen',
             'documents.uploader',
-            'reviews.reviewer',
+            'reviews.reviewer.dosen',
             'contract',
             'activities',
             'reports.uploader',

@@ -14,7 +14,7 @@ class ReviewController extends Controller
     {
         $user = $request->user();
 
-        $reviews = LpmReview::with(['proposal.program', 'proposal.ketua'])
+        $reviews = LpmReview::with(['proposal.program', 'proposal.ketua.dosen'])
             ->where('reviewer_user_id', $user->id)
             ->orderBy('updated_at', 'desc')
             ->paginate(10)
@@ -31,7 +31,7 @@ class ReviewController extends Controller
             abort(403);
         }
 
-        $review->load(['proposal.program.reviewScheme.criteria', 'proposal.ketua', 'proposal.members.user', 'proposal.documents']);
+        $review->load(['proposal.program.reviewScheme.criteria', 'proposal.ketua.dosen', 'proposal.members.user', 'proposal.documents']);
 
         return Inertia::render('Dosen/Lpm/Review', [
             'review' => $review,
