@@ -8,6 +8,7 @@ import {
     CalendarDaysIcon,
     CheckBadgeIcon,
     ChevronRightIcon,
+    ClipboardDocumentCheckIcon,
     ClipboardDocumentListIcon,
     ClockIcon,
     MapPinIcon,
@@ -116,6 +117,7 @@ export default function MahasiswaDashboard({
     krsSummary,
     todaySchedule,
     recentScores,
+    recentLmsGrades,
 }) {
     const todayLabel = useMemo(() => {
         return new Date().toLocaleDateString('id-ID', {
@@ -231,6 +233,71 @@ export default function MahasiswaDashboard({
                         progress={Number(stats.kehadiran) || 0}
                     />
                 </section>
+
+                {/* ---------------- Nilai tugas LMS terbaru (di atas jadwal) ---------------- */}
+                <SectionCard
+                    title="Nilai Tugas Terbaru"
+                    action={
+                        <Link
+                            href={route('mahasiswa.lms.index')}
+                            className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-[0.12em] text-brand-700 hover:text-brand-800"
+                        >
+                            Buka LMS
+                            <ArrowRightIcon className="h-3 w-3" />
+                        </Link>
+                    }
+                >
+                    {recentLmsGrades?.length ? (
+                        <div className="space-y-2.5">
+                            {recentLmsGrades.map((item) => (
+                                <Link
+                                    key={item.id}
+                                    href={
+                                        item.lms_course_id
+                                            ? route('mahasiswa.lms.show', item.lms_course_id)
+                                            : route('mahasiswa.lms.index')
+                                    }
+                                    className="flex gap-3 rounded-xl border border-neutral-200 bg-neutral-50/60 p-3 transition hover:border-brand-200 hover:bg-white active:scale-[0.99]"
+                                >
+                                    <span
+                                        className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl border text-[14px] font-extrabold ${GradeBadge(
+                                            item.grade,
+                                        )}`}
+                                    >
+                                        {Number(item.grade)}
+                                    </span>
+
+                                    <div className="min-w-0 flex-1">
+                                        <p className="truncate text-[13px] font-extrabold text-neutral-900">
+                                            {item.judul}
+                                        </p>
+                                        <p className="mt-0.5 truncate text-[11px] font-semibold text-neutral-500">
+                                            {item.mata_kuliah} • {item.kode}
+                                        </p>
+                                        {item.feedback ? (
+                                            <p className="mt-1 line-clamp-2 text-[11px] font-medium text-neutral-600">
+                                                Feedback: {item.feedback}
+                                            </p>
+                                        ) : null}
+                                        <p className="mt-1 text-[10px] font-semibold text-neutral-400">
+                                            Dinilai {item.dinilai_pada}
+                                        </p>
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="rounded-xl border border-dashed border-neutral-300 bg-neutral-50 p-6 text-center">
+                            <ClipboardDocumentCheckIcon className="mx-auto h-6 w-6 text-neutral-300" />
+                            <p className="mt-2 text-[12px] font-bold text-neutral-500">
+                                Belum ada nilai tugas dari dosen
+                            </p>
+                            <p className="mt-0.5 text-[11px] font-semibold text-neutral-400">
+                                Nilai tugas dari LMS akan tampil di sini setelah dosen menilai.
+                            </p>
+                        </div>
+                    )}
+                </SectionCard>
 
                 {/* ---------------- Jadwal hari ini ---------------- */}
                 <SectionCard

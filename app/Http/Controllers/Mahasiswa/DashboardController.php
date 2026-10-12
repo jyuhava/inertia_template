@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Mahasiswa;
 use App\Http\Controllers\Controller;
 use App\Models\Absensi;
 use App\Models\Krs;
+use App\Models\LmsAssignmentSubmission;
 use App\Models\Mahasiswa;
 use App\Models\Penilaian;
 use App\Models\PeriodeKrs;
@@ -127,6 +128,36 @@ class DashboardController extends Controller
                 ];
             });
 
+        // Nilai tugas LMS yang sudah dinilai dosen — ditampilkan di beranda
+        // tepat di atas "Jadwal Hari Ini" sebagai pembaruan terbaru.
+        $recentLmsGrades = LmsAssignmentSubmission::with([
+            'assignment.chapter.course.jadwalKuliah.mataKuliah',
+            'assignment.chapter.course.jadwalKuliah.dosen',
+        ])
+            ->where('mahasiswa_id', $mahasiswa->id)
+            ->whereNotNull('grade')
+            ->latest('updated_at')
+            ->limit(5)
+            ->get()
+            ->map(function ($submission) {
+                $assignment = $submission->assignment;
+                $course = $assignment?->chapter?->course;
+                $jadwal = $course?->jadwalKuliah;
+
+                return [
+                    'id' => $submission->id,
+                    'judul' => $assignment->title ?? 'Tugas',
+                    'mata_kuliah' => $jadwal->mataKuliah->nama_mata_kuliah ?? '-',
+                    'kode' => $jadwal->mataKuliah->kode_mata_kuliah ?? '-',
+                    'dosen' => $jadwal->dosen->nama_lengkap ?? '-',
+                    'komponen' => $assignment->komponen ?? 'harian',
+                    'grade' => $submission->grade,
+                    'feedback' => $submission->feedback,
+                    'dinilai_pada' => $submission->updated_at?->translatedFormat('d M Y H:i'),
+                    'lms_course_id' => $course->id ?? null,
+                ];
+            });
+
         $lmsCount = $krsAktif
             ->filter(function ($krs) {
                 return in_array($krs->status, ['disetujui', 'diambil'], true)
@@ -169,6 +200,7 @@ class DashboardController extends Controller
             'krsSummary' => $krsSummary,
             'todaySchedule' => $todaySchedule,
             'recentScores' => $recentScores,
+            'recentLmsGrades' => $recentLmsGrades,
         ]);
     }
 
