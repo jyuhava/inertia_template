@@ -241,6 +241,7 @@ window.route = (name, params = {}) => {
         'dosen.absensi.pertemuan.delete': (id) => `/dosen/absensi/${id}/pertemuan`,
         'dosen.absensi.rekap': (id) => `/dosen/absensi/${id}/rekap`,
         // Outcome-Based Education routes
+        'admin.obe.taxonomy-levels.index': '/admin/obe/taxonomy-levels',
         'admin.obe.cpl.index': '/admin/obe/cpl',
         'admin.obe.cpl.create': '/admin/obe/cpl/create',
         'admin.obe.cpmk.index': '/admin/obe/cpmk',

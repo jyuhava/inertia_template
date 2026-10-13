@@ -372,12 +372,16 @@ class AkademikLengkapSeeder extends Seeder
             foreach (KurikulumMataKuliah::where('kurikulum_id', $kurikulum->id)->take(3)->get() as $courseIndex => $mapping) {
                 $course = $mapping->mataKuliah;
                 foreach ($cpls as $cpl) {
-                    ObeCplCourseMapping::updateOrCreate(['cpl_id' => $cpl->id, 'mata_kuliah_id' => $course->id, 'kurikulum_id' => $kurikulum->id], ['contribution_level' => 'tinggi', 'weight' => 0.3333]);
+                    // Bobot disimpan pada skala 0-100 sesuai Mapping.jsx ("bobot
+                    // kontribusi (0-100)") dan validasi storeCplCourse yang
+                    // menolak nilai di atas 100. Tiga mata kuliah dengan bobot
+                    // sama partagent 100% kontribusi ke tiap CPL.
+                    ObeCplCourseMapping::updateOrCreate(['cpl_id' => $cpl->id, 'mata_kuliah_id' => $course->id, 'kurikulum_id' => $kurikulum->id], ['contribution_level' => 'tinggi', 'weight' => 33.3333]);
                 }
                 $cpmk = ObeCpmk::updateOrCreate(['mata_kuliah_id' => $course->id, 'kurikulum_id' => $kurikulum->id, 'code' => 'CPMK-01'], ['title' => 'Menerapkan konsep '.$course->nama_mata_kuliah, 'description' => 'CPMK data demo.', 'taxonomy_level_id' => $levels['C3']->id, 'sequence' => 1, 'status' => 'aktif', 'created_by' => $admin->id]);
                 $sub = ObeSubCpmk::updateOrCreate(['obe_cpmk_id' => $cpmk->id, 'code' => 'SUB-01'], ['title' => 'Menyelesaikan studi kasus dasar', 'description' => 'Sub-CPMK data demo.', 'taxonomy_level_id' => $levels['C3']->id, 'sequence' => 1, 'status' => 'aktif']);
                 foreach ($cpls as $cpl) {
-                    ObeCpmkCplMapping::updateOrCreate(['cpmk_id' => $cpmk->id, 'cpl_id' => $cpl->id], ['weight' => 0.3333]);
+                    ObeCpmkCplMapping::updateOrCreate(['cpmk_id' => $cpmk->id, 'cpl_id' => $cpl->id], ['weight' => 33.3333]);
                 }
                 $class = $classes->first(fn ($item) => $item->kurikulum_id === $kurikulum->id && $item->mata_kuliah_id === $course->id);
                 $assessment = ObeAssessment::updateOrCreate(['mata_kuliah_id' => $course->id, 'kelas_kuliah_id' => $class?->id, 'type' => 'tugas', 'title' => 'Tugas Studi Kasus'], ['description' => 'Asesmen OBE data demo.', 'max_score' => 100, 'weight' => 0.3, 'status' => 'aktif', 'created_by' => $admin->id]);

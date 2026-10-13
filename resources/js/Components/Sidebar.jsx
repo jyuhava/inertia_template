@@ -127,6 +127,7 @@ function StaffSidebar({ isOpen, isCollapsed, toggleSidebar, toggleCollapse }) {
                 </svg>
             ),
             items: [
+                { name: 'Level Taksonomi', href: route('admin.obe.taxonomy-levels.index') },
                 { name: 'CPL', href: '/admin/obe/cpl' },
                 { name: 'CPMK & Sub-CPMK', href: '/admin/obe/cpmk' },
                 { name: 'Pemetaan OBE', href: '/admin/obe/mapping' },

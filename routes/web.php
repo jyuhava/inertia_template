@@ -290,6 +290,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
         Route::put('cpmk/{cpmk}/sub-cpmk/{subCpmk}', [\App\Http\Controllers\Admin\Obe\CpmkController::class, 'updateSubCpmk'])->name('sub-cpmk.update');
         Route::delete('cpmk/{cpmk}/sub-cpmk/{subCpmk}', [\App\Http\Controllers\Admin\Obe\CpmkController::class, 'destroySubCpmk'])->name('sub-cpmk.destroy');
 
+        Route::get('mapping', [\App\Http\Controllers\Admin\Obe\MappingController::class, 'index'])->name('mapping.index');
         Route::post('mappings/cpl-course', [\App\Http\Controllers\Admin\Obe\MappingController::class, 'storeCplCourse'])->name('mappings.cpl-course.store');
         Route::delete('mappings/cpl-course/{mapping}', [\App\Http\Controllers\Admin\Obe\MappingController::class, 'destroyCplCourse'])->name('mappings.cpl-course.destroy');
         Route::post('mappings/cpmk-cpl', [\App\Http\Controllers\Admin\Obe\MappingController::class, 'storeCpmkCpl'])->name('mappings.cpmk-cpl.store');
