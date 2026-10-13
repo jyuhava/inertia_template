@@ -136,6 +136,14 @@ function SubmissionCard({ submission }) {
         });
     };
 
+    // PDF bisa dipratinjau langsung di browser; format lain (docx/xlsx/zip, dll)
+    // tidak, jadi harus diunduh — bukan "dilihat".
+    const filePath = submission.file_path || '';
+    const isPdf = filePath.toLowerCase().endsWith('.pdf');
+    const downloadName = filePath.split('/').pop();
+    const fileLinkClass =
+        'shrink-0 border border-black bg-white px-3 py-2 text-xs font-semibold uppercase tracking-widest text-black transition hover:bg-black hover:text-white';
+
     return (
         <article className="overflow-hidden border border-[#e5e5e5] bg-white">
             <div className="flex flex-col gap-3 border-b border-[#e5e5e5] bg-[#f4f4f5] p-4 md:flex-row md:items-center md:justify-between">
@@ -148,15 +156,25 @@ function SubmissionCard({ submission }) {
                         Dikumpulkan: {submission.submitted_at ? new Date(submission.submitted_at).toLocaleString('id-ID') : '-'}
                     </p>
                 </div>
-                {submission.file_path && (
-                    <a
-                        href={`/storage/${submission.file_path}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="shrink-0 border border-black bg-white px-3 py-2 text-xs font-semibold uppercase tracking-widest text-black transition hover:bg-black hover:text-white"
-                    >
-                        Lihat File Jawaban
-                    </a>
+                {filePath && (
+                    isPdf ? (
+                        <a
+                            href={`/storage/${filePath}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className={fileLinkClass}
+                        >
+                            Lihat File Jawaban
+                        </a>
+                    ) : (
+                        <a
+                            href={`/storage/${filePath}`}
+                            download={downloadName}
+                            className={fileLinkClass}
+                        >
+                            Unduh File Jawaban
+                        </a>
+                    )
                 )}
             </div>
 
