@@ -3,11 +3,12 @@
  * Service Worker SIAKAD STIT Al Wafi
  * Strategi:
  *  - Navigasi (HTML): network-first → cache → halaman offline
- *  - Aset statis (build, ikon, gambar, font): stale-while-revalidate
+ *  - Aset statis (build, ikon, gambar, font): network-first → fallback cache
  *  - Sisanya: langsung ke jaringan (data akademik selalu segar)
  */
 
-const VERSION = 'v1';
+// Naikkan setiap kali strategi aset berubah agar cache lama dibuang saat activate.
+const VERSION = 'v2';
 const SHELL_CACHE = `siakad-shell-${VERSION}`;
 const ASSET_CACHE = `siakad-asset-${VERSION}`;
 const OFFLINE_URL = '/offline.html';
@@ -85,20 +86,28 @@ async function networkFirstNavigation(request) {
     }
 }
 
-async function staleWhileRevalidate(request) {
+// Aset build: network-first supaya bundle baru langsung dipakai setelah deploy.
+// Cache hanya dipakai sebagai cadangan saat jaringan gagal.
+async function networkFirstAsset(request) {
     const cache = await caches.open(ASSET_CACHE);
-    const cached = await cache.match(request);
 
-    const network = fetch(request)
-        .then((response) => {
-            if (response && response.ok) {
-                cache.put(request, response.clone()).catch(() => undefined);
-            }
-            return response;
-        })
-        .catch(() => cached);
+    try {
+        const response = await fetch(request);
+        if (response && response.ok) {
+            cache.put(request, response.clone()).catch(() => undefined);
+        }
+        return response;
+    } catch (error) {
+        const cached = await cache.match(request);
+        if (cached) {
+            return cached;
+        }
 
-    return cached || network;
+        return new Response('Aset tidak tersedia secara offline.', {
+            status: 504,
+            headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+        });
+    }
 }
 
 self.addEventListener('fetch', (event) => {
@@ -121,6 +130,6 @@ self.addEventListener('fetch', (event) => {
     }
 
     if (isStaticAsset(url, request)) {
-        event.respondWith(staleWhileRevalidate(request));
+        event.respondWith(networkFirstAsset(request));
     }
 });

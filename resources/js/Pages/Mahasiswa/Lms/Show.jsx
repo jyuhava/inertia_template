@@ -431,13 +431,28 @@ function AssignmentViewer({ assignment, submission, onClose }) {
     });
 
     const [isEditing, setIsEditing] = useState(false);
+    const [submitError, setSubmitError] = useState('');
 
     const submit = (e) => {
         e.preventDefault();
+        setSubmitError('');
+
         post(route('mahasiswa.lms.assignments.submit', assignment.id), {
+            // Jaga state agar modal tetap terbuka dan mahasiswa langsung melihat
+            // hasilnya, alih-alih halaman yang kembali ke daftar tugas.
+            preserveState: true,
+            preserveScroll: true,
             onSuccess: () => {
                 reset();
                 setIsEditing(false);
+            },
+            // Tanpa handler kegagalan, request yang error diam-diam dan tombol
+            // terasa "tidak bisa diklik".
+            onError: () => {
+                setSubmitError('Jawaban belum tersimpan. Periksa kembali teks jawaban atau file yang diunggah.');
+            },
+            onException: (error) => {
+                setSubmitError(`Pengiriman gagal (${error?.status ?? 'status tidak diketahui'}). Silakan coba lagi.`);
             },
         });
     };
@@ -557,11 +572,23 @@ function AssignmentViewer({ assignment, submission, onClose }) {
                         <InputError message={errors.notes} className="mt-1" />
                     </div>
 
-                    <div className="flex justify-end gap-2">
+                    {submitError ? (
+                        <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[11px] font-semibold leading-relaxed text-red-700">
+                            {submitError}
+                        </div>
+                    ) : null}
+
+                    {/* Footer melekat: tombol tetap terjangkau walau CKEditor panjang.
+                        Padding bawah ditulis eksplisit (bukan .safe-bottom) karena
+                        .safe-bottom berada di luar @layer dan mengalahkan py-*. */}
+                    <div className="sticky bottom-0 -mx-4 flex justify-end gap-2 border-t border-neutral-200 bg-white/95 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] backdrop-blur sm:-mx-5 sm:px-5">
                         {submission ? (
                             <ActionButton
                                 type="button"
-                                onClick={() => setIsEditing(false)}
+                                onClick={() => {
+                                    setIsEditing(false);
+                                    setSubmitError('');
+                                }}
                                 disabled={processing}
                                 variant="secondary"
                             >
