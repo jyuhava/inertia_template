@@ -294,6 +294,7 @@ class DosenController extends Controller
         }
 
         $request->validate([
+            'nilai_aktivitas' => 'nullable|numeric|min:0|max:100',
             'nilai_tugas' => 'nullable|numeric|min:0|max:100',
             'nilai_uts' => 'nullable|numeric|min:0|max:100',
             'nilai_uas' => 'nullable|numeric|min:0|max:100',
@@ -301,6 +302,7 @@ class DosenController extends Controller
         ]);
 
         $penilaian->update([
+            'nilai_aktivitas' => $request->nilai_aktivitas,
             'nilai_tugas' => $request->nilai_tugas,
             'nilai_uts' => $request->nilai_uts,
             'nilai_uas' => $request->nilai_uas,

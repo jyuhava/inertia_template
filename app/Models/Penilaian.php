@@ -11,6 +11,7 @@ class Penilaian extends Model
         'mahasiswa_id',
         'jadwal_kuliah_id',
         'periode_krs_id',
+        'nilai_aktivitas',
         'nilai_tugas',
         'nilai_uts',
         'nilai_uas',
@@ -22,6 +23,7 @@ class Penilaian extends Model
     ];
 
     protected $casts = [
+        'nilai_aktivitas' => 'decimal:2',
         'nilai_tugas' => 'decimal:2',
         'nilai_uts' => 'decimal:2',
         'nilai_uas' => 'decimal:2',
@@ -55,15 +57,19 @@ class Penilaian extends Model
 
     /**
      * Hitung nilai akhir berdasarkan komponen nilai
+     *
+     * Bobot default: Aktivitas 30%, Tugas 20%, UTS 20%, UAS 30%.
      */
-    public function hitungNilaiAkhir($bobotTugas = 30, $bobotUts = 30, $bobotUas = 40)
+    public function hitungNilaiAkhir($bobotAktivitas = 30, $bobotTugas = 20, $bobotUts = 20, $bobotUas = 30)
     {
+        $nilaiAktivitas = $this->nilai_aktivitas ?? 0;
         $nilaiTugas = $this->nilai_tugas ?? 0;
         $nilaiUts = $this->nilai_uts ?? 0;
         $nilaiUas = $this->nilai_uas ?? 0;
 
-        $nilaiAkhir = ($nilaiTugas * $bobotTugas / 100) + 
-                      ($nilaiUts * $bobotUts / 100) + 
+        $nilaiAkhir = ($nilaiAktivitas * $bobotAktivitas / 100) +
+                      ($nilaiTugas * $bobotTugas / 100) +
+                      ($nilaiUts * $bobotUts / 100) +
                       ($nilaiUas * $bobotUas / 100);
 
         return round($nilaiAkhir, 2);
@@ -103,9 +109,9 @@ class Penilaian extends Model
     /**
      * Update nilai akhir dan konversi otomatis
      */
-    public function updateNilaiAkhir($bobotTugas = 30, $bobotUts = 30, $bobotUas = 40)
+    public function updateNilaiAkhir($bobotAktivitas = 30, $bobotTugas = 20, $bobotUts = 20, $bobotUas = 30)
     {
-        $nilaiAkhir = $this->hitungNilaiAkhir($bobotTugas, $bobotUts, $bobotUas);
+        $nilaiAkhir = $this->hitungNilaiAkhir($bobotAktivitas, $bobotTugas, $bobotUts, $bobotUas);
         $nilaiHuruf = $this->konversiNilaiHuruf($nilaiAkhir);
         $nilaiAngka = $this->konversiNilaiAngka($nilaiHuruf);
 

@@ -65,7 +65,7 @@ class ReportController extends Controller
 
             $mataKuliahs = $mataKuliahIds->isEmpty()
                 ? collect()
-                : MataKuliah::whereIn('id', $mataKuliahs->all())->orderBy('kode_mata_kuliah')->get();
+                : MataKuliah::whereIn('id', $mataKuliahIds->all())->orderBy('kode_mata_kuliah')->get();
 
             $mahasiswas = $this->mahasiswaOptions($prodiId);
         }
