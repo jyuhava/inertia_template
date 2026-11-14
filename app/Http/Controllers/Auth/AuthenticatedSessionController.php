@@ -31,9 +31,13 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
 
+        // Regenerate session id + token to avoid fixation, then force a hard
+        // browser reload (Inertia::location) so no stale client-side state or
+        // cached CSRF token from a previous account survives the switch.
         $request->session()->regenerate();
+        $request->session()->regenerateToken();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        return Inertia::location(route('dashboard', absolute: false));
     }
 
     /**
@@ -41,12 +45,20 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        // Log out, then fully invalidate and flush the session so no stale
+        // auth/role data from the previous account survives. Regenerate the
+        // CSRF token and force a hard browser reload to clear Inertia cache.
         Auth::guard('web')->logout();
 
+        $request->session()->flush();
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        // Drop any remember-me cookie explicitly.
+        if ($request->hasCookie(Auth::guard('web')->getRecallerName())) {
+            cookie()->queue(cookie()->forget(Auth::guard('web')->getRecallerName()));
+        }
+
+        return Inertia::location('/');
     }
 }
