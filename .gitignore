@@ -9,6 +9,12 @@
 .env
 .env.backup
 .env.production
+
+# SQLite database (local only, jangan di-commit)
+/database/*.sqlite
+/database/*.sqlite-journal
+/database/*.sqlite-wal
+/database/*.sqlite-shm
 .phpactor.json
 .phpunit.result.cache
 Homestead.json
