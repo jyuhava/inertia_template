@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin\Obe;
 
 use App\Http\Controllers\Controller;
 use App\Models\Kurikulum;
+use App\Models\KurikulumMataKuliah;
 use App\Models\MataKuliah;
 use App\Models\ObeCpl;
 use App\Models\ObeCplCourseMapping;
@@ -11,9 +12,77 @@ use App\Models\ObeCpmk;
 use App\Models\ObeCpmkCplMapping;
 use App\Services\ObeValidationService;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class MappingController extends Controller
 {
+    /**
+     * Halaman Pemetaan OBE — matriks CPL x Mata Kuliah dan daftar mapping CPMK.
+     *
+     * Route ini sebelumnya tidak pernah terdaftar sementara Sidebar dan
+     * app.jsx sudah menunjuk ke /admin/obe/mapping, sehingga menu tersebut
+     * berakhir 404 dan bobot kontribusi tidak pernah bisa diisi. Tanpa bobot
+     * ini matriks pada Laporan OBE juga selalu kosong.
+     */
+    public function index(Request $request)
+    {
+        $data = $request->validate([
+            'kurikulum_id' => ['nullable', 'integer', 'exists:kurikulums,id'],
+        ]);
+
+        $kurikulumId = $data['kurikulum_id'] ?? null;
+
+        $cpls = ObeCpl::query()
+            ->when($kurikulumId, fn ($query) => $query->where('kurikulum_id', $kurikulumId))
+            ->orderBy('kurikulum_id')
+            ->orderBy('sequence')
+            ->get();
+
+        // Mata kuliah diambil lewat kurikulum_mata_kuliahs supaya setiap baris
+        // membawa kurikulum_id-nya. Mapping.jsx memfilter kolom matriks dengan
+        // field itu, sedangkan tabel mata_kuliahs sendiri tidak punya kolom
+        // tersebut.
+        $mataKuliahs = KurikulumMataKuliah::query()
+            ->when($kurikulumId, fn ($query) => $query->where('kurikulum_id', $kurikulumId))
+            ->with('mataKuliah')
+            ->orderBy('semester')
+            ->orderBy('sort_order')
+            ->get()
+            ->map(fn (KurikulumMataKuliah $item) => $item->mataKuliah
+                ? $item->mataKuliah->toArray() + ['kurikulum_id' => $item->kurikulum_id]
+                : null)
+            ->filter()
+            ->unique('id')
+            ->values();
+
+        $cplCourseMappings = ObeCplCourseMapping::query()
+            ->when($kurikulumId, fn ($query) => $query->where('kurikulum_id', $kurikulumId))
+            ->orderBy('cpl_id')
+            ->get();
+
+        $cpmks = ObeCpmk::query()
+            ->when($kurikulumId, fn ($query) => $query->where('kurikulum_id', $kurikulumId))
+            ->orderBy('mata_kuliah_id')
+            ->orderBy('sequence')
+            ->get();
+
+        $cpmkCplMappings = ObeCpmkCplMapping::query()
+            ->with('cpmk', 'cpl')
+            ->when($kurikulumId, fn ($query) => $query->whereHas('cpmk', fn ($cpmk) => $cpmk->where('kurikulum_id', $kurikulumId)))
+            ->orderBy('cpl_id')
+            ->get();
+
+        return Inertia::render('Admin/Obe/Mapping', [
+            'kurikulums' => Kurikulum::orderByDesc('kode')->get(),
+            'filters' => ['kurikulum_id' => $kurikulumId],
+            'cpls' => $cpls,
+            'mataKuliahs' => $mataKuliahs,
+            'cplCourseMappings' => $cplCourseMappings,
+            'cpmks' => $cpmks,
+            'cpmkCplMappings' => $cpmkCplMappings,
+        ]);
+    }
+
     public function storeCplCourse(Request $request, ObeValidationService $validation)
     {
         $data = $request->validate([

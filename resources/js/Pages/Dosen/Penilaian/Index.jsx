@@ -166,7 +166,7 @@ export default function Index({ dosen, periodeAktif, jadwalKuliah, mahasiswas })
                         <div className="h-full bg-neutral-900" style={{ width: `${finalRate}%` }} />
                     </div>
                     <div className="mt-3 border border-neutral-300 bg-neutral-50 p-3 text-xs text-neutral-700">
-                        Bobot penilaian: Tugas 30% • UTS 30% • UAS 40%. Nilai akhir dan grade dihitung otomatis saat data disimpan.
+                        Bobot penilaian: Aktivitas 30% • Tugas 20% • UTS 20% • UAS 30%. Nilai akhir dan grade dihitung otomatis saat data disimpan.
                     </div>
                 </Box>
 
@@ -200,6 +200,7 @@ export default function Index({ dosen, periodeAktif, jadwalKuliah, mahasiswas })
 
 function PenilaianRow({ mahasiswa, isEditing, onEdit, onCancel, onSaved, allNilaiIsFinal }) {
     const { data, setData, put, processing, errors, reset } = useForm({
+        nilai_aktivitas: mahasiswa.penilaian?.nilai_aktivitas || '',
         nilai_tugas: mahasiswa.penilaian?.nilai_tugas || '',
         nilai_uts: mahasiswa.penilaian?.nilai_uts || '',
         nilai_uas: mahasiswa.penilaian?.nilai_uas || '',
@@ -225,13 +226,14 @@ function PenilaianRow({ mahasiswa, isEditing, onEdit, onCancel, onSaved, allNila
         return Math.max(0, Math.min(100, n));
     };
 
+    const nilaiAktivitas = normalize(data.nilai_aktivitas);
     const nilaiTugas = normalize(data.nilai_tugas);
     const nilaiUts = normalize(data.nilai_uts);
     const nilaiUas = normalize(data.nilai_uas);
-    const hasAnyComponent = nilaiTugas !== null || nilaiUts !== null || nilaiUas !== null;
+    const hasAnyComponent = nilaiAktivitas !== null || nilaiTugas !== null || nilaiUts !== null || nilaiUas !== null;
 
     const simulatedFinal = hasAnyComponent
-        ? ((nilaiTugas ?? 0) * 0.3 + (nilaiUts ?? 0) * 0.3 + (nilaiUas ?? 0) * 0.4).toFixed(2)
+        ? ((nilaiAktivitas ?? 0) * 0.3 + (nilaiTugas ?? 0) * 0.2 + (nilaiUts ?? 0) * 0.2 + (nilaiUas ?? 0) * 0.3).toFixed(2)
         : null;
 
     const toGrade = (nilaiAkhir) => {
@@ -271,11 +273,37 @@ function PenilaianRow({ mahasiswa, isEditing, onEdit, onCancel, onSaved, allNila
                 <form onSubmit={save} className="space-y-4 p-4 md:p-5">
                     <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
                         <div className="space-y-4 lg:col-span-8">
-                            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+                                <div className="border border-neutral-200 bg-neutral-50 p-3">
+                                    <div className="mb-2 flex items-center justify-between">
+                                        <InputLabel htmlFor={`nilai_aktivitas_${mahasiswa.id}`} value="Nilai Aktivitas" />
+                                        <span className="border border-neutral-300 bg-white px-2 py-0.5 text-[11px] font-semibold text-neutral-700">30%</span>
+                                    </div>
+                                    <TextInput
+                                        id={`nilai_aktivitas_${mahasiswa.id}`}
+                                        type="number"
+                                        min="0"
+                                        max="100"
+                                        step="0.01"
+                                        className="mt-1 block w-full border-neutral-300 bg-white text-right text-sm font-semibold focus:border-neutral-900 focus:ring-neutral-900"
+                                        value={data.nilai_aktivitas}
+                                        onChange={(e) => setData('nilai_aktivitas', e.target.value)}
+                                        placeholder="0 - 100"
+                                    />
+                                    <div className="mt-2 flex items-center justify-between text-[11px] text-neutral-500">
+                                        <span>Bobot 30%</span>
+                                        <span>{nilaiAktivitas ?? 0}</span>
+                                    </div>
+                                    <div className="mt-1.5 h-1.5 overflow-hidden bg-neutral-200">
+                                        <div className="h-full bg-neutral-900 transition-all duration-300" style={{ width: `${nilaiAktivitas ?? 0}%` }} />
+                                    </div>
+                                    <InputError message={errors.nilai_aktivitas} className="mt-2" />
+                                </div>
+
                                 <div className="border border-neutral-200 bg-neutral-50 p-3">
                                     <div className="mb-2 flex items-center justify-between">
                                         <InputLabel htmlFor={`nilai_tugas_${mahasiswa.id}`} value="Nilai Tugas" />
-                                        <span className="border border-neutral-300 bg-white px-2 py-0.5 text-[11px] font-semibold text-neutral-700">30%</span>
+                                        <span className="border border-neutral-300 bg-white px-2 py-0.5 text-[11px] font-semibold text-neutral-700">20%</span>
                                     </div>
                                     <TextInput
                                         id={`nilai_tugas_${mahasiswa.id}`}
@@ -289,7 +317,7 @@ function PenilaianRow({ mahasiswa, isEditing, onEdit, onCancel, onSaved, allNila
                                         placeholder="0 - 100"
                                     />
                                     <div className="mt-2 flex items-center justify-between text-[11px] text-neutral-500">
-                                        <span>Bobot 30%</span>
+                                        <span>Bobot 20%</span>
                                         <span>{nilaiTugas ?? 0}</span>
                                     </div>
                                     <div className="mt-1.5 h-1.5 overflow-hidden bg-neutral-200">
@@ -301,7 +329,7 @@ function PenilaianRow({ mahasiswa, isEditing, onEdit, onCancel, onSaved, allNila
                                 <div className="border border-neutral-200 bg-neutral-50 p-3">
                                     <div className="mb-2 flex items-center justify-between">
                                         <InputLabel htmlFor={`nilai_uts_${mahasiswa.id}`} value="Nilai UTS" />
-                                        <span className="border border-neutral-300 bg-white px-2 py-0.5 text-[11px] font-semibold text-neutral-700">30%</span>
+                                        <span className="border border-neutral-300 bg-white px-2 py-0.5 text-[11px] font-semibold text-neutral-700">20%</span>
                                     </div>
                                     <TextInput
                                         id={`nilai_uts_${mahasiswa.id}`}
@@ -315,7 +343,7 @@ function PenilaianRow({ mahasiswa, isEditing, onEdit, onCancel, onSaved, allNila
                                         placeholder="0 - 100"
                                     />
                                     <div className="mt-2 flex items-center justify-between text-[11px] text-neutral-500">
-                                        <span>Bobot 30%</span>
+                                        <span>Bobot 20%</span>
                                         <span>{nilaiUts ?? 0}</span>
                                     </div>
                                     <div className="mt-1.5 h-1.5 overflow-hidden bg-neutral-200">
@@ -327,7 +355,7 @@ function PenilaianRow({ mahasiswa, isEditing, onEdit, onCancel, onSaved, allNila
                                 <div className="border border-neutral-200 bg-neutral-50 p-3">
                                     <div className="mb-2 flex items-center justify-between">
                                         <InputLabel htmlFor={`nilai_uas_${mahasiswa.id}`} value="Nilai UAS" />
-                                        <span className="border border-neutral-300 bg-white px-2 py-0.5 text-[11px] font-semibold text-neutral-700">40%</span>
+                                        <span className="border border-neutral-300 bg-white px-2 py-0.5 text-[11px] font-semibold text-neutral-700">30%</span>
                                     </div>
                                     <TextInput
                                         id={`nilai_uas_${mahasiswa.id}`}
@@ -341,7 +369,7 @@ function PenilaianRow({ mahasiswa, isEditing, onEdit, onCancel, onSaved, allNila
                                         placeholder="0 - 100"
                                     />
                                     <div className="mt-2 flex items-center justify-between text-[11px] text-neutral-500">
-                                        <span>Bobot 40%</span>
+                                        <span>Bobot 30%</span>
                                         <span>{nilaiUas ?? 0}</span>
                                     </div>
                                     <div className="mt-1.5 h-1.5 overflow-hidden bg-neutral-200">
@@ -372,7 +400,7 @@ function PenilaianRow({ mahasiswa, isEditing, onEdit, onCancel, onSaved, allNila
                             <Box variant="dark" className="!p-4">
                                 <p className="text-xs font-semibold uppercase tracking-widest text-neutral-400">Preview Real-time</p>
                                 <p className="mt-2 text-xs text-neutral-300">
-                                    Rumus: (Tugas x 30%) + (UTS x 30%) + (UAS x 40%)
+                                    Rumus: (Aktivitas x 30%) + (Tugas x 20%) + (UTS x 20%) + (UAS x 30%)
                                 </p>
 
                                 <div className="mt-4 grid grid-cols-2 gap-2">
@@ -444,7 +472,11 @@ function PenilaianRow({ mahasiswa, isEditing, onEdit, onCancel, onSaved, allNila
                 </div>
             </div>
 
-            <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-5">
+            <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
+                <div className="border border-neutral-200 bg-neutral-50 px-3 py-2">
+                    <p className="text-[11px] uppercase tracking-widest text-neutral-500">Aktivitas</p>
+                    <p className="mt-1 text-sm font-semibold text-neutral-900">{mahasiswa.penilaian?.nilai_aktivitas ?? '-'}</p>
+                </div>
                 <div className="border border-neutral-200 bg-neutral-50 px-3 py-2">
                     <p className="text-[11px] uppercase tracking-widest text-neutral-500">Tugas</p>
                     <p className="mt-1 text-sm font-semibold text-neutral-900">{mahasiswa.penilaian?.nilai_tugas ?? '-'}</p>

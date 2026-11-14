@@ -162,6 +162,12 @@
     min-height: 400px !important;
 }
 
+/* Di dalam modal, tinggi editor dibatasi supaya tombol submit tetap terjangkau
+   (toolbar CKEditor membungkus jadi banyak baris di layar 360–430px). */
+.rich-text-editor .ck-editor__editable {
+    min-height: 150px !important;
+}
+
 /* ==========================================================================
    Global Compact Density System
    Compact, sleek, and comfortable without being too small or altering theme

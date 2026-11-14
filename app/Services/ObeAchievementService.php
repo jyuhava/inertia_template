@@ -57,6 +57,8 @@ class ObeAchievementService
         $weightTotal = 0.0;
         $weightedAchievement = 0.0;
         $missingEvidence = 0;
+        $evidence = 0;
+        $assessments = 0;
 
         foreach ($cpl->cpmkMappings as $mapping) {
             if (! $mapping->cpmk) {
@@ -64,6 +66,8 @@ class ObeAchievementService
             }
 
             $achievement = $this->cpmkAchievement($mapping->cpmk, $mahasiswa);
+            $assessments += $achievement['assessment_count'];
+
             if ($achievement['achievement'] === null) {
                 $missingEvidence++;
 
@@ -72,6 +76,7 @@ class ObeAchievementService
 
             $weightTotal += $mapping->weight;
             $weightedAchievement += $achievement['achievement'] * $mapping->weight;
+            $evidence += $achievement['evidence_count'];
         }
 
         $value = $weightTotal > 0 ? round($weightedAchievement / $weightTotal, 2) : null;
@@ -83,6 +88,11 @@ class ObeAchievementService
             'achieved' => $value !== null && $value >= $threshold,
             'gap' => $value === null ? $threshold : round(max(0, $threshold - $value), 2),
             'missing_cpmk_evidence' => $missingEvidence,
+            // Jumlah assessment yang benar-benar terpakai untuk hitungan. Laporan
+            // OBE menampilkan angka ini sebagai kolom "Evidence", jadi ikut
+            // dikembalikan di sini supaya halaman tidak perlu menghitung ulang.
+            'evidence_count' => $evidence,
+            'assessment_count' => $assessments,
         ];
     }
 

@@ -14,6 +14,7 @@ use App\Models\ObeAssessment;
 use App\Models\ObeAssessmentMapping;
 use App\Models\ObeAssessmentScore;
 use App\Models\ObeCpl;
+use App\Models\ObeCplCourseMapping;
 use App\Models\ObeCpmk;
 use App\Models\ObeCpmkCplMapping;
 use App\Models\Prodi;
@@ -24,6 +25,7 @@ use App\Services\ObeAchievementService;
 use App\Services\ObeValidationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class ObeModuleTest extends TestCase
@@ -178,5 +180,151 @@ class ObeModuleTest extends TestCase
 
         $this->expectException(ValidationException::class);
         app(ObeValidationService::class)->assertDosenCanReadClass($dosen, $kelas);
+    }
+
+    /**
+     * Rantai lengkap OBE untuk satu CPL: matriks bobot, CPMK, assessment, dan
+     * skor mahasiswa. Dipakai test halaman laporan supaya prop achievements dan
+     * gaps benar-benar terisi.
+     *
+     * @return array{cpl: ObeCpl, cpmk: ObeCpmk, mahasiswa: Mahasiswa}
+     */
+    private function achievementGraph(Mahasiswa $mahasiswa, Kurikulum $kurikulum, MataKuliah $mataKuliah, int $score): array
+    {
+        $cpl = ObeCpl::create(['prodi_id' => $kurikulum->prodi_id, 'kurikulum_id' => $kurikulum->id, 'code' => 'CPL-01', 'name' => 'Sikap']);
+        ObeCplCourseMapping::create(['cpl_id' => $cpl->id, 'mata_kuliah_id' => $mataKuliah->id, 'kurikulum_id' => $kurikulum->id, 'weight' => 100]);
+        $cpmk = ObeCpmk::create(['mata_kuliah_id' => $mataKuliah->id, 'kurikulum_id' => $kurikulum->id, 'code' => 'CPMK-01', 'title' => 'CPMK']);
+        ObeCpmkCplMapping::create(['cpmk_id' => $cpmk->id, 'cpl_id' => $cpl->id, 'weight' => 100]);
+        $assessment = ObeAssessment::create(['mata_kuliah_id' => $mataKuliah->id, 'type' => 'quiz', 'title' => 'Quiz', 'max_score' => 100, 'weight' => 100, 'status' => 'aktif']);
+        ObeAssessmentMapping::create(['assessment_id' => $assessment->id, 'cpmk_id' => $cpmk->id, 'weight' => 1]);
+        ObeAssessmentScore::create(['assessment_id' => $assessment->id, 'mahasiswa_id' => $mahasiswa->id, 'score' => $score]);
+
+        return compact('cpl', 'cpmk', 'mahasiswa');
+    }
+
+    public function test_report_page_returns_matrix_achievement_and_gap_for_selected_mahasiswa(): void
+    {
+        ['prodi' => $prodi, 'kurikulum' => $kurikulum, 'mataKuliah' => $mataKuliah] = $this->context();
+        $admin = User::factory()->create(['role' => 'admin']);
+        $this->achievementGraph($this->mahasiswa($prodi), $kurikulum, $mataKuliah, 55);
+
+        $mahasiswa = Mahasiswa::where('prodi_id', $prodi->id)->firstOrFail();
+
+        $this->actingAs($admin)->get(route('admin.obe.report.index', [
+            'kurikulum_id' => $kurikulum->id,
+            'mahasiswa_id' => $mahasiswa->id,
+            'threshold' => 70,
+        ]))->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Obe/Report')
+            ->has('cpls', 1)
+            ->has('mataKuliahs', 1)
+            ->has('matrix', 1)
+            ->where('matrix.0.weight', 100)
+            ->has('achievements', 1)
+            ->where('achievements.0.cpl.kode', 'CPL-01')
+            ->where('achievements.0.evidence_count', 1)
+            ->where('achievements.0.achieved', false)
+            ->has('gaps', 1)
+            ->where('gaps.0.rekomendasi', 'Tinjau ulang penilaian assessment CPL ini; capaian masih 15.00% di bawah target 70.00%.')
+        );
+    }
+
+    public function test_report_page_marks_cpl_above_threshold_as_achieved_and_without_gap(): void
+    {
+        ['prodi' => $prodi, 'kurikulum' => $kurikulum, 'mataKuliah' => $mataKuliah] = $this->context();
+        $admin = User::factory()->create(['role' => 'admin']);
+        $this->achievementGraph($this->mahasiswa($prodi), $kurikulum, $mataKuliah, 88);
+        $mahasiswa = Mahasiswa::where('prodi_id', $prodi->id)->firstOrFail();
+
+        $this->actingAs($admin)->get(route('admin.obe.report.index', [
+            'kurikulum_id' => $kurikulum->id,
+            'mahasiswa_id' => $mahasiswa->id,
+        ]))->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Obe/Report')
+            ->has('achievements', 1)
+            ->where('achievements.0.achieved', true)
+            ->has('gaps', 0)
+        );
+    }
+
+    public function test_report_ignores_a_mahasiswa_belonging_to_another_prodi(): void
+    {
+        $a = $this->context('A');
+        $b = $this->context('B');
+        $admin = User::factory()->create(['role' => 'admin']);
+        ObeCpl::create(['prodi_id' => $a['prodi']->id, 'kurikulum_id' => $a['kurikulum']->id, 'code' => 'CPL-01', 'name' => 'CPL A']);
+        $mahasiswaB = $this->mahasiswa($b['prodi']);
+
+        $this->actingAs($admin)->get(route('admin.obe.report.index', [
+            'kurikulum_id' => $a['kurikulum']->id,
+            'mahasiswa_id' => $mahasiswaB->id,
+        ]))->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Obe/Report')
+            ->has('mahasiswas', 0)
+            ->has('achievements', 0)
+            ->has('gaps', 0)
+        );
+    }
+
+    public function test_mapping_page_renders_and_admin_can_save_a_cpl_course_weight(): void
+    {
+        ['prodi' => $prodi, 'kurikulum' => $kurikulum, 'mataKuliah' => $mataKuliah] = $this->context();
+        $admin = User::factory()->create(['role' => 'admin']);
+        $cpl = ObeCpl::create(['prodi_id' => $prodi->id, 'kurikulum_id' => $kurikulum->id, 'code' => 'CPL-01', 'name' => 'Sikap']);
+
+        $this->actingAs($admin)->get(route('admin.obe.mapping.index', ['kurikulum_id' => $kurikulum->id]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Admin/Obe/Mapping')
+                ->has('cpls', 1)
+                ->has('mataKuliahs', 1)
+                // Mapping.jsx memfilter kolom matriks dengan field ini.
+                ->where('mataKuliahs.0.kurikulum_id', $kurikulum->id)
+                ->where('mataKuliahs.0.kode_mata_kuliah', $mataKuliah->kode_mata_kuliah)
+            );
+
+        $this->actingAs($admin)->post(route('admin.obe.mappings.cpl-course.store'), [
+            'cpl_id' => $cpl->id, 'mata_kuliah_id' => $mataKuliah->id, 'kurikulum_id' => $kurikulum->id, 'weight' => 40,
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('obe_cpl_course_mappings', [
+            'cpl_id' => $cpl->id, 'mata_kuliah_id' => $mataKuliah->id, 'weight' => 40,
+        ]);
+    }
+
+    /**
+     * Penjaga regresi untuk kelas bug "halaman Inertia ada tapi route-nya tidak
+     * terdaftar": Sidebar dan Report.jsx dulu menunjuk ke URL yang tidak pernah
+     * ada, sehingga menu berakhir 404 tanpa ada test yang gagal.
+     */
+    public function test_every_obe_admin_page_is_reachable(): void
+    {
+        ['prodi' => $prodi, 'kurikulum' => $kurikulum] = $this->context();
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $urls = [
+            route('admin.obe.taxonomy-levels.index'),
+            route('admin.obe.cpl.index'),
+            route('admin.obe.cpmk.index'),
+            route('admin.obe.mapping.index'),
+            route('admin.obe.assessments.index'),
+            route('admin.obe.report.index'),
+            route('admin.obe.matrix', $kurikulum),
+        ];
+
+        foreach ($urls as $url) {
+            $this->actingAs($admin)->get($url)->assertOk();
+        }
+    }
+
+    public function test_obe_pages_are_closed_to_non_admin_users(): void
+    {
+        $dosenUser = User::factory()->create(['role' => 'dosen']);
+        $mahasiswaUser = User::factory()->create(['role' => 'mahasiswa']);
+
+        foreach ([$dosenUser, $mahasiswaUser] as $user) {
+            $this->actingAs($user)->get(route('admin.obe.report.index'))->assertForbidden();
+            $this->actingAs($user)->get(route('admin.obe.mapping.index'))->assertForbidden();
+        }
     }
 }
