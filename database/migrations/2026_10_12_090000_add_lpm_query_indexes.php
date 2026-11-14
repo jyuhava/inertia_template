@@ -49,6 +49,13 @@ return new class extends Migration
     public function up(): void
     {
         foreach (self::INDEXES as $index) {
+            // Tabel bisa saja belum/tidak ada pada instalasi tertentu (mis.
+            // migrasi pembuat tabel sudah tercatat Ran tetapi tabelnya tidak
+            // pernah terbentuk). Lewati agar migrasi tidak memblokir yang lain.
+            if (! Schema::hasTable($index['table'])) {
+                continue;
+            }
+
             if (Schema::hasIndex($index['table'], $index['columns'])) {
                 continue;
             }
@@ -66,7 +73,7 @@ return new class extends Migration
             // kolom yang sama bisa saja sudah ada sebelum migrasi ini (MySQL
             // membuat index FK otomatis dengan nama sendiri) dan itu bukan
             // milik kita untuk dibuang.
-            if (! Schema::hasIndex($index['table'], $index['name'])) {
+            if (! Schema::hasTable($index['table']) || ! Schema::hasIndex($index['table'], $index['name'])) {
                 continue;
             }
 
