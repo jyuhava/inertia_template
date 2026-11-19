@@ -23,6 +23,12 @@ class MeetingMinute extends Model
         'published_at',
         'published_by',
         'created_by',
+        'official_document_path',
+        'official_document_name',
+        'official_document_mime',
+        'official_document_size',
+        'official_document_uploaded_by',
+        'official_document_uploaded_at',
     ];
 
     protected $casts = [
@@ -30,6 +36,7 @@ class MeetingMinute extends Model
         'meeting_date' => 'date',
         'is_public' => 'boolean',
         'published_at' => 'datetime',
+        'official_document_uploaded_at' => 'datetime',
     ];
 
     /**
@@ -38,6 +45,7 @@ class MeetingMinute extends Model
     protected $appends = [
         'average_progress',
         'public_url',
+        'has_official_document',
     ];
 
     /**
@@ -99,6 +107,14 @@ class MeetingMinute extends Model
         }
 
         return null;
+    }
+
+    /**
+     * Accessor: apakah notulen memiliki dokumen resmi yang sudah diunggah.
+     */
+    public function getHasOfficialDocumentAttribute(): bool
+    {
+        return !empty($this->official_document_path);
     }
 
     /**

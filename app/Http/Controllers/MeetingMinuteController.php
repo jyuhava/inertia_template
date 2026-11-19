@@ -90,13 +90,36 @@ class MeetingMinuteController extends Controller
     /**
      * Tampilkan form buat notulen baru.
      */
-    public function create()
+    public function create(Request $request)
     {
         $employees = User::orderBy('name')
             ->get(['id', 'name']);
 
+        // Daftar dokumen notulensi yang sudah diunggah dan bisa diunduh user.
+        $documents = $this->visibleMeetingsQuery(
+            MeetingMinute::query()->whereNotNull('official_document_path'),
+            $request->user(),
+        )
+            ->orderBy('meeting_date', 'desc')
+            ->get([
+                'id',
+                'title',
+                'official_document_name',
+                'official_document_size',
+                'official_document_uploaded_at',
+            ])
+            ->map(fn (MeetingMinute $meeting) => [
+                'id' => $meeting->id,
+                'title' => $meeting->title,
+                'name' => $meeting->official_document_name,
+                'size' => $meeting->official_document_size,
+                'uploaded_at' => $meeting->official_document_uploaded_at?->toISOString(),
+                'can_modify' => $this->canModify($meeting),
+            ]);
+
         return Inertia::render('MeetingMinutes/Create', [
             'employees' => $employees,
+            'documents' => $documents,
         ]);
     }
 
@@ -113,13 +136,20 @@ class MeetingMinuteController extends Controller
             'description' => 'nullable|string',
             'attendees' => 'required|array',
             'attendees.*' => 'integer|exists:users,id',
-            'agenda_items' => 'required|array|min:1',
+            'agenda_items' => 'nullable|array',
             'agenda_items.*.discussion' => 'required|string',
             'agenda_items.*.decision' => 'required|string',
             'agenda_items.*.pic' => 'required|array',
             'agenda_items.*.pic.*' => 'integer|exists:users,id',
             'agenda_items.*.deadline' => 'required|date',
+            'official_document' => 'nullable|file|mimes:pdf,doc,docx|max:20480',
         ]);
+
+        if (empty($validated['agenda_items']) && !$request->hasFile('official_document')) {
+            return back()
+                ->withErrors(['agenda_items' => 'Isi minimal satu agenda atau unggah dokumen notulensi.'])
+                ->withInput();
+        }
 
         $meetingMinute = MeetingMinute::create([
             'title' => $validated['title'],
@@ -132,7 +162,15 @@ class MeetingMinuteController extends Controller
             'created_by' => $request->user()->id,
         ]);
 
-        foreach (array_values($validated['agenda_items']) as $index => $item) {
+        if ($request->hasFile('official_document')) {
+            $this->storeOfficialDocument(
+                $meetingMinute,
+                $request->file('official_document'),
+                $request->user()->id,
+            );
+        }
+
+        foreach (array_values($validated['agenda_items'] ?? []) as $index => $item) {
             MeetingAgendaItem::create([
                 'meeting_minute_id' => $meetingMinute->id,
                 'item_number' => $index + 1,
@@ -242,6 +280,11 @@ class MeetingMinuteController extends Controller
         // Hapus file lampiran dari storage
         foreach ($meetingMinute->attachments as $attachment) {
             Storage::disk('public')->delete($attachment->file_path);
+        }
+
+        // Hapus dokumen notulensi resmi dari storage
+        if ($meetingMinute->official_document_path) {
+            Storage::disk('public')->delete($meetingMinute->official_document_path);
         }
 
         $meetingMinute->delete();
@@ -373,6 +416,105 @@ class MeetingMinuteController extends Controller
         $attachment->delete();
 
         return back()->with('success', 'Lampiran berhasil dihapus.');
+    }
+
+    /**
+     * Upload dokumen notulensi resmi (notulen final).
+     * Satu notulen hanya memiliki satu dokumen resmi; upload baru mengganti yang lama.
+     */
+    public function uploadOfficialDocument(Request $request, MeetingMinute $meetingMinute)
+    {
+        $this->authorizeModify($meetingMinute);
+
+        $validated = $request->validate([
+            'file' => 'required|file|mimes:pdf,doc,docx|max:20480', // maks 20MB
+        ]);
+
+        $this->storeOfficialDocument($meetingMinute, $validated['file'], $request->user()->id);
+
+        return back()->with('success', 'Dokumen notulensi resmi berhasil diunggah.');
+    }
+
+    /**
+     * Unduh dokumen notulensi resmi dengan nama file asli.
+     * Dapat diakses oleh siapa pun yang berhak melihat notulen ini.
+     */
+    public function downloadOfficialDocument(MeetingMinute $meetingMinute)
+    {
+        $this->authorizeView($meetingMinute);
+
+        if (!$meetingMinute->official_document_path) {
+            abort(404, 'Dokumen notulensi resmi belum tersedia.');
+        }
+
+        return Storage::disk('public')->download(
+            $meetingMinute->official_document_path,
+            $meetingMinute->official_document_name ?: 'dokumen-notulensi.pdf'
+        );
+    }
+
+    /**
+     * Hapus dokumen notulensi resmi.
+     */
+    public function deleteOfficialDocument(MeetingMinute $meetingMinute)
+    {
+        $this->authorizeModify($meetingMinute);
+
+        if ($meetingMinute->official_document_path) {
+            Storage::disk('public')->delete($meetingMinute->official_document_path);
+        }
+
+        $meetingMinute->update([
+            'official_document_path' => null,
+            'official_document_name' => null,
+            'official_document_mime' => null,
+            'official_document_size' => null,
+            'official_document_uploaded_by' => null,
+            'official_document_uploaded_at' => null,
+        ]);
+
+        return back()->with('success', 'Dokumen notulensi resmi berhasil dihapus.');
+    }
+
+    /**
+     * Simpan dokumen notulensi ke storage dan perbarui metadata notulen.
+     */
+    private function storeOfficialDocument(MeetingMinute $meetingMinute, $file, int $userId): void
+    {
+        if ($meetingMinute->official_document_path) {
+            Storage::disk('public')->delete($meetingMinute->official_document_path);
+        }
+
+        $fileName = time() . '_official_' . $meetingMinute->id . '_'
+            . str_replace(' ', '_', $file->getClientOriginalName());
+        $filePath = $file->storeAs('meeting-official-documents', $fileName, 'public');
+
+        $meetingMinute->update([
+            'official_document_path' => $filePath,
+            'official_document_name' => $file->getClientOriginalName(),
+            'official_document_mime' => $file->getMimeType(),
+            'official_document_size' => $file->getSize(),
+            'official_document_uploaded_by' => $userId,
+            'official_document_uploaded_at' => now(),
+        ]);
+    }
+
+    /**
+     * Batasi query hanya pada notulen yang terlihat oleh user (admin melihat semua).
+     */
+    private function visibleMeetingsQuery($query, $user)
+    {
+        if (!$user->isAdmin()) {
+            $query->where(function ($q) use ($user) {
+                $q->where('created_by', $user->id)
+                    ->orWhereJsonContains('attendees', $user->id)
+                    ->orWhereHas('agendaItems', function ($agenda) use ($user) {
+                        $agenda->whereJsonContains('pic', $user->id);
+                    });
+            });
+        }
+
+        return $query;
     }
 
     /**

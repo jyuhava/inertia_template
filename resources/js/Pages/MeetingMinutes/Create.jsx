@@ -2,6 +2,7 @@ import { Head, Link, router, useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import InputError from '@/Components/InputError';
 import MultiSelectEmployee from '@/Components/MultiSelectEmployee';
+import { useState } from 'react';
 
 function emptyAgendaItem() {
     return {
@@ -14,7 +15,10 @@ function emptyAgendaItem() {
     };
 }
 
-export default function Create({ employees }) {
+export default function Create({ employees, documents }) {
+    const [useDocument, setUseDocument] = useState(false);
+    const [replacingDoc, setReplacingDoc] = useState(null);
+
     const { data, setData, post, processing, errors } = useForm({
         title: '',
         division: '',
@@ -23,6 +27,7 @@ export default function Create({ employees }) {
         description: '',
         attendees: [],
         agenda_items: [emptyAgendaItem()],
+        official_document: null,
     });
 
     const updateAgendaItem = (index, key, value) => {
@@ -47,9 +52,43 @@ export default function Create({ employees }) {
         );
     };
 
+    const handleReplaceDocument = (e) => {
+        const file = e.target.files?.[0];
+        if (!file || !replacingDoc) return;
+
+        router.post(
+            route('meeting-minutes.official-document.upload', replacingDoc),
+            { file },
+            {
+                forceFormData: true,
+                preserveScroll: true,
+                onSuccess: () => setReplacingDoc(null),
+            },
+        );
+        e.target.value = '';
+    };
+
+    const handleDeleteDocument = (doc) => {
+        if (!confirm(`Hapus dokumen "${doc.name}" dari notulen "${doc.title}"?`)) return;
+
+        router.delete(
+            route('meeting-minutes.official-document.destroy', doc.id),
+            { preserveScroll: true },
+        );
+    };
+
+    const setMode = (documentMode) => {
+        setUseDocument(documentMode);
+        setData('agenda_items', documentMode ? [] : [emptyAgendaItem()]);
+        if (!documentMode) {
+            setData('official_document', null);
+        }
+    };
+
     const submit = (e) => {
         e.preventDefault();
-        post(route('meeting-minutes.store'));
+        const options = data.official_document ? { forceFormData: true } : {};
+        post(route('meeting-minutes.store'), options);
     };
 
     const inputClass =
@@ -171,6 +210,7 @@ export default function Create({ employees }) {
                         </div>
 
                         {/* Agenda items */}
+                        {!useDocument && (
                         <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
                             <div className="mb-4 flex items-center justify-between">
                                 <h2 className="text-lg font-semibold text-gray-900">Agenda Rapat *</h2>
@@ -281,6 +321,136 @@ export default function Create({ employees }) {
                                         </div>
                                     </div>
                                 ))}
+                            </div>
+                        </div>
+                        )}
+
+                        {/* Dokumen Notulensi — opsi alternatif pengisian notulen */}
+                        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                            <h2 className="text-lg font-semibold text-gray-900">Dokumen Notulensi</h2>
+                            <p className="mt-1 text-sm text-gray-500">
+                                Pilih mengisi agenda secara manual, atau cukup unggah dokumen notulensi.
+                            </p>
+
+                            <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                                <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-gray-200 px-4 py-2.5 text-sm text-gray-700 transition hover:bg-gray-50">
+                                    <input
+                                        type="radio"
+                                        name="input_mode"
+                                        checked={!useDocument}
+                                        onChange={() => setMode(false)}
+                                    />
+                                    Isi agenda secara manual
+                                </label>
+                                <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-gray-200 px-4 py-2.5 text-sm text-gray-700 transition hover:bg-gray-50">
+                                    <input
+                                        type="radio"
+                                        name="input_mode"
+                                        checked={useDocument}
+                                        onChange={() => setMode(true)}
+                                    />
+                                    Upload dokumen notulensi
+                                </label>
+                            </div>
+
+                            {useDocument && (
+                                <div className="mt-4">
+                                    <label className={labelClass} htmlFor="official_document">
+                                        File Notulensi (PDF/DOC/DOCX, maks 20 MB) *
+                                    </label>
+                                    <input
+                                        id="official_document"
+                                        type="file"
+                                        accept=".pdf,.doc,.docx"
+                                        required
+                                        onChange={(e) =>
+                                            setData('official_document', e.target.files?.[0] || null)
+                                        }
+                                        className="mt-1 block w-full text-sm text-gray-700 file:mr-3 file:rounded-lg file:border-0 file:bg-indigo-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-indigo-700"
+                                    />
+                                    <InputError message={errors.official_document} className="mt-1" />
+                                </div>
+                            )}
+
+                            <div className="mt-6 border-t border-gray-100 pt-4">
+                                <h3 className="mb-3 text-sm font-semibold text-gray-800">
+                                    Dokumen yang sudah diunggah
+                                </h3>
+                                {(documents || []).length === 0 ? (
+                                    <p className="text-sm text-gray-400">
+                                        Belum ada dokumen notulensi yang diunggah.
+                                    </p>
+                                ) : (
+                                    <ul className="space-y-2">
+                                        {documents.map((doc) => (
+                                            <li
+                                                key={doc.id}
+                                                className="flex items-center justify-between gap-3 rounded-lg border border-gray-200 p-3"
+                                            >
+                                                <div className="min-w-0">
+                                                    <p className="truncate text-sm font-medium text-gray-900">
+                                                        {doc.name}
+                                                    </p>
+                                                    <p className="truncate text-xs text-gray-500">
+                                                        {doc.title}
+                                                    </p>
+                                                </div>
+                                                <div className="flex shrink-0 items-center gap-2">
+                                                    <a
+                                                        href={route(
+                                                            'meeting-minutes.official-document.download',
+                                                            doc.id,
+                                                        )}
+                                                        className="rounded-lg bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700 transition hover:bg-indigo-100"
+                                                    >
+                                                        Unduh
+                                                    </a>
+                                                    {doc.can_modify && (
+                                                        <>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setReplacingDoc(doc.id)}
+                                                                className="rounded-lg bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700 transition hover:bg-amber-100"
+                                                            >
+                                                                Ganti
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleDeleteDocument(doc)}
+                                                                className="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-100"
+                                                            >
+                                                                Hapus
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
+
+                                {replacingDoc && (
+                                    <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
+                                        <div className="mb-2 flex items-center justify-between gap-2">
+                                            <p className="text-xs font-semibold text-amber-800">
+                                                Pilih file baru untuk mengganti dokumen ini
+                                            </p>
+                                            <button
+                                                type="button"
+                                                onClick={() => setReplacingDoc(null)}
+                                                className="text-xs font-semibold text-amber-700 hover:text-amber-900"
+                                            >
+                                                Batal
+                                            </button>
+                                        </div>
+                                        <input
+                                            type="file"
+                                            accept=".pdf,.doc,.docx"
+                                            onChange={handleReplaceDocument}
+                                            className="block w-full text-sm text-gray-700 file:mr-3 file:rounded-lg file:border-0 file:bg-amber-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-amber-700"
+                                        />
+                                    </div>
+                                )}
                             </div>
                         </div>
 

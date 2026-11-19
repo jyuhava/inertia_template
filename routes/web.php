@@ -577,6 +577,11 @@ Route::middleware('auth')->group(function () {
     Route::post('meeting-agenda-items/{agendaItem}/progress', [\App\Http\Controllers\MeetingMinuteController::class, 'updateProgress'])->name('meeting-agenda-items.progress');
     Route::post('meeting-minutes/{meetingMinute}/attachments', [\App\Http\Controllers\MeetingMinuteController::class, 'uploadAttachment'])->name('meeting-minutes.attachments.upload');
     Route::delete('meeting-attachments/{attachment}', [\App\Http\Controllers\MeetingMinuteController::class, 'deleteAttachment'])->name('meeting-attachments.destroy');
+
+    // Dokumen notulensi resmi (final) — upload oleh pembuat/admin, unduh oleh semua viewer
+    Route::post('meeting-minutes/{meetingMinute}/official-document', [\App\Http\Controllers\MeetingMinuteController::class, 'uploadOfficialDocument'])->name('meeting-minutes.official-document.upload');
+    Route::get('meeting-minutes/{meetingMinute}/official-document/download', [\App\Http\Controllers\MeetingMinuteController::class, 'downloadOfficialDocument'])->name('meeting-minutes.official-document.download');
+    Route::delete('meeting-minutes/{meetingMinute}/official-document', [\App\Http\Controllers\MeetingMinuteController::class, 'deleteOfficialDocument'])->name('meeting-minutes.official-document.destroy');
 });
 
 // Raker (Rapat Kerja) — semua role kecuali mahasiswa
@@ -632,5 +637,6 @@ Route::middleware(['auth', 'not-mahasiswa'])->prefix('raker')->name('raker.')->g
 
 // Public access (tanpa auth) - Notulen rapat publik
 Route::get('public/meeting/{token}', [\App\Http\Controllers\PublicMeetingMinuteController::class, 'show'])->name('meeting-minutes.public');
+Route::get('public/meeting/{token}/official-document/download', [\App\Http\Controllers\PublicMeetingMinuteController::class, 'downloadOfficialDocument'])->name('meeting-minutes.public.official-document');
 
 require __DIR__.'/auth.php';

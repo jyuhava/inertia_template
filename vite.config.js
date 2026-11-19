@@ -8,7 +8,11 @@ const require = createRequire(import.meta.url);
 export default defineConfig({
     plugins: [
         laravel({
-            input: 'resources/js/app.jsx',
+            input: [
+                'resources/js/app.jsx',
+                'resources/js/Pages/Admin/Obe/Assessment/Index.jsx',
+                'resources/js/Pages/Admin/Obe/Assessments.jsx',
+            ],
             refresh: true,
         }),
         react(),

@@ -363,7 +363,11 @@ window.route = (name, params = {}) => {
         'meeting-agenda-items.progress': (id) => `/meeting-agenda-items/${id}/progress`,
         'meeting-minutes.attachments.upload': (id) => `/meeting-minutes/${id}/attachments`,
         'meeting-attachments.destroy': (id) => `/meeting-attachments/${id}`,
+        'meeting-minutes.official-document.upload': (id) => `/meeting-minutes/${id}/official-document`,
+        'meeting-minutes.official-document.download': (id) => `/meeting-minutes/${id}/official-document/download`,
+        'meeting-minutes.official-document.destroy': (id) => `/meeting-minutes/${id}/official-document`,
         'meeting-minutes.public': (token) => `/public/meeting/${token}`,
+        'meeting-minutes.public.official-document': (token) => `/public/meeting/${token}/official-document/download`,
 
         // Raker (Rapat Kerja)
         'raker.index': '/raker',
